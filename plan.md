@@ -1185,3 +1185,13 @@ Vite plugin 產生 —— CI 上沒有它會直接失敗。做法:檔案進版�
 `String.prototype.localeCompare` 每次呼叫都要重建定序物件。2,717 筆排序會呼叫
 三萬次以上,實測最差情況(空查詢、全部課程)要 29.7ms —— 桌機就用掉 §6 效能預算
 的六成,中階手機必定超標。改用模組層級共用的 `Intl.Collator` 後降到 **4.7ms**。
+
+### D.11 索引與系所對照要並行取得
+
+交給元件裡的 suspense 各自去抓時,冷快取下會排成瀑布:
+`meta` → `index.json` → `departments.json`,三段串行約 945ms。
+兩份資料都只依賴 `meta`,沒有理由排隊。
+
+改在路由 loader 裡用 `Promise.all` 並行取得後,實測兩者同時在 228ms 發出,
+搜尋就緒時間降到約 457ms。`loaderDeps` 只帶 `sem` —— 其餘篩選條件都在前端算,
+不該讓它們觸發重新載入。

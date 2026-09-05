@@ -6,8 +6,8 @@ import { toFilters, validateSearchParams, type SearchParams } from '@/lib/search
 import type { SortKey } from '@/lib/searchParams'
 import type { RelaxTarget } from '@/lib/suggest'
 import { activeFilterCount } from '@/lib/filters'
-import { useMeta } from '@/hooks/useMeta'
-import { useSemesterIndex } from '@/hooks/useSemesterIndex'
+import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
+import { semesterIndexQueryOptions, useSemesterIndex } from '@/hooks/useSemesterIndex'
 import { useCourseSearch } from '@/hooks/useCourseSearch'
 import { useDebounced } from '@/hooks/useDebounced'
 import { FilterPanel, type FilterValues } from '@/components/search/FilterPanel'
@@ -19,6 +19,22 @@ import type { Meta } from '@/types/api'
 export const Route = createFileRoute('/search')({
   validateSearch: (search: Record<string, unknown>): SearchParams =>
     validateSearchParams(search),
+  // 只有學期會改變要載入的資料,其餘條件都在前端算
+  loaderDeps: ({ search }) => ({ sem: search.sem }),
+  /**
+   * 索引與系所對照**並行**取得。
+   *
+   * 交給元件裡的 suspense 去抓的話會變成瀑布:index 解析完才輪到 departments,
+   * 冷快取下多花約 260ms。兩者都只依賴 meta,沒有理由排隊。
+   */
+  loader: async ({ context, deps }) => {
+    const { data: meta } = await context.queryClient.ensureQueryData(metaQueryOptions())
+    const semester = deps.sem ?? meta.latest
+    await Promise.all([
+      context.queryClient.ensureQueryData(semesterIndexQueryOptions(meta, semester)),
+      context.queryClient.ensureQueryData(departmentsQueryOptions(meta, semester)),
+    ])
+  },
   component: SearchPage,
 })
 
@@ -147,6 +163,7 @@ function SearchPage() {
       <div className="bg-background sticky top-0 z-10 flex items-center gap-2 py-3">
         <input
           type="search"
+          name="q"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="課名、教師、課號"
@@ -156,6 +173,7 @@ function SearchPage() {
         />
 
         <select
+          name="sem"
           value={semester}
           aria-label="學期"
           onChange={(e) =>
@@ -173,6 +191,7 @@ function SearchPage() {
         </select>
 
         <select
+          name="sort"
           value={sort}
           aria-label="排序"
           onChange={(e) =>

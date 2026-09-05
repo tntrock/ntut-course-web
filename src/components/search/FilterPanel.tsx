@@ -163,6 +163,7 @@ export function FilterPanel({
             min={0}
             max={options.maxCredits}
             step={0.5}
+            name="cmin"
             value={values.cmin ?? ''}
             placeholder="最低"
             aria-label="最低學分"
@@ -179,6 +180,7 @@ export function FilterPanel({
             min={0}
             max={options.maxCredits}
             step={0.5}
+            name="cmax"
             value={values.cmax ?? ''}
             placeholder="最高"
             aria-label="最高學分"
