@@ -72,15 +72,29 @@ function Badges({ items }: { items: readonly string[] }) {
   )
 }
 
+function Loading() {
+  return (
+    <p className="text-muted-foreground px-4 py-10 text-center text-sm">載入大綱中…</p>
+  )
+}
+
 export function SyllabusPanel({
   state,
   syllabus,
   syllabusUrl,
 }: {
-  state: SyllabusState
+  /**
+   * `null` 代表大綱進度還沒回來,狀態還算不出來。
+   *
+   * 大綱不擋整頁渲染(見 plan D.17),所以「還不知道」是正常的一刻 ——
+   * 這時說「尚未收錄」是錯的,它會閃一下錯誤訊息再變成內容。
+   */
+  state: SyllabusState | null
   syllabus: Syllabus | undefined
   syllabusUrl: string | null
 }) {
+  if (state === null) return <Loading />
+
   if (state.kind === 'semester-not-covered') {
     return (
       <Notice
@@ -101,7 +115,7 @@ export function SyllabusPanel({
   }
 
   // 「還沒抓到」是暫時的,「沒有大綱」是永久的 —— 說法必須分得開
-  if (state.kind === 'pending' || syllabus === undefined) {
+  if (state.kind === 'pending') {
     return (
       <Notice
         title="大綱尚未收錄"
@@ -110,6 +124,9 @@ export function SyllabusPanel({
       />
     )
   }
+
+  // 知道檔案在、只是還沒到 —— 這是載入中,不是「沒有」
+  if (syllabus === undefined) return <Loading />
 
   if (!syllabus.has_content) {
     return (

@@ -96,6 +96,27 @@ describe('SyllabusPanel', () => {
     expect(screen.getByText('本學期未收錄教學大綱')).toBeInTheDocument()
   })
 
+  it('大綱還在路上時顯示載入中,不能先說「尚未收錄」再改口', () => {
+    // 大綱不擋整頁渲染(見 plan D.17),所以面板一定會先遇到「還沒拿到」的一刻。
+    // 這時說「尚未收錄」是錯的 —— 它會閃一下錯誤訊息再變成內容
+    render(
+      <SyllabusPanel
+        state={{ kind: 'available', version: '2026-09-05T06:21:43Z' }}
+        syllabus={undefined}
+        syllabusUrl="https://aps.ntut.edu.tw/x"
+      />,
+    )
+
+    expect(screen.getByText('載入大綱中…')).toBeInTheDocument()
+    expect(screen.queryByText('大綱尚未收錄')).not.toBeInTheDocument()
+  })
+
+  it('大綱進度還沒回來時也是載入中 —— 狀態根本還算不出來', () => {
+    render(<SyllabusPanel state={null} syllabus={undefined} syllabusUrl={null} />)
+
+    expect(screen.getByText('載入大綱中…')).toBeInTheDocument()
+  })
+
   it('有內容時把老師更新時間與本站抓取時間分開標示', () => {
     render(
       <SyllabusPanel

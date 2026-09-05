@@ -25,37 +25,51 @@ export const Route = createFileRoute('/course/$semester/$courseId')({
     search.tab === 'syllabus' ? { tab: 'syllabus' } : {},
 
   /**
-   * 冷啟動(直接開分享連結)的請求安排。
+   * 冷啟動(直接開分享連結)的請求安排。實測線上冷快取約 1.25 秒,
+   * 其中三個來回就佔了約 700ms —— 這是「沒有 lookup.json」的固有成本
+   * (要拿系所代碼就得先載整份索引),plan §9 記了解法。這裡榨乾的是排程:
    *
-   * meta → [索引 ∥ 大綱進度] → [系所檔 ∥ 系所對照 ∥ 大綱]
+   * ```
+   * meta ─┬─ 索引 ────── 系所檔 ─┐
+   *       ├─ 系所對照 ───────────┤ 頁面可以渲染了
+   *       └─ 大綱進度 ── 大綱 ─ ─ ─ (不擋渲染,面板自己顯示載入中)
+   * ```
    *
-   * 關鍵是最後一輪:大綱只需要「進度表裡那門課的抓取時間」就能取,**不必等系所檔
-   * 回來看 `syllabus_url`**。硬要等的話會多一個來回。
+   * 兩個刻意的安排:
+   *
+   * 1. **每個請求在自己的相依項回來的當下就發出**,不等同一輪的其他人。
+   *    用 `Promise.all` 分輪的話,系所檔要等比較慢的大綱進度,白等約 100ms。
+   * 2. **大綱不進 `await`。** 課程資訊分頁不需要它,而它是最後才會回來的那個。
+   *    讓它擋著等於為了一個多數人不會馬上看的分頁,拖慢所有人的首次渲染。
    */
   loader: async ({ context, params }) => {
     const { semester, courseId } = params
-    const { data: meta } = await context.queryClient.ensureQueryData(metaQueryOptions())
+    const { queryClient } = context
+    const { data: meta } = await queryClient.ensureQueryData(metaQueryOptions())
 
     if (!meta.semesters.some((s) => s.path === semester)) throw notFound()
 
-    const [index, progress] = await Promise.all([
-      context.queryClient.ensureQueryData(semesterIndexQueryOptions(meta, semester)),
-      context.queryClient.ensureQueryData(syllabusProgressQueryOptions(meta)),
-    ])
+    const coursePromise = queryClient
+      .ensureQueryData(semesterIndexQueryOptions(meta, semester))
+      .then((index) => {
+        const entry = index.courses.find((c) => c.id === courseId)
+        if (!entry) throw notFound()
+        return queryClient.ensureQueryData(courseQueryOptions(meta, semester, entry))
+      })
 
-    const entry = index.courses.find((c) => c.id === courseId)
-    if (!entry) throw notFound()
-
-    const version = progress.fetched[semester]?.[courseId]
+    void queryClient
+      .ensureQueryData(syllabusProgressQueryOptions(meta))
+      .then((progress) => {
+        const version = progress.fetched[semester]?.[courseId]
+        if (version === undefined) return null
+        return queryClient.ensureQueryData(
+          syllabusQueryOptions(semester, courseId, version),
+        )
+      })
 
     await Promise.all([
-      context.queryClient.ensureQueryData(courseQueryOptions(meta, semester, entry)),
-      context.queryClient.ensureQueryData(departmentsQueryOptions(meta, semester)),
-      version === undefined
-        ? Promise.resolve(null)
-        : context.queryClient.ensureQueryData(
-            syllabusQueryOptions(semester, courseId, version),
-          ),
+      coursePromise,
+      queryClient.ensureQueryData(departmentsQueryOptions(meta, semester)),
     ])
   },
 
@@ -132,22 +146,28 @@ function CourseDetail() {
 
   const course = useSuspenseQuery(courseQueryOptions(meta, semester, entry)).data
   const departments = useSuspenseQuery(departmentsQueryOptions(meta, semester)).data
-  const progress = useSuspenseQuery(syllabusProgressQueryOptions(meta)).data
 
-  const state = syllabusState(progress, semester, courseId, course.syllabus_url)
+  // 大綱進度**不用 suspense** —— 用了就等於重新讓它擋住整頁渲染,
+  // 白費 loader 裡把它移出 await 的功夫
+  const progress = useQuery(syllabusProgressQueryOptions(meta)).data
+  const state = progress
+    ? syllabusState(progress, semester, courseId, course.syllabus_url)
+    : null
+
   const syllabus = useQuery({
     ...syllabusQueryOptions(
       semester,
       courseId,
-      state.kind === 'available' ? state.version : 'none',
+      state?.kind === 'available' ? state.version : 'none',
     ),
     // 沒有大綱檔就不發請求 —— 這是「不靠 404 判斷」那條要求的實作點
-    enabled: state.kind === 'available',
+    enabled: state?.kind === 'available',
   }).data
 
   const deptName = new Map(departments.departments.map((d) => [d.id, d.name]))
-  // 沒有大綱的課連分頁都不顯示,不讓使用者點進去撲空
-  const showSyllabusTab = state.kind !== 'no-syllabus'
+  // 沒有大綱的課連分頁都不顯示,不讓使用者點進去撲空。
+  // 這一條只看 `syllabus_url`,不等大綱進度 —— 否則分頁會晚一拍才冒出來
+  const showSyllabusTab = course.syllabus_url !== null
   const active = tab === 'syllabus' && showSyllabusTab ? 'syllabus' : 'info'
 
   return (
