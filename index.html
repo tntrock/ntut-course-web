@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>北科課程</title>
+    <meta name="description" content="臺北科技大學課程查詢:關鍵字搜尋、多維篩選、教學大綱、我的課表。非官方網站。" />
+    <script>
+      // 在第一次繪製前決定主題,避免深色模式閃白
+      (function () {
+        try {
+          var saved = JSON.parse(localStorage.getItem('ntut-course-web:v1') || '{}')
+          var theme = (saved.settings && saved.settings.theme) || 'system'
+          var dark =
+            theme === 'dark' ||
+            (theme === 'system' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) document.documentElement.classList.add('dark')
+        } catch (e) {
+          /* localStorage 不可用時就用淺色,不影響功能 */
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
