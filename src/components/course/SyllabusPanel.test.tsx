@@ -39,6 +39,13 @@ function syllabus(overrides: Partial<Syllabus> = {}): Syllabus {
   }
 }
 
+/** exactOptionalPropertyTypes 下不能塞 undefined,要真的把 key 拿掉。 */
+function withoutFetchedAt(): Syllabus {
+  const record = syllabus()
+  delete (record as { fetched_at?: string }).fetched_at
+  return record
+}
+
 describe('SyllabusPanel', () => {
   it('大綱檔在但老師沒填時,說明是老師沒填,不是本站漏抓', () => {
     render(
@@ -115,6 +122,20 @@ describe('SyllabusPanel', () => {
     render(<SyllabusPanel state={null} syllabus={undefined} syllabusUrl={null} />)
 
     expect(screen.getByText('載入大綱中…')).toBeInTheDocument()
+  })
+
+  it('已凍結學期沒有 fetched_at 時,不印出「本站抓取」後面一片空白', () => {
+    // schema v3 起,凍結學期的大綱記錄不帶 fetched_at
+    render(
+      <SyllabusPanel
+        state={{ kind: 'available', version: '2026-09-05T10:40:52Z' }}
+        syllabus={withoutFetchedAt()}
+        syllabusUrl="https://aps.ntut.edu.tw/x"
+      />,
+    )
+
+    expect(screen.getByText(/教師最後更新 2026-08-11/)).toBeInTheDocument()
+    expect(screen.queryByText(/本站抓取/)).not.toBeInTheDocument()
   })
 
   it('有內容時把老師更新時間與本站抓取時間分開標示', () => {

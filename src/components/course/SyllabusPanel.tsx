@@ -238,8 +238,14 @@ export function SyllabusPanel({
           {syllabus.updated_at
             ? `教師最後更新 ${formatTaipei(syllabus.updated_at)}`
             : '教師未提供更新時間'}
-          <span className="mx-1.5">·</span>
-          本站抓取 {formatTaipei(syllabus.fetched_at)}
+          {/* 已凍結學期的記錄沒有 fetched_at(schema v3)——
+              沒有就整段不印,不要留一個「本站抓取 」後面空白 */}
+          {syllabus.fetched_at && (
+            <>
+              <span className="mx-1.5">·</span>
+              本站抓取 {formatTaipei(syllabus.fetched_at)}
+            </>
+          )}
         </p>
         <a
           href={syllabus.url}

@@ -1,4 +1,9 @@
-import type { SemesterPath, Syllabus, SyllabusProgress } from '@/types/api'
+import type {
+  SemesterPath,
+  Syllabus,
+  SyllabusFetchInfo,
+  SyllabusProgress,
+} from '@/types/api'
 
 /**
  * 教學大綱的四種狀態。
@@ -25,18 +30,56 @@ export type SyllabusState =
  *
  * 也因此**不需要靠 404 判斷** —— 檔案存不存在在對照表裡就有了。
  */
+/**
+ * 取出某門課的抓取時間。
+ *
+ * schema v3 把值從時間字串改成 `{ at }` 物件。兩種都吃得下 —— 爬蟲回退版本時
+ * 不該讓整個大綱功能壞掉。
+ */
+function fetchedAt(value: SyllabusFetchInfo | string | undefined): string | undefined {
+  if (value === undefined) return undefined
+  return typeof value === 'string' ? value : value.at
+}
+
+/**
+ * 路由 loader 專用:只有在**逐課對照表確認檔案存在**時才回傳版本號。
+ *
+ * 為什麼不直接用 `syllabusState()`:凍結學期沒有逐課對照,存在性得看
+ * `syllabus_url`,而那要等系所檔回來才知道。光憑「學期凍結了」就預取,
+ * 等於對那三成沒有大綱的課發 404 —— 正是驗收條件禁止的事。
+ *
+ * 凍結學期的大綱因此晚一個來回,由元件在拿到課程物件之後才取。
+ */
+export function confirmedSyllabusVersion(
+  progress: SyllabusProgress,
+  semester: SemesterPath,
+  courseId: string,
+): string | undefined {
+  return fetchedAt(progress.fetched[semester]?.[courseId])
+}
+
 export function syllabusState(
   progress: SyllabusProgress,
   semester: SemesterPath,
   courseId: string,
   syllabusUrl: string | null,
 ): SyllabusState {
-  const entry = progress.semesters.find((s) => s.semester === semester)
-  if (!entry || entry.fetched === 0) return { kind: 'semester-not-covered' }
-
-  const version = progress.fetched[semester]?.[courseId]
+  // 1. 逐課對照表:檔案確實在手上,最可靠
+  const version = fetchedAt(progress.fetched[semester]?.[courseId])
   // 旗標與實際檔案打架時以檔案為準 —— 檔案在手上,顯示它沒有 404 風險
   if (version !== undefined) return { kind: 'available', version }
+
+  // 2. 已凍結的學期不逐課列出(六千多筆沒有意義)。`fetched === with_url` 代表
+  //    有連結的課全部抓完了,所以存在性回頭用 syllabus_url 判斷就夠準
+  const frozen = progress.frozen?.[semester]
+  if (frozen) {
+    if (syllabusUrl === null) return { kind: 'no-syllabus' }
+    return { kind: 'available', version: frozen.at }
+  }
+
+  // 3. 都沒有 —— 這個學期到底收錄了沒?
+  const entry = progress.semesters.find((s) => s.semester === semester)
+  if (!entry || entry.fetched === 0) return { kind: 'semester-not-covered' }
 
   if (syllabusUrl === null) return { kind: 'no-syllabus' }
   return { kind: 'pending' }
@@ -72,6 +115,8 @@ const KNOWN_KEYS = new Set([
   'sdgs',
   'ai_usage',
   'notes',
+  // schema v3 的中繼資料,不是給使用者看的內容
+  'content_hash',
 ])
 
 export interface UnknownField {

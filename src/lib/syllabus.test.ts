@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { SyllabusProgress } from '@/types/api'
-import { syllabusState, unknownSyllabusFields } from './syllabus'
+import {
+  confirmedSyllabusVersion,
+  syllabusState,
+  unknownSyllabusFields,
+} from './syllabus'
 
 /**
  * `syllabus.json` 的實測形狀:`semesters[]` 是每學期的覆蓋率,
@@ -128,5 +132,131 @@ describe('unknownSyllabusFields', () => {
   it('未知欄位是空值時不列出,免得畫面長出一堆空標題', () => {
     const empty = { ...known, a: null, b: '', c: [], d: '有值' }
     expect(unknownSyllabusFields(empty as never)).toEqual([{ key: 'd', value: '有值' }])
+  })
+})
+
+/**
+ * schema v3(2026-09-05)對 `syllabus.json` 動了兩個地方:
+ *
+ * 1. `fetched[學期][課號]` 從**時間字串**變成 `{ at: "…" }` 物件
+ * 2. 新增 `frozen` —— 已經抓完、不再更新的學期。實測 114-2 / 114-1 / 113-2
+ *    都在這裡,而且它們**不在** `fetched` 對照裡
+ *
+ * 沒有跟上的話,那三個學期的 6,000 多篇大綱在站上全部顯示「尚未收錄」。
+ */
+function v3(
+  semesters: { semester: string; fetched: number }[],
+  fetched: Record<string, Record<string, { at: string }>>,
+  frozen: Record<string, { fetched: number; with_url: number; at: string }> = {},
+): SyllabusProgress {
+  return {
+    schema_version: 3,
+    generated_at: '2026-09-05T12:23:28Z',
+    semesters: semesters.map((s) => ({
+      semester: s.semester,
+      fetched: s.fetched,
+      oldest_fetch: null,
+      newest_fetch: null,
+      course_count: 2717,
+      with_url: s.fetched,
+    })),
+    fetched,
+    frozen,
+  }
+}
+
+describe('syllabusState（schema v3）', () => {
+  const URL = 'https://aps.ntut.edu.tw/x'
+
+  const progress = v3(
+    [
+      { semester: '115-1', fetched: 1909 },
+      { semester: '114-2', fetched: 1968 },
+    ],
+    { '115-1': { '364893': { at: '2026-09-05T06:21:43Z' } } },
+    { '114-2': { fetched: 1968, with_url: 1968, at: '2026-09-05T10:40:52Z' } },
+  )
+
+  it('抓取時間從物件的 at 取出來當版本號', () => {
+    // 直接拿整個物件當版本號會讓網址變成 ?v=[object Object],
+    // 檔案還是抓得到,但老師改過的大綱從此永遠取到舊的那份
+    expect(syllabusState(progress, '115-1', '364893', URL)).toEqual({
+      kind: 'available',
+      version: '2026-09-05T06:21:43Z',
+    })
+  })
+
+  it('已凍結的學期即使不在 fetched 對照裡,大綱一樣看得到', () => {
+    // frozen 的 fetched === with_url,代表有連結的課全部抓完了,
+    // 所以這裡用 syllabus_url 判斷存在性就夠
+    expect(syllabusState(progress, '114-2', '353187', URL)).toEqual({
+      kind: 'available',
+      version: '2026-09-05T10:40:52Z',
+    })
+  })
+
+  it('凍結學期裡沒有大綱連結的課,仍然不顯示大綱分頁', () => {
+    expect(syllabusState(progress, '114-2', '353187', null)).toEqual({
+      kind: 'no-syllabus',
+    })
+  })
+
+  it('既不在 fetched 也不在 frozen 的學期是「本學期未收錄」', () => {
+    expect(syllabusState(progress, '110-1', '300000', URL)).toEqual({
+      kind: 'semester-not-covered',
+    })
+  })
+
+  it('仍然吃得下 v2 的字串形式,爬蟲回退版本時不會壞掉', () => {
+    const old = v3([{ semester: '115-1', fetched: 1 }], {
+      '115-1': { '364893': '2026-09-05T06:21:43Z' as unknown as { at: string } },
+    })
+
+    expect(old && syllabusState(old, '115-1', '364893', URL)).toEqual({
+      kind: 'available',
+      version: '2026-09-05T06:21:43Z',
+    })
+  })
+})
+
+describe('unknownSyllabusFields（schema v3）', () => {
+  it('content_hash 是中繼資料,不能當成課程內容渲染出來', () => {
+    // v3 的舊學期記錄多了這個欄位。「渲染所有未知欄位」的設計在這裡吃到
+    // 第一個假陽性 —— 使用者會看到一個標題叫 content_hash 的雜湊區塊
+    const withHash = {
+      schema_version: 3,
+      course_id: '353187',
+      has_content: true,
+      outline: '教學目標',
+      content_hash: 'a3f9c1e8b2d4',
+    }
+
+    expect(unknownSyllabusFields(withHash as never)).toEqual([])
+  })
+})
+
+describe('confirmedSyllabusVersion', () => {
+  const URL = 'https://aps.ntut.edu.tw/x'
+  const progress = v3(
+    [
+      { semester: '115-1', fetched: 1909 },
+      { semester: '114-2', fetched: 1968 },
+    ],
+    { '115-1': { '364893': { at: '2026-09-05T06:21:43Z' } } },
+    { '114-2': { fetched: 1968, with_url: 1968, at: '2026-09-05T10:40:52Z' } },
+  )
+
+  it('逐課對照表有的課回傳版本號,路由可以先預取', () => {
+    expect(confirmedSyllabusVersion(progress, '115-1', '364893')).toBe(
+      '2026-09-05T06:21:43Z',
+    )
+  })
+
+  it('凍結學期回傳 undefined —— 那裡的存在性要看 syllabus_url', () => {
+    // 凍結學期有三成的課沒有大綱連結。光憑「學期凍結了」就預取,
+    // 等於對那三成的課發 404,正是驗收條件禁止的事。
+    // 這些課由元件在拿到課程物件之後再取,多一個來回換不發錯誤請求
+    expect(confirmedSyllabusVersion(progress, '114-2', '353187')).toBeUndefined()
+    expect(syllabusState(progress, '114-2', '353187', URL).kind).toBe('available')
   })
 })

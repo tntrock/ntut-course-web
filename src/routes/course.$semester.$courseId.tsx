@@ -10,7 +10,7 @@ import {
   syllabusQueryOptions,
 } from '@/hooks/useCourseDetail'
 import { departmentsQueryOptions } from '@/hooks/useDepartments'
-import { syllabusState } from '@/lib/syllabus'
+import { confirmedSyllabusVersion, syllabusState } from '@/lib/syllabus'
 import { formatSlotClock, formatTimeSlots } from '@/lib/formatTime'
 import { LANGUAGE_ZH } from '@/lib/filters'
 import { SyllabusPanel } from '@/components/course/SyllabusPanel'
@@ -60,7 +60,7 @@ export const Route = createFileRoute('/course/$semester/$courseId')({
     void queryClient
       .ensureQueryData(syllabusProgressQueryOptions(meta))
       .then((progress) => {
-        const version = progress.fetched[semester]?.[courseId]
+        const version = confirmedSyllabusVersion(progress, semester, courseId)
         if (version === undefined) return null
         return queryClient.ensureQueryData(
           syllabusQueryOptions(semester, courseId, version),

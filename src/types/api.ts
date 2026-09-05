@@ -13,7 +13,7 @@
  */
 
 /** 目前支援的 schema 版本。crawler 移除欄位 / 改型別 / 改語意時才會升版。 */
-export const SUPPORTED_SCHEMA_VERSION = 2
+export const SUPPORTED_SCHEMA_VERSION = 3
 
 /** 所有頂層回應共有的欄位。 */
 export interface SchemaVersioned {
@@ -349,7 +349,17 @@ export interface Syllabus extends SemesterScoped {
   department_ids: string[]
   /** 學校原始大綱頁,老師沒填時給使用者當退路。 */
   url: string
-  fetched_at: string
+  /**
+   * 本站抓取這份大綱的時間。
+   *
+   * **schema v3 起,已凍結學期的記錄沒有這個欄位** —— 顯示前一定要判斷。
+   */
+  fetched_at?: string
+  /**
+   * 內容雜湊(schema v3 新增,凍結學期才有)。用來判斷內容有沒有變,
+   * **不是給使用者看的東西** —— 別讓它跑到畫面上。
+   */
+  content_hash?: string
   /**
    * 老師是否填了內容。
    *
@@ -389,15 +399,39 @@ export interface SyllabusProgress extends SchemaVersioned {
   generated_at: string
   semesters: SyllabusProgressEntry[]
   /**
-   * 學期 → 課號 → 該門大綱的抓取時間。**不是數量**(plan §1 原本記成 `number`,
-   * 實測是巢狀物件)。
+   * 學期 → 課號 → 該門大綱的抓取資訊。**不是數量**(plan §1 原本記成 `number`)。
+   *
+   * schema v3 把值從**時間字串**改成 `{ at }` 物件。字串型別留著是為了
+   * 爬蟲回退版本時不會整頁壞掉 —— 讀取一律經過 `syllabusState()`。
    *
    * 這份對照有兩個用途,兩個都比別的來源準:
    * 1. **存在性** —— 檔案抓到了才會在這裡,所以不必靠 404 判斷有沒有大綱
    * 2. **快取版本號** —— 大綱是獨立於學期索引更新的,拿學期的 `generated_at`
    *    當版本號會讓老師改過的大綱一直取到舊的
+   *
+   * **只涵蓋還在更新的學期。** 已抓完的學期移到 `frozen`,不再逐課列出。
    */
-  fetched: Record<SemesterPath, Record<string, string>>
+  fetched: Record<SemesterPath, Record<string, SyllabusFetchInfo | string>>
+  /**
+   * 已經抓完、不再更新的學期(schema v3 新增)。實測 114-2 / 114-1 / 113-2。
+   *
+   * 這些學期**不會**出現在 `fetched` 裡 —— 逐課列出六千多筆沒有意義。
+   * `fetched === with_url` 代表有大綱連結的課全部抓完了,所以個別課程的存在性
+   * 改用 `Course.syllabus_url` 判斷,`at` 則當成整個學期共用的快取版本號。
+   */
+  frozen?: Record<SemesterPath, FrozenSemester>
+}
+
+export interface SyllabusFetchInfo {
+  /** 抓取時間。 */
+  at: string
+}
+
+export interface FrozenSemester {
+  fetched: number
+  with_url: number
+  /** 凍結時間。當作該學期所有大綱的快取版本號。 */
+  at: string
 }
 
 // ─────────────────────────────────────────────────────────────
