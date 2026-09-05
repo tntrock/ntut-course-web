@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 本機環境變數(.env.example 是範本,已進版控)
+.env
+.env.local
