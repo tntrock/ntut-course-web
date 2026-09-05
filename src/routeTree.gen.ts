@@ -10,12 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as ClassSemesterClassIdRouteImport } from './routes/class.$semester.$classId'
+import { Route as ClassroomSemesterClassroomIdRouteImport } from './routes/classroom.$semester.$classroomId'
 import { Route as CourseSemesterCourseIdRouteImport } from './routes/course.$semester.$courseId'
+import { Route as DeptSemesterDeptIdRouteImport } from './routes/dept.$semester.$deptId'
+import { Route as ProgramSemesterProgramNameRouteImport } from './routes/program.$semester.$programName'
+import { Route as TeacherSemesterTeacherIdRouteImport } from './routes/teacher.$semester.$teacherId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrowseRoute = BrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -23,40 +34,120 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClassSemesterClassIdRoute = ClassSemesterClassIdRouteImport.update({
+  id: '/class/$semester/$classId',
+  path: '/class/$semester/$classId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClassroomSemesterClassroomIdRoute =
+  ClassroomSemesterClassroomIdRouteImport.update({
+    id: '/classroom/$semester/$classroomId',
+    path: '/classroom/$semester/$classroomId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CourseSemesterCourseIdRoute = CourseSemesterCourseIdRouteImport.update({
   id: '/course/$semester/$courseId',
   path: '/course/$semester/$courseId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeptSemesterDeptIdRoute = DeptSemesterDeptIdRouteImport.update({
+  id: '/dept/$semester/$deptId',
+  path: '/dept/$semester/$deptId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgramSemesterProgramNameRoute =
+  ProgramSemesterProgramNameRouteImport.update({
+    id: '/program/$semester/$programName',
+    path: '/program/$semester/$programName',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TeacherSemesterTeacherIdRoute =
+  TeacherSemesterTeacherIdRouteImport.update({
+    id: '/teacher/$semester/$teacherId',
+    path: '/teacher/$semester/$teacherId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/browse': typeof BrowseRoute
   '/search': typeof SearchRoute
+  '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
+  '/classroom/$semester/$classroomId': typeof ClassroomSemesterClassroomIdRoute
   '/course/$semester/$courseId': typeof CourseSemesterCourseIdRoute
+  '/dept/$semester/$deptId': typeof DeptSemesterDeptIdRoute
+  '/program/$semester/$programName': typeof ProgramSemesterProgramNameRoute
+  '/teacher/$semester/$teacherId': typeof TeacherSemesterTeacherIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/browse': typeof BrowseRoute
   '/search': typeof SearchRoute
+  '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
+  '/classroom/$semester/$classroomId': typeof ClassroomSemesterClassroomIdRoute
   '/course/$semester/$courseId': typeof CourseSemesterCourseIdRoute
+  '/dept/$semester/$deptId': typeof DeptSemesterDeptIdRoute
+  '/program/$semester/$programName': typeof ProgramSemesterProgramNameRoute
+  '/teacher/$semester/$teacherId': typeof TeacherSemesterTeacherIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/browse': typeof BrowseRoute
   '/search': typeof SearchRoute
+  '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
+  '/classroom/$semester/$classroomId': typeof ClassroomSemesterClassroomIdRoute
   '/course/$semester/$courseId': typeof CourseSemesterCourseIdRoute
+  '/dept/$semester/$deptId': typeof DeptSemesterDeptIdRoute
+  '/program/$semester/$programName': typeof ProgramSemesterProgramNameRoute
+  '/teacher/$semester/$teacherId': typeof TeacherSemesterTeacherIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/search' | '/course/$semester/$courseId'
+  fullPaths:
+    | '/'
+    | '/browse'
+    | '/search'
+    | '/class/$semester/$classId'
+    | '/classroom/$semester/$classroomId'
+    | '/course/$semester/$courseId'
+    | '/dept/$semester/$deptId'
+    | '/program/$semester/$programName'
+    | '/teacher/$semester/$teacherId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/search' | '/course/$semester/$courseId'
-  id: '__root__' | '/' | '/search' | '/course/$semester/$courseId'
+  to:
+    | '/'
+    | '/browse'
+    | '/search'
+    | '/class/$semester/$classId'
+    | '/classroom/$semester/$classroomId'
+    | '/course/$semester/$courseId'
+    | '/dept/$semester/$deptId'
+    | '/program/$semester/$programName'
+    | '/teacher/$semester/$teacherId'
+  id:
+    | '__root__'
+    | '/'
+    | '/browse'
+    | '/search'
+    | '/class/$semester/$classId'
+    | '/classroom/$semester/$classroomId'
+    | '/course/$semester/$courseId'
+    | '/dept/$semester/$deptId'
+    | '/program/$semester/$programName'
+    | '/teacher/$semester/$teacherId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BrowseRoute: typeof BrowseRoute
   SearchRoute: typeof SearchRoute
+  ClassSemesterClassIdRoute: typeof ClassSemesterClassIdRoute
+  ClassroomSemesterClassroomIdRoute: typeof ClassroomSemesterClassroomIdRoute
   CourseSemesterCourseIdRoute: typeof CourseSemesterCourseIdRoute
+  DeptSemesterDeptIdRoute: typeof DeptSemesterDeptIdRoute
+  ProgramSemesterProgramNameRoute: typeof ProgramSemesterProgramNameRoute
+  TeacherSemesterTeacherIdRoute: typeof TeacherSemesterTeacherIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,11 +159,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/browse': {
+      id: '/browse'
+      path: '/browse'
+      fullPath: '/browse'
+      preLoaderRoute: typeof BrowseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/class/$semester/$classId': {
+      id: '/class/$semester/$classId'
+      path: '/class/$semester/$classId'
+      fullPath: '/class/$semester/$classId'
+      preLoaderRoute: typeof ClassSemesterClassIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/classroom/$semester/$classroomId': {
+      id: '/classroom/$semester/$classroomId'
+      path: '/classroom/$semester/$classroomId'
+      fullPath: '/classroom/$semester/$classroomId'
+      preLoaderRoute: typeof ClassroomSemesterClassroomIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/course/$semester/$courseId': {
@@ -82,13 +194,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CourseSemesterCourseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dept/$semester/$deptId': {
+      id: '/dept/$semester/$deptId'
+      path: '/dept/$semester/$deptId'
+      fullPath: '/dept/$semester/$deptId'
+      preLoaderRoute: typeof DeptSemesterDeptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/program/$semester/$programName': {
+      id: '/program/$semester/$programName'
+      path: '/program/$semester/$programName'
+      fullPath: '/program/$semester/$programName'
+      preLoaderRoute: typeof ProgramSemesterProgramNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher/$semester/$teacherId': {
+      id: '/teacher/$semester/$teacherId'
+      path: '/teacher/$semester/$teacherId'
+      fullPath: '/teacher/$semester/$teacherId'
+      preLoaderRoute: typeof TeacherSemesterTeacherIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BrowseRoute: BrowseRoute,
   SearchRoute: SearchRoute,
+  ClassSemesterClassIdRoute: ClassSemesterClassIdRoute,
+  ClassroomSemesterClassroomIdRoute: ClassroomSemesterClassroomIdRoute,
   CourseSemesterCourseIdRoute: CourseSemesterCourseIdRoute,
+  DeptSemesterDeptIdRoute: DeptSemesterDeptIdRoute,
+  ProgramSemesterProgramNameRoute: ProgramSemesterProgramNameRoute,
+  TeacherSemesterTeacherIdRoute: TeacherSemesterTeacherIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

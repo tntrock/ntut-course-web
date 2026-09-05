@@ -1,5 +1,6 @@
 import type { CourseIndexEntry, DepartmentsResponse, PeriodDef } from '@/types/api'
 import { LANGUAGE_ZH, type TimeMode } from '@/lib/filters'
+import { collegeGroups } from '@/lib/browse'
 import { TimeGrid } from './TimeGrid'
 
 export interface FilterValues {
@@ -92,23 +93,25 @@ export function FilterPanel({
   onChange: (patch: Partial<FilterValues>) => void
 }) {
   const options = distinct(courses)
-  const deptName = new Map(departments.departments.map((d) => [d.id, d.name]))
 
   return (
     <div className="text-sm">
       <Section title="學院 / 系所">
         <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
-          {departments.colleges.map((college) => (
+          {/* `colleges[].name` 有一個是 `null`(教務處、體育室、通識中心、
+              師培中心、校院級課程這 5 個)。直接渲染會變成一個沒有標題的區塊,
+              使用者只看到五個孤兒按鈕 —— 一律經過 collegeGroups() 換成「校級單位」 */}
+          {collegeGroups(departments).map((college) => (
             <div key={college.name}>
               <p className="text-muted-foreground mb-1 text-xs">{college.name}</p>
               <div className="flex flex-wrap gap-1">
-                {college.department_ids.map((id) => (
+                {college.departments.map((d) => (
                   <Chip
-                    key={id}
-                    active={values.dept.includes(id)}
-                    onClick={() => onChange({ dept: toggle(values.dept, id) })}
+                    key={d.id}
+                    active={values.dept.includes(d.id)}
+                    onClick={() => onChange({ dept: toggle(values.dept, d.id) })}
                   >
-                    {deptName.get(id) ?? id}
+                    {d.name}
                   </Chip>
                 ))}
               </div>

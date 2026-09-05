@@ -199,15 +199,27 @@ export interface CourseIndex extends SemesterScoped {
 // 瀏覽層
 // ─────────────────────────────────────────────────────────────
 
+/** 系所底下的班級。**是物件不是字串** —— plan §1 原本記成 `string[]`。 */
+export interface ClassGroupSummary {
+  id: string
+  name: string
+  url: string
+}
+
 export interface Department extends DepartmentRef {
-  class_groups: string[]
+  class_groups: ClassGroupSummary[]
   course_count: number
   /** 系所課程檔的路徑,例如 `"115-1/courses/59.json"`。 */
   path: string
 }
 
 export interface College {
-  name: string
+  /**
+   * **`null` 是實測值**,代表教務處 / 體育室 / 通識中心 / 師培中心 / 校院級課程
+   * 這 5 個不屬於任何學院的單位。UI 一律顯示成「校級單位」,
+   * 絕不可讓 `null` 或空字串跑到畫面上。
+   */
+  name: string | null
   department_ids: string[]
 }
 

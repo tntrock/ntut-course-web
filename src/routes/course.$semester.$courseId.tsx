@@ -270,6 +270,24 @@ function TabButton({
   )
 }
 
+/**
+ * 名稱與代碼是兩個平行陣列(`teachers`/`teacher_codes` 之類)。實測 2,717 門課
+ * 的長度全部對得上,但對不上時**寧可顯示純文字也不要生出連到別人頁面的連結** ——
+ * 錯的連結比沒有連結糟。
+ */
+function NameLink({
+  name,
+  id,
+  render,
+}: {
+  name: string
+  id: string | undefined
+  render: (id: string) => React.ReactNode
+}) {
+  if (id === undefined || id === '') return <span>{name}</span>
+  return <>{render(id)}</>
+}
+
 function CourseInfo({
   course,
   semester,
@@ -312,17 +330,23 @@ function CourseInfo({
           <span className="text-muted-foreground">未定</span>
         ) : (
           <div className="flex flex-wrap gap-x-3 gap-y-1">
-            {/* 教師專頁是 Phase 3。在那之前連到「以姓名搜尋」—— 那是一次搜尋,
-                不宣稱同名的兩位老師是同一個人(plan §1.3.6) */}
+            {/* 連結一律走**教師代碼**,不是姓名 —— 實測有兩組同名老師,
+                用姓名會把兩個人的課混在一起(plan §1.3.6) */}
             {course.teachers.map((name, i) => (
-              <Link
+              <NameLink
                 key={course.teacher_codes[i] ?? name}
-                to="/search"
-                search={{ sem: semester, q: name }}
-                className="underline underline-offset-4"
-              >
-                {name}
-              </Link>
+                name={name}
+                id={course.teacher_codes[i]}
+                render={(id) => (
+                  <Link
+                    to="/teacher/$semester/$teacherId"
+                    params={{ semester, teacherId: id }}
+                    className="underline underline-offset-4"
+                  >
+                    {name}
+                  </Link>
+                )}
+              />
             ))}
           </div>
         )}
@@ -333,8 +357,8 @@ function CourseInfo({
           {course.department_ids.map((id) => (
             <Link
               key={id}
-              to="/search"
-              search={{ sem: semester, dept: [id] }}
+              to="/dept/$semester/$deptId"
+              params={{ semester, deptId: id }}
               className="underline underline-offset-4"
             >
               {deptName.get(id) ?? id}
@@ -343,10 +367,50 @@ function CourseInfo({
         </div>
       </Row>
 
-      {course.classes.length > 0 && <Row label="班級">{course.classes.join('、')}</Row>}
+      {course.classes.length > 0 && (
+        <Row label="班級">
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            {course.classes.map((name, i) => (
+              <NameLink
+                key={course.class_ids[i] ?? name}
+                name={name}
+                id={course.class_ids[i]}
+                render={(id) => (
+                  <Link
+                    to="/class/$semester/$classId"
+                    params={{ semester, classId: id }}
+                    className="underline underline-offset-4"
+                  >
+                    {name}
+                  </Link>
+                )}
+              />
+            ))}
+          </div>
+        </Row>
+      )}
 
       {course.classrooms.length > 0 && (
-        <Row label="教室">{course.classrooms.join('、')}</Row>
+        <Row label="教室">
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            {course.classrooms.map((name, i) => (
+              <NameLink
+                key={course.classroom_codes[i] ?? name}
+                name={name}
+                id={course.classroom_codes[i]}
+                render={(id) => (
+                  <Link
+                    to="/classroom/$semester/$classroomId"
+                    params={{ semester, classroomId: id }}
+                    className="underline underline-offset-4"
+                  >
+                    {name}
+                  </Link>
+                )}
+              />
+            ))}
+          </div>
+        </Row>
       )}
 
       <Row label="修課人數">
@@ -362,7 +426,20 @@ function CourseInfo({
       </Row>
 
       {course.programs.length > 0 && (
-        <Row label="學程">{course.programs.join('、')}</Row>
+        <Row label="學程">
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            {course.programs.map((name) => (
+              <Link
+                key={name}
+                to="/program/$semester/$programName"
+                params={{ semester, programName: name }}
+                className="underline underline-offset-4"
+              >
+                {name}
+              </Link>
+            ))}
+          </div>
+        </Row>
       )}
 
       {course.audit && <Row label="隨班附讀">{course.audit}</Row>}

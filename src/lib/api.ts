@@ -1,13 +1,19 @@
 import type {
+  ClassCourses,
+  ClassesResponse,
+  ClassroomsResponse,
   Course,
   CourseIndex,
   CourseIndexEntry,
   CoursesResponse,
   DepartmentsResponse,
   Meta,
+  ProgramsResponse,
   SemesterPath,
   Syllabus,
   SyllabusProgress,
+  TeacherCourses,
+  TeachersResponse,
 } from '@/types/api'
 
 const BASE = (
@@ -172,6 +178,84 @@ export async function fetchCourse(
     if (course) return course
   }
   throw new CourseNotFoundError(semester, entry.id)
+}
+
+/** 教師清單(803 位)。 */
+export function fetchTeachers(
+  meta: Meta,
+  semester: SemesterPath,
+): Promise<TeachersResponse> {
+  return fetchVersioned<TeachersResponse>(
+    `${semester}/teachers.json`,
+    semesterVersion(meta, semester),
+  )
+}
+
+/**
+ * 單一教師的課表。
+ *
+ * `teacherId` 是**教師代碼**不是姓名 —— 實測 803 個代碼只有 801 個不同姓名,
+ * 林志哲與陳盈竹各有兩位。用姓名會把兩個人的課混在一起。
+ */
+export function fetchTeacherCourses(
+  meta: Meta,
+  semester: SemesterPath,
+  teacherId: string,
+): Promise<TeacherCourses> {
+  return fetchVersioned<TeacherCourses>(
+    `${semester}/teachers/${encodeURIComponent(teacherId)}.json`,
+    semesterVersion(meta, semester),
+  )
+}
+
+/** 班級清單(293 個)。 */
+export function fetchClasses(
+  meta: Meta,
+  semester: SemesterPath,
+): Promise<ClassesResponse> {
+  return fetchVersioned<ClassesResponse>(
+    `${semester}/classes.json`,
+    semesterVersion(meta, semester),
+  )
+}
+
+/** 單一班級的課表。 */
+export function fetchClassCourses(
+  meta: Meta,
+  semester: SemesterPath,
+  classId: string,
+): Promise<ClassCourses> {
+  return fetchVersioned<ClassCourses>(
+    `${semester}/classes/${encodeURIComponent(classId)}.json`,
+    semesterVersion(meta, semester),
+  )
+}
+
+/**
+ * 學程 → 課號(86 個)。
+ *
+ * **只有課號沒有課程內容**,要顯示課程得拿課號回索引查(見 `lib/crossref.ts`)。
+ * 學程也**沒有代碼**,識別只能用中文名。
+ */
+export function fetchPrograms(
+  meta: Meta,
+  semester: SemesterPath,
+): Promise<ProgramsResponse> {
+  return fetchVersioned<ProgramsResponse>(
+    `${semester}/programs.json`,
+    semesterVersion(meta, semester),
+  )
+}
+
+/** 教室 → 課號(234 間)。同 `fetchPrograms`,只有課號。 */
+export function fetchClassrooms(
+  meta: Meta,
+  semester: SemesterPath,
+): Promise<ClassroomsResponse> {
+  return fetchVersioned<ClassroomsResponse>(
+    `${semester}/classrooms.json`,
+    semesterVersion(meta, semester),
+  )
 }
 
 /**

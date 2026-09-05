@@ -23,12 +23,20 @@ function Home() {
         查課程、看教學大綱、排課表。非官方網站。
       </p>
 
-      <Link
-        to="/search"
-        className="bg-primary text-primary-foreground focus-visible:ring-ring mt-6 inline-block rounded-lg px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
-      >
-        開始搜尋
-      </Link>
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Link
+          to="/search"
+          className="bg-primary text-primary-foreground focus-visible:ring-ring inline-block rounded-lg px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+        >
+          開始搜尋
+        </Link>
+        <Link
+          to="/browse"
+          className="hover:bg-accent focus-visible:ring-ring inline-block rounded-lg border px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+        >
+          瀏覽系所與教師
+        </Link>
+      </div>
 
       <dl className="mt-8 grid grid-cols-2 gap-4 text-sm">
         <Stat label="最新學期" value={meta.latest} />

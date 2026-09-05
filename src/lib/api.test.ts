@@ -364,3 +364,50 @@ describe('fetchCourse', () => {
     expect(fetchMock.calls).toHaveLength(0)
   })
 })
+
+describe('瀏覽層的端點', () => {
+  const meta = {
+    schema_version: 2,
+    generated_at: '2026-09-05T03:34:59Z',
+    latest: '115-1',
+    semesters: [{ path: '115-1', generated_at: '2026-09-05T03:34:59Z' }],
+  } as unknown as import('@/types/api').Meta
+
+  const cases = [
+    ['fetchTeachers', '115-1/teachers.json', undefined],
+    ['fetchClasses', '115-1/classes.json', undefined],
+    ['fetchPrograms', '115-1/programs.json', undefined],
+    ['fetchClassrooms', '115-1/classrooms.json', undefined],
+    ['fetchTeacherCourses', '115-1/teachers/11453.json', '11453'],
+    ['fetchClassCourses', '115-1/classes/1212.json', '1212'],
+  ] as const
+
+  for (const [name, path, id] of cases) {
+    it(`${name} 帶該學期的版本號打 ${path}`, async () => {
+      const api = (await import('./api')) as unknown as Record<
+        string,
+        (...args: unknown[]) => Promise<unknown>
+      >
+      const fetchMock = createFakeFetch({ [path]: { schema_version: 2 } })
+      vi.stubGlobal('fetch', fetchMock)
+
+      const fn = api[name]
+      expect(fn).toBeTypeOf('function')
+      await (id === undefined ? fn?.(meta, '115-1') : fn?.(meta, '115-1', id))
+
+      expect(fetchMock.calls[0]).toContain(path)
+      // 舊學期的版本號永遠不變,歷史資料才只下載一次
+      expect(fetchMock.calls[0]).toContain('v=2026-09-05T03%3A34%3A59Z')
+    })
+  }
+
+  it('教師代碼含特殊字元時會被編碼進路徑,不會生出壞網址', async () => {
+    const { fetchTeacherCourses } = await import('./api')
+    const fetchMock = createFakeFetch({})
+    vi.stubGlobal('fetch', fetchMock)
+
+    await fetchTeacherCourses(meta, '115-1', 'a b/c').catch(() => undefined)
+
+    expect(fetchMock.calls[0]).toContain('teachers/a%20b%2Fc.json')
+  })
+})
