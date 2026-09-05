@@ -194,3 +194,31 @@ describe('fetchSemesterIndex', () => {
     expect(fetchMock.calls[0]).toContain('v=2026-09-04T01%3A19%3A26Z')
   })
 })
+
+describe('對未知欄位的容忍度', () => {
+  // crawler 承諾新增欄位不升 schema_version,所以多出來的欄位必須被原樣帶過。
+  // 這條測試是護欄:哪天有人加上 runtime schema 驗證(zod 之類),它會先壞掉。
+  it('回應含型別沒宣告的欄位時照樣可用,不丟棄也不報錯', async () => {
+    const { fetchVersioned } = await import('./api')
+    vi.stubGlobal(
+      'fetch',
+      createFakeFetch({
+        '115-1/index.json': {
+          schema_version: 2,
+          course_count: 1,
+          courses: [{ id: '1', name_zh: '測試', brand_new_field: 'v3 才有的欄位' }],
+          another_new_top_level_field: 42,
+        },
+      }),
+    )
+
+    const index = await fetchVersioned<{
+      course_count: number
+      courses: { id: string }[]
+    }>('115-1/index.json', 'v1')
+
+    expect(index.course_count).toBe(1)
+    expect(index.courses[0]?.id).toBe('1')
+    expect(Reflect.get(index, 'another_new_top_level_field')).toBe(42)
+  })
+})
