@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 版本只定義在 .nvmrc,Cloudflare Pages 也讀同一個檔
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: 格式檢查
+        run: npm run format:check
+
+      - name: 測試
+        run: npm test
+
+      # Cloudflare Pages 自己會 build,這裡跑是為了讓型別錯誤在 PR 上就擋下來,
+      # 而不是等部署失敗才發現
+      - name: Build
+        run: npm run build
