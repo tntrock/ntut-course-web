@@ -248,3 +248,119 @@ describe('fetchDepartments', () => {
     expect(fetchMock.calls[0]).toContain('v=2026-09-05T03%3A34%3A59Z')
   })
 })
+
+describe('fetchSyllabusProgress', () => {
+  const meta = {
+    schema_version: 2,
+    generated_at: '2026-09-05T03:34:59Z',
+    latest: '115-1',
+    semesters: [{ path: '115-1', generated_at: '2026-09-05T03:34:59Z' }],
+  } as unknown as import('@/types/api').Meta
+
+  it('用 meta.generated_at 當版本號 —— 大綱進度是全站範圍,不屬於任何學期', async () => {
+    const { fetchSyllabusProgress } = await import('./api')
+    const fetchMock = createFakeFetch({
+      'syllabus.json': {
+        schema_version: 2,
+        semesters: [{ semester: '115-1', fetched: 1909 }],
+        fetched: { '115-1': { '364893': '2026-09-05T06:21:43Z' } },
+      },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const data = await fetchSyllabusProgress(meta)
+
+    expect(data.semesters[0]?.fetched).toBe(1909)
+    expect(fetchMock.calls[0]).toContain('syllabus.json')
+    expect(fetchMock.calls[0]).toContain('v=2026-09-05T03%3A34%3A59Z')
+  })
+})
+
+describe('fetchSyllabus', () => {
+  it('版本號用該門課自己的抓取時間,不是學期的 generated_at', async () => {
+    // 老師改大綱時學期索引不會跟著重新產生。用學期版本號會讓修訂過的大綱
+    // 一直取到舊的那份。
+    const { fetchSyllabus } = await import('./api')
+    const fetchMock = createFakeFetch({
+      '115-1/syllabus/364893.json': { course_id: '364893', has_content: true },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const data = await fetchSyllabus('115-1', '364893', '2026-09-05T06:21:43Z')
+
+    expect(data.course_id).toBe('364893')
+    expect(fetchMock.calls[0]).toContain('115-1/syllabus/364893.json')
+    expect(fetchMock.calls[0]).toContain('v=2026-09-05T06%3A21%3A43Z')
+  })
+})
+
+describe('fetchCourse', () => {
+  const meta = {
+    schema_version: 2,
+    generated_at: '2026-09-05T03:34:59Z',
+    latest: '115-1',
+    semesters: [{ path: '115-1', generated_at: '2026-09-05T03:34:59Z' }],
+  } as unknown as import('@/types/api').Meta
+
+  const entry = (departmentIds: string[]) =>
+    ({
+      id: '364893',
+      name_zh: '數位影像處理',
+      department_ids: departmentIds,
+    }) as unknown as import('@/types/api').CourseIndexEntry
+
+  it('從索引裡的系所代碼取出完整課程物件', async () => {
+    const { fetchCourse } = await import('./api')
+    const fetchMock = createFakeFetch({
+      '115-1/courses/59.json': {
+        courses: [{ id: '364893', name_zh: '數位影像處理', syllabus_url: 'https://x' }],
+      },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const course = await fetchCourse(meta, '115-1', entry(['59']))
+
+    expect(course.syllabus_url).toBe('https://x')
+    expect(fetchMock.calls).toHaveLength(1)
+    expect(fetchMock.calls[0]).toContain('115-1/courses/59.json')
+  })
+
+  it('第一個系所檔沒有這門課時,換下一個系所代碼再找', async () => {
+    // 合開課掛在多個系所底下(實測 111 門)。實測三個系所檔的內容一致,
+    // 但一致是資料的巧合,不是 API 的承諾 —— 找不到就換一個比較誠實。
+    const { fetchCourse } = await import('./api')
+    const fetchMock = createFakeFetch({
+      '115-1/courses/30.json': { courses: [] },
+      '115-1/courses/B2.json': { courses: [{ id: '364893', name_zh: '數位影像處理' }] },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const course = await fetchCourse(meta, '115-1', entry(['30', 'B2']))
+
+    expect(course.id).toBe('364893')
+    expect(fetchMock.calls).toHaveLength(2)
+  })
+
+  it('所有系所檔都沒有時丟出 CourseNotFoundError', async () => {
+    const { fetchCourse, CourseNotFoundError } = await import('./api')
+    vi.stubGlobal(
+      'fetch',
+      createFakeFetch({ '115-1/courses/59.json': { courses: [] } }),
+    )
+
+    const err = await fetchCourse(meta, '115-1', entry(['59'])).catch((e: unknown) => e)
+
+    expect(err).toBeInstanceOf(CourseNotFoundError)
+  })
+
+  it('索引裡沒有系所代碼時直接丟錯,不發出任何請求', async () => {
+    const { fetchCourse, CourseNotFoundError } = await import('./api')
+    const fetchMock = createFakeFetch({})
+    vi.stubGlobal('fetch', fetchMock)
+
+    const err = await fetchCourse(meta, '115-1', entry([])).catch((e: unknown) => e)
+
+    expect(err).toBeInstanceOf(CourseNotFoundError)
+    expect(fetchMock.calls).toHaveLength(0)
+  })
+})

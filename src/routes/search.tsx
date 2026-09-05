@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
-import { fetchDepartments } from '@/lib/api'
 import { toFilters, validateSearchParams, type SearchParams } from '@/lib/searchParams'
 import type { SortKey } from '@/lib/searchParams'
 import type { RelaxTarget } from '@/lib/suggest'
@@ -13,8 +12,8 @@ import { useDebounced } from '@/hooks/useDebounced'
 import { FilterPanel, type FilterValues } from '@/components/search/FilterPanel'
 import { ResultList } from '@/components/search/ResultList'
 import { EmptyResults } from '@/components/search/EmptyResults'
-import { useSuspenseQuery, queryOptions } from '@tanstack/react-query'
-import type { Meta } from '@/types/api'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { departmentsQueryOptions } from '@/hooks/useDepartments'
 
 export const Route = createFileRoute('/search')({
   validateSearch: (search: Record<string, unknown>): SearchParams =>
@@ -37,16 +36,6 @@ export const Route = createFileRoute('/search')({
   },
   component: SearchPage,
 })
-
-function departmentsQueryOptions(meta: Meta, semester: string) {
-  const version =
-    meta.semesters.find((s) => s.path === semester)?.generated_at ?? 'unknown'
-  return queryOptions({
-    queryKey: ['departments', semester, version],
-    queryFn: () => fetchDepartments(meta, semester),
-    staleTime: Infinity,
-  })
-}
 
 /** 移除某個條件後的網址參數。 */
 function withoutFilter(params: SearchParams, target: RelaxTarget): SearchParams {

@@ -1,4 +1,4 @@
-import type { CourseIndexEntry, PeriodDef } from '@/types/api'
+import type { CourseIndexEntry, PeriodDef, TimeSlot } from '@/types/api'
 
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -12,11 +12,15 @@ function orderOf(periods: readonly PeriodDef[]): Map<string, number> {
 }
 
 /**
- * 把連續的節次收成 `2-4`,不連續的分開列。
+ * 把節次切成一段一段連續的區間。
  *
- * 不能無腦取頭尾:`2、4` 寫成 `2-4` 等於謊稱包含第 3 節。
+ * 不能無腦取頭尾:`2、4` 當成一段等於謊稱包含第 3 節。
+ * meta 沒收錄的代碼另外回傳,由呼叫端決定怎麼處理 —— 不能憑空替它編順序。
  */
-function compress(codes: readonly string[], order: Map<string, number>): string {
+function runsOf(
+  codes: readonly string[],
+  order: Map<string, number>,
+): { runs: string[][]; unknown: string[] } {
   const known = codes.filter((c) => order.has(c))
   const unknown = codes.filter((c) => !order.has(c))
 
@@ -31,6 +35,13 @@ function compress(codes: readonly string[], order: Map<string, number>): string 
     if (isNext && last) last.push(code)
     else runs.push([code])
   }
+
+  return { runs, unknown }
+}
+
+/** 把連續的節次收成 `2-4`,不連續的分開列。 */
+function compress(codes: readonly string[], order: Map<string, number>): string {
+  const { runs, unknown } = runsOf(codes, order)
 
   const parts = runs.map((run) => {
     const first = run[0]
@@ -57,5 +68,28 @@ export function formatTimeSlots(
       const day = DAY_NAMES[slot.day] ?? String(slot.day)
       return `週${day} ${compress(slot.periods, order)}`
     })
+    .join('、')
+}
+
+/**
+ * 一個時段的實際起訖時刻,例如 `09:10–12:00`。
+ *
+ * 節次代碼(`2-4`)對排課的人是熟語,但對第一次看的人不是 —— 詳情頁兩個都給。
+ * 不連續的節次分成兩段,理由同 `compress`:併成一段等於謊稱中間那節也要上課。
+ *
+ * 節次不在 `meta.periods` 裡就不編時間,回傳空字串;呼叫端自己決定要不要顯示。
+ */
+export function formatSlotClock(slot: TimeSlot, periods: readonly PeriodDef[]): string {
+  const order = orderOf(periods)
+  const byCode = new Map(periods.map((p) => [p.code, p]))
+  const { runs } = runsOf(slot.periods, order)
+
+  return runs
+    .map((run) => {
+      const start = byCode.get(run[0] ?? '')?.start
+      const end = byCode.get(run[run.length - 1] ?? '')?.end
+      return start && end ? `${start}–${end}` : ''
+    })
+    .filter((part) => part !== '')
     .join('、')
 }

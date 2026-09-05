@@ -1,4 +1,14 @@
-import type { CourseIndex, DepartmentsResponse, Meta, SemesterPath } from '@/types/api'
+import type {
+  Course,
+  CourseIndex,
+  CourseIndexEntry,
+  CoursesResponse,
+  DepartmentsResponse,
+  Meta,
+  SemesterPath,
+  Syllabus,
+  SyllabusProgress,
+} from '@/types/api'
 
 const BASE = (
   import.meta.env.VITE_API_BASE ?? 'https://tntrock.github.io/ntut-course-crawler'
@@ -13,6 +23,24 @@ export class ApiError extends Error {
     this.name = 'ApiError'
     this.status = status
     this.path = path
+  }
+}
+
+/**
+ * 索引裡有這門課,但翻遍它掛的系所檔都找不到完整物件。
+ *
+ * 與 `ApiError` 分開是因為使用者看到的東西不同:這個要顯示「查無此課」,
+ * `ApiError` 要顯示「載入失敗,請重試」。
+ */
+export class CourseNotFoundError extends Error {
+  readonly semester: SemesterPath
+  readonly courseId: string
+
+  constructor(semester: SemesterPath, courseId: string) {
+    super(`${semester} 找不到課號 ${courseId}`)
+    this.name = 'CourseNotFoundError'
+    this.semester = semester
+    this.courseId = courseId
   }
 }
 
@@ -112,6 +140,63 @@ export function fetchDepartments(
     `${semester}/departments.json`,
     semesterVersion(meta, semester),
   )
+}
+
+/** 單一系所的完整課程檔。gzip 約 3.6 KB。 */
+export function fetchDepartmentCourses(
+  meta: Meta,
+  semester: SemesterPath,
+  departmentId: string,
+): Promise<CoursesResponse> {
+  return fetchVersioned<CoursesResponse>(
+    `${semester}/courses/${departmentId}.json`,
+    semesterVersion(meta, semester),
+  )
+}
+
+/**
+ * 取得**完整**課程物件 —— 輕量索引沒有 `syllabus_url` / `notes` /
+ * `classrooms` / `programs`,詳情頁需要這些。
+ *
+ * 合開課掛在多個系所底下,實測三個系所檔裡的課程物件完全一致;但那是資料的
+ * 巧合而非 API 的承諾,所以第一個找不到就往下試,而不是直接放棄。
+ */
+export async function fetchCourse(
+  meta: Meta,
+  semester: SemesterPath,
+  entry: CourseIndexEntry,
+): Promise<Course> {
+  for (const departmentId of entry.department_ids) {
+    const response = await fetchDepartmentCourses(meta, semester, departmentId)
+    const course = response.courses.find((c) => c.id === entry.id)
+    if (course) return course
+  }
+  throw new CourseNotFoundError(semester, entry.id)
+}
+
+/**
+ * 大綱抓取進度。**這是判斷「有沒有大綱」的來源**(見 `lib/syllabus.ts`),
+ * 所以詳情頁一定會用到它,不是可有可無的統計資料。
+ *
+ * 它跨學期,版本號因此用 `meta.generated_at`。
+ */
+export function fetchSyllabusProgress(meta: Meta): Promise<SyllabusProgress> {
+  return fetchVersioned<SyllabusProgress>('syllabus.json', meta.generated_at)
+}
+
+/**
+ * 單門課的教學大綱。
+ *
+ * `version` 要傳**該門課在 `syllabus.json` 裡的抓取時間**,不是學期的
+ * `generated_at` —— 老師改大綱時學期索引不會重新產生,用學期版本號會讓
+ * 修訂過的大綱永遠取到舊的那份。
+ */
+export function fetchSyllabus(
+  semester: SemesterPath,
+  courseId: string,
+  version: string,
+): Promise<Syllabus> {
+  return fetchVersioned<Syllabus>(`${semester}/syllabus/${courseId}.json`, version)
 }
 
 /**

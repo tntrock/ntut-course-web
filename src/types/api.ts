@@ -361,10 +361,10 @@ export interface Syllabus extends SemesterScoped {
   notes: string | null
 }
 
-/** `syllabus.json` —— 大綱抓取進度,用來算覆蓋率。 */
+/** `syllabus.json` 的 `semesters[]` —— 每個學期的大綱覆蓋率。 */
 export interface SyllabusProgressEntry {
   semester: SemesterPath
-  /** 已抓取的門數。 */
+  /** 已抓取的門數。為 0 代表該學期整個沒有大綱。 */
   fetched: number
   oldest_fetch: string | null
   newest_fetch: string | null
@@ -376,7 +376,16 @@ export interface SyllabusProgressEntry {
 export interface SyllabusProgress extends SchemaVersioned {
   generated_at: string
   semesters: SyllabusProgressEntry[]
-  fetched: number
+  /**
+   * 學期 → 課號 → 該門大綱的抓取時間。**不是數量**(plan §1 原本記成 `number`,
+   * 實測是巢狀物件)。
+   *
+   * 這份對照有兩個用途,兩個都比別的來源準:
+   * 1. **存在性** —— 檔案抓到了才會在這裡,所以不必靠 404 判斷有沒有大綱
+   * 2. **快取版本號** —— 大綱是獨立於學期索引更新的,拿學期的 `generated_at`
+   *    當版本號會讓老師改過的大綱一直取到舊的
+   */
+  fetched: Record<SemesterPath, Record<string, string>>
 }
 
 // ─────────────────────────────────────────────────────────────
