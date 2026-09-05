@@ -14,6 +14,7 @@ import { confirmedSyllabusVersion, syllabusState } from '@/lib/syllabus'
 import { formatSlotClock, formatTimeSlots } from '@/lib/formatTime'
 import { LANGUAGE_ZH } from '@/lib/filters'
 import { BackLink } from '@/components/BackLink'
+import { Badge } from '@/components/ui/Badge'
 import { SyllabusPanel } from '@/components/course/SyllabusPanel'
 import type { Course, Meta, SemesterPath } from '@/types/api'
 
@@ -96,22 +97,31 @@ function CourseNotFound() {
   )
 }
 
-/** 一列「標籤 / 內容」。內容為空就整列不顯示,不要留一排空欄位。 */
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+/**
+ * 一列「標籤 / 內容」。內容為空就整列不顯示,不要留一排空欄位。
+ *
+ * `wide` 給內容會很長的欄位(學程、備註那類)——它們在兩欄版面裡會被擠到換行,
+ * 直接讓它們佔滿一整列比較好讀。
+ */
+function Row({
+  label,
+  wide = false,
+  children,
+}: {
+  label: string
+  wide?: boolean
+  children: React.ReactNode
+}) {
   if (children === null || children === undefined || children === false) return null
   return (
-    <div className="grid grid-cols-[5rem_1fr] gap-3 border-t py-2.5 text-sm">
+    <div
+      className={`grid grid-cols-[5rem_1fr] gap-3 border-t py-2.5 text-sm ${
+        wide ? 'sm:col-span-2' : ''
+      }`}
+    >
       <dt className="text-muted-foreground">{label}</dt>
       <dd>{children}</dd>
     </div>
-  )
-}
-
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="bg-secondary text-secondary-foreground rounded px-1.5 py-0.5 text-xs">
-      {children}
-    </span>
   )
 }
 
@@ -193,24 +203,37 @@ function CourseDetail() {
         </div>
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {/*
+            **學期一定要看得見。** 分享連結進來的人不知道自己看的是哪一學期,
+            而課號跨學期不通用(plan §1.3.7)—— 沒有這個標示,一門 114-2 的課
+            看起來會跟本學期的課一模一樣。
+          */}
           <span className="text-muted-foreground text-xs tabular-nums">
+            {semester}
+            <span className="mx-1.5">·</span>
             {course.id}
           </span>
-          {course.requirement_type && <Badge>{course.requirement_type}</Badge>}
-          {course.credits !== null && <Badge>{course.credits} 學分</Badge>}
-          {course.hours !== null && <Badge>{course.hours} 小時</Badge>}
-          {course.stage && <Badge>{course.stage} 年級</Badge>}
+          {course.requirement_type && (
+            <Badge tone={course.required === true ? 'strong' : 'normal'}>
+              {course.requirement_type}
+            </Badge>
+          )}
           {course.language !== null && course.language !== LANGUAGE_ZH && (
             <Badge>{course.language}</Badge>
           )}
+          {course.credits !== null && <Badge tone="quiet">{course.credits} 學分</Badge>}
+          {course.hours !== null && <Badge tone="quiet">{course.hours} 小時</Badge>}
+          {course.stage && <Badge tone="quiet">{course.stage} 年級</Badge>}
         </div>
       </header>
 
-      {/* 合開資訊在 notes 裡,是選課時真正會影響決定的資訊 —— 放在最上面 */}
+      {/* 合開資訊在 notes 裡,是選課時真正會影響決定的資訊 —— 放在最上面。
+          標上「備註」才知道這是學校寫的,不是本站的提示 */}
       {course.notes && (
-        <p className="bg-secondary/60 mt-4 rounded-lg px-3 py-2 text-sm">
-          {course.notes}
-        </p>
+        <div className="border-primary bg-primary-muted/40 mt-4 rounded-lg border-l-2 px-3 py-2">
+          <p className="text-muted-foreground text-xs">備註</p>
+          <p className="mt-0.5 text-sm">{course.notes}</p>
+        </div>
       )}
 
       <div className="mt-6 flex gap-1 border-b" role="tablist" aria-label="課程分頁">
@@ -310,7 +333,8 @@ function CourseInfo({
   const withdrawn = course.withdrawn ?? 0
 
   return (
-    <dl>
+    /* 寬螢幕排兩欄:六個短欄位擠成三列,少捲一半 */
+    <dl className="sm:grid sm:grid-cols-2 sm:gap-x-6">
       <Row label="時段">
         {course.time_slots.length === 0 ? (
           <span className="text-muted-foreground">無固定時段</span>
@@ -434,7 +458,7 @@ function CourseInfo({
       </Row>
 
       {course.programs.length > 0 && (
-        <Row label="學程">
+        <Row label="學程" wide>
           <div className="flex flex-wrap gap-x-3 gap-y-1">
             {course.programs.map((name) => (
               <Link
@@ -450,8 +474,16 @@ function CourseInfo({
         </Row>
       )}
 
-      {course.audit && <Row label="隨班附讀">{course.audit}</Row>}
-      {course.lab && <Row label="實習">{course.lab}</Row>}
+      {course.audit && (
+        <Row label="隨班附讀" wide>
+          {course.audit}
+        </Row>
+      )}
+      {course.lab && (
+        <Row label="實習" wide>
+          {course.lab}
+        </Row>
+      )}
     </dl>
   )
 }

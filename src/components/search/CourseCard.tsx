@@ -2,38 +2,11 @@ import { Link } from '@tanstack/react-router'
 import type { CourseIndexEntry, PeriodDef } from '@/types/api'
 import { LANGUAGE_ZH } from '@/lib/filters'
 import { formatTimeSlots } from '@/lib/formatTime'
+import { Badge } from '@/components/ui/Badge'
 
 function languageLabel(language: string | null): string | null {
   if (language === null || language === LANGUAGE_ZH) return null
   return language
-}
-
-/**
- * 徽章分三級。原本四個徽章長得一模一樣,「專業選修」「3 學分」「英語」
- * 「修課 29 人」看起來一樣重要 —— 等於沒有重點。
- *
- * - `strong`:必修。這是選課時最先要判斷的事
- * - `normal`:選修類別、授課語言
- * - `quiet`:學分、人數這種數字,看得到就好
- */
-function Badge({
-  tone = 'normal',
-  children,
-}: {
-  tone?: 'strong' | 'normal' | 'quiet'
-  children: React.ReactNode
-}) {
-  const styles = {
-    strong: 'bg-primary-muted text-primary font-medium',
-    normal: 'bg-secondary text-secondary-foreground',
-    quiet: 'text-muted-foreground',
-  }[tone]
-
-  return (
-    <span className={`rounded-md px-1.5 py-0.5 text-xs whitespace-nowrap ${styles}`}>
-      {children}
-    </span>
-  )
 }
 
 export function CourseCard({
