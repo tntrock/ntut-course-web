@@ -1,4 +1,4 @@
-import type { CourseIndexEntry, PeriodDef, TimeSlot } from '@/types/api'
+import type { PeriodDef, TimeSlot } from '@/types/api'
 
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -54,9 +54,13 @@ function compress(codes: readonly string[], order: Map<string, number>): string 
   return [...parts, ...unknown].filter((p) => p !== '').join('、')
 }
 
-/** `週五 2-4、週三 5-6`。沒有時段的課回傳「無固定時段」而不是空字串。 */
+/**
+ * `週五 2-4、週三 5-6`。沒有時段的課回傳「無固定時段」而不是空字串。
+ *
+ * 只吃 `time_slots` —— 課表的快照不是完整的課程物件,收窄型別才不必到處硬轉。
+ */
 export function formatTimeSlots(
-  course: CourseIndexEntry,
+  course: { time_slots: readonly TimeSlot[] },
   periods: readonly PeriodDef[],
 ): string {
   if (course.time_slots.length === 0) return '無固定時段'

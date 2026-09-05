@@ -3,6 +3,7 @@ import type { CourseIndexEntry, PeriodDef } from '@/types/api'
 import { LANGUAGE_ZH } from '@/lib/filters'
 import { formatTimeSlots } from '@/lib/formatTime'
 import { Badge } from '@/components/ui/Badge'
+import { ScheduleToggle } from '@/components/ScheduleToggle'
 
 function languageLabel(language: string | null): string | null {
   if (language === null || language === LANGUAGE_ZH) return null
@@ -24,7 +25,7 @@ export function CourseCard({
   const isRequired = course.required === true
 
   return (
-    <article className="bg-card shadow-card hover:ring-primary/40 h-full rounded-xl transition-shadow hover:shadow-md hover:ring-1">
+    <article className="bg-card shadow-card hover:ring-primary/40 relative h-full rounded-xl transition-shadow hover:shadow-md hover:ring-1">
       <Link
         to="/course/$semester/$courseId"
         params={{ semester, courseId: course.id }}
@@ -50,8 +51,9 @@ export function CourseCard({
         </p>
         <p className="mt-0.5 truncate text-sm">{formatTimeSlots(course, periods)}</p>
 
-        {/* 徽章也固定一行:換行會讓卡片變高,整列又跟著錯開 */}
-        <div className="mt-2.5 flex h-6 items-center gap-1.5 overflow-hidden">
+        {/* 徽章也固定一行:換行會讓卡片變高,整列又跟著錯開。
+            右邊留出加入課表按鈕的位置 */}
+        <div className="mt-2.5 flex h-7 items-center gap-1.5 overflow-hidden pr-9">
           {course.requirement_type && (
             <Badge tone={isRequired ? 'strong' : 'normal'}>
               {course.requirement_type}
@@ -65,6 +67,14 @@ export function CourseCard({
           )}
         </div>
       </Link>
+
+      {/*
+        放在 `<Link>` **外面** —— 按鈕不能巢狀在連結裡(HTML 不合法,而且點了
+        會同時觸發導頁)。絕對定位到卡片右下角,對齊徽章那一列。
+      */}
+      <div className="absolute right-3 bottom-3">
+        <ScheduleToggle course={course} semester={semester} />
+      </div>
     </article>
   )
 }

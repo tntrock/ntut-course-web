@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BrowseRouteImport } from './routes/browse'
+import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ClassSemesterClassIdRouteImport } from './routes/class.$semester.$classId'
 import { Route as ClassroomSemesterClassroomIdRouteImport } from './routes/classroom.$semester.$classroomId'
@@ -27,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
 const BrowseRoute = BrowseRouteImport.update({
   id: '/browse',
   path: '/browse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -71,6 +77,7 @@ const TeacherSemesterTeacherIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/schedule': typeof ScheduleRoute
   '/search': typeof SearchRoute
   '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
   '/classroom/$semester/$classroomId': typeof ClassroomSemesterClassroomIdRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/schedule': typeof ScheduleRoute
   '/search': typeof SearchRoute
   '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
   '/classroom/$semester/$classroomId': typeof ClassroomSemesterClassroomIdRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/schedule': typeof ScheduleRoute
   '/search': typeof SearchRoute
   '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
   '/classroom/$semester/$classroomId': typeof ClassroomSemesterClassroomIdRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/browse'
+    | '/schedule'
     | '/search'
     | '/class/$semester/$classId'
     | '/classroom/$semester/$classroomId'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/browse'
+    | '/schedule'
     | '/search'
     | '/class/$semester/$classId'
     | '/classroom/$semester/$classroomId'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/browse'
+    | '/schedule'
     | '/search'
     | '/class/$semester/$classId'
     | '/classroom/$semester/$classroomId'
@@ -141,6 +153,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrowseRoute: typeof BrowseRoute
+  ScheduleRoute: typeof ScheduleRoute
   SearchRoute: typeof SearchRoute
   ClassSemesterClassIdRoute: typeof ClassSemesterClassIdRoute
   ClassroomSemesterClassroomIdRoute: typeof ClassroomSemesterClassroomIdRoute
@@ -164,6 +177,13 @@ declare module '@tanstack/react-router' {
       path: '/browse'
       fullPath: '/browse'
       preLoaderRoute: typeof BrowseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -221,6 +241,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrowseRoute: BrowseRoute,
+  ScheduleRoute: ScheduleRoute,
   SearchRoute: SearchRoute,
   ClassSemesterClassIdRoute: ClassSemesterClassIdRoute,
   ClassroomSemesterClassroomIdRoute: ClassroomSemesterClassroomIdRoute,

@@ -15,6 +15,8 @@ import { formatSlotClock, formatTimeSlots } from '@/lib/formatTime'
 import { LANGUAGE_ZH } from '@/lib/filters'
 import { BackLink } from '@/components/BackLink'
 import { Badge } from '@/components/ui/Badge'
+import { ScheduleToggle } from '@/components/ScheduleToggle'
+import { FavoriteToggle } from '@/components/FavoriteToggle'
 import { SyllabusPanel } from '@/components/course/SyllabusPanel'
 import type { Course, Meta, SemesterPath } from '@/types/api'
 
@@ -199,7 +201,13 @@ function CourseDetail() {
       <header className="mt-4">
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">{course.name_zh}</h1>
-          <ShareButton />
+          <div className="flex shrink-0 items-start gap-2">
+            <FavoriteToggle semester={semester} courseId={course.id} />
+            <ShareButton />
+          </div>
+        </div>
+        <div className="mt-3">
+          <ScheduleToggle course={course} semester={semester} variant="button" />
         </div>
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">

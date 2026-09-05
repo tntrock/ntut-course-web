@@ -87,13 +87,20 @@ export function AppHeader() {
         <nav className="ml-auto flex items-center gap-1 text-sm sm:ml-0">
           <NavLink to="/search">搜尋</NavLink>
           <NavLink to="/browse">瀏覽</NavLink>
+          <NavLink to="/schedule">課表</NavLink>
         </nav>
       </div>
     </header>
   )
 }
 
-function NavLink({ to, children }: { to: '/search' | '/browse'; children: string }) {
+function NavLink({
+  to,
+  children,
+}: {
+  to: '/search' | '/browse' | '/schedule'
+  children: string
+}) {
   return (
     <Link
       to={to}

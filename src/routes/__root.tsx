@@ -4,6 +4,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
 import { AppHeader } from '@/components/AppHeader'
 import { OfflineNotice } from '@/components/OfflineNotice'
+import { RecoveryNotice } from '@/components/RecoveryNotice'
 import { SchemaWarning } from '@/components/SchemaWarning'
 import { ApiError } from '@/lib/api'
 
@@ -27,6 +28,8 @@ function RootLayout() {
     <div className="flex min-h-dvh flex-col">
       <SchemaWarning version={meta.schema_version} />
       {fromCache && <OfflineNotice generatedAt={meta.generated_at} />}
+      {/* 個人資料損毀過就要講,不能讓課表默默變空 */}
+      <RecoveryNotice />
 
       <AppHeader />
 
