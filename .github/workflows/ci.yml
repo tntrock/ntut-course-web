@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # 版本只定義在 .nvmrc,Cloudflare Pages 也讀同一個檔
           node-version-file: .nvmrc
