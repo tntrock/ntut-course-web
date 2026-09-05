@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* 深色模式採 class 策略,由 <html class="dark"> 控制,可跟隨系統或手動覆寫 */
 @custom-variant dark (&:is(.dark *));
@@ -74,10 +74,9 @@
 
   /* 中文字型優先,避免瀏覽器落到明體 */
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans TC",
-    "PingFang TC", "Microsoft JhengHei", "Helvetica Neue", Arial, sans-serif;
-  --font-mono:
-    ui-monospace, "SFMono-Regular", "Cascadia Code", Consolas, monospace;
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', 'PingFang TC',
+    'Microsoft JhengHei', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', Consolas, monospace;
 }
 
 @layer base {

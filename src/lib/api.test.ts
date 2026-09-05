@@ -78,7 +78,10 @@ describe('fetchVersioned', () => {
 
   it('回應非 2xx 時丟出帶狀態碼與路徑的 ApiError', async () => {
     const { fetchVersioned, ApiError } = await import('./api')
-    vi.stubGlobal('fetch', createFakeFetch({ '115-1/syllabus/1.json': { status: 404 } }))
+    vi.stubGlobal(
+      'fetch',
+      createFakeFetch({ '115-1/syllabus/1.json': { status: 404 } }),
+    )
 
     const err = await fetchVersioned('115-1/syllabus/1.json', 'v1').catch(
       (e: unknown) => e,

@@ -384,11 +384,7 @@ export interface SyllabusProgress extends SchemaVersioned {
 // ─────────────────────────────────────────────────────────────
 
 export type ChangeEventType =
-  | 'baseline'
-  | 'course_added'
-  | 'course_removed'
-  | 'course_changed'
-  | 'bulk_change'
+  'baseline' | 'course_added' | 'course_removed' | 'course_changed' | 'bulk_change'
 
 interface ChangeEventBase {
   at: string

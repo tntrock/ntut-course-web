@@ -27,28 +27,28 @@
 
 ### 0.2 明確不做的
 
-| 不做 | 原因 |
-|---|---|
-| 後端伺服器、資料庫 | 資料是靜態 JSON,前端直接 fetch 即可 |
-| 使用者帳號、雲端同步 | 需要後端。個人資料存 localStorage,提供 JSON 匯出/匯入替代 |
-| SSR / SSG 預渲染課程頁 | 14 萬門課無法預渲染,且資料每 4 小時變動 |
-| ICS 日曆匯出 | 需要校曆(學期起訖、停課補課日),crawler 無此資料來源。見 §8 |
-| 選課功能、搶課輔助 | 非本專案範圍,且會對學校系統造成負擔 |
-| 課程評價 / 留言 | 需要後端與內容審核。可能另開專案 |
-| 退選率時間走勢圖 | `enrollment.json` 目前僅 1 個快照,資料不足。見 §8 |
+| 不做                   | 原因                                                       |
+| ---------------------- | ---------------------------------------------------------- |
+| 後端伺服器、資料庫     | 資料是靜態 JSON,前端直接 fetch 即可                        |
+| 使用者帳號、雲端同步   | 需要後端。個人資料存 localStorage,提供 JSON 匯出/匯入替代  |
+| SSR / SSG 預渲染課程頁 | 14 萬門課無法預渲染,且資料每 4 小時變動                    |
+| ICS 日曆匯出           | 需要校曆(學期起訖、停課補課日),crawler 無此資料來源。見 §8 |
+| 選課功能、搶課輔助     | 非本專案範圍,且會對學校系統造成負擔                        |
+| 課程評價 / 留言        | 需要後端與內容審核。可能另開專案                           |
+| 退選率時間走勢圖       | `enrollment.json` 目前僅 1 個快照,資料不足。見 §8          |
 
 ### 0.3 技術棧
 
-| 層 | 選用 | 理由 |
-|---|---|---|
-| 建置 | **Vite 7** | 靜態輸出,建置快 |
-| 框架 | **React 19 + TypeScript** | 生態成熟,型別能把 crawler 的 schema 鎖住 |
-| 路由 | **TanStack Router** | 檔案式路由 + **型別安全的 search params**。本站所有篩選條件都放在網址上(可分享、可回上一頁),這是它最關鍵的優勢 |
-| 資料 | **TanStack Query** | 請求去重、背景重取、載入/錯誤狀態。快取失效策略見 §2.2 |
-| 樣式 | **Tailwind CSS v4 + shadcn/ui** | 元件直接進 repo 可改,深色模式與可及性內建 |
-| PWA | **vite-plugin-pwa (Workbox)** | 只管 app shell,API 資料由自訂快取層處理(§2.2) |
-| 測試 | **Vitest + Testing Library**,e2e 用 **Playwright** | |
-| 部署 | **Cloudflare Pages** | 綁自訂網域與 Web Analytics 方便 |
+| 層   | 選用                                               | 理由                                                                                                           |
+| ---- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 建置 | **Vite 7**                                         | 靜態輸出,建置快                                                                                                |
+| 框架 | **React 19 + TypeScript**                          | 生態成熟,型別能把 crawler 的 schema 鎖住                                                                       |
+| 路由 | **TanStack Router**                                | 檔案式路由 + **型別安全的 search params**。本站所有篩選條件都放在網址上(可分享、可回上一頁),這是它最關鍵的優勢 |
+| 資料 | **TanStack Query**                                 | 請求去重、背景重取、載入/錯誤狀態。快取失效策略見 §2.2                                                         |
+| 樣式 | **Tailwind CSS v4 + shadcn/ui**                    | 元件直接進 repo 可改,深色模式與可及性內建                                                                      |
+| PWA  | **vite-plugin-pwa (Workbox)**                      | 只管 app shell,API 資料由自訂快取層處理(§2.2)                                                                  |
+| 測試 | **Vitest + Testing Library**,e2e 用 **Playwright** |                                                                                                                |
+| 部署 | **Cloudflare Pages**                               | 綁自訂網域與 Web Analytics 方便                                                                                |
 
 **不使用**:任何需要付費的服務、任何後端執行環境(Cloudflare Functions 目前不用,
 但保留為 §7 風險的退路)。
@@ -77,23 +77,23 @@ https://tntrock.github.io/ntut-course-crawler/
 以下為 2026-09-05 帶 `Accept-Encoding: gzip` 的**實際傳輸 bytes**,不是原始檔大小。
 這些數字是 §2 架構決策的依據。
 
-| 端點 | gzip 傳輸 | 原始 | 用途 |
-|---|---:|---:|---|
-| `meta.json` | **2.4 KB** | 13 KB | 學期清單、節次時刻、必選修對照 |
-| `115-1/index.json` | **83 KB** | 921 KB | 單一學期輕量索引,**搜尋的資料來源** |
-| `index.json` | 173 KB | 1.8 MB | 最新兩學期合併索引(本站不使用,見 §2.2) |
-| `115-1/departments.json` | 5.0 KB | 48 KB | 學院/系所/班級三層對照 |
-| `115-1/teachers.json` | 15 KB | 89 KB | 教師清單 |
-| `115-1/classes.json` | 6.4 KB | 70 KB | 班級清單 |
-| `115-1/programs.json` | 4.1 KB | 16 KB | 學程 → 課號 |
-| `115-1/classrooms.json` | 8.5 KB | 51 KB | 教室 → 課號 |
-| `115-1/schedule.json` | 10 KB | 55 KB | 星期 × 節次 → 課號 |
-| `115-1/courses/59.json` | 3.6 KB | 32 KB | 系所完整課程物件 |
-| `115-1/teachers/12095.json` | 0.7 KB | 2.2 KB | 教師課表 |
-| `115-1/classes/2915.json` | 1.0 KB | 4.0 KB | 班級課表 |
-| `115-1/syllabus/364893.json` | 2.5 KB | 4.6 KB | 單門課教學大綱 |
-| `changes.json` | 0.8 KB | 2.9 KB | 異動事件流 |
-| `syllabus.json` | 10 KB | 61 KB | 大綱抓取進度(用來算覆蓋率) |
+| 端點                         |  gzip 傳輸 |   原始 | 用途                                   |
+| ---------------------------- | ---------: | -----: | -------------------------------------- |
+| `meta.json`                  | **2.4 KB** |  13 KB | 學期清單、節次時刻、必選修對照         |
+| `115-1/index.json`           |  **83 KB** | 921 KB | 單一學期輕量索引,**搜尋的資料來源**    |
+| `index.json`                 |     173 KB | 1.8 MB | 最新兩學期合併索引(本站不使用,見 §2.2) |
+| `115-1/departments.json`     |     5.0 KB |  48 KB | 學院/系所/班級三層對照                 |
+| `115-1/teachers.json`        |      15 KB |  89 KB | 教師清單                               |
+| `115-1/classes.json`         |     6.4 KB |  70 KB | 班級清單                               |
+| `115-1/programs.json`        |     4.1 KB |  16 KB | 學程 → 課號                            |
+| `115-1/classrooms.json`      |     8.5 KB |  51 KB | 教室 → 課號                            |
+| `115-1/schedule.json`        |      10 KB |  55 KB | 星期 × 節次 → 課號                     |
+| `115-1/courses/59.json`      |     3.6 KB |  32 KB | 系所完整課程物件                       |
+| `115-1/teachers/12095.json`  |     0.7 KB | 2.2 KB | 教師課表                               |
+| `115-1/classes/2915.json`    |     1.0 KB | 4.0 KB | 班級課表                               |
+| `115-1/syllabus/364893.json` |     2.5 KB | 4.6 KB | 單門課教學大綱                         |
+| `changes.json`               |     0.8 KB | 2.9 KB | 異動事件流                             |
+| `syllabus.json`              |      10 KB |  61 KB | 大綱抓取進度(用來算覆蓋率)             |
 
 **關鍵結論**:
 
@@ -138,25 +138,25 @@ C  20:20-21:10    D  21:10-22:00
 差別在共同/專業,不是必/選 —— 篩選 UI 不能只做「必修/選修」兩個按鈕就了事:
 
 | 符號 | `required` | `requirement_type` |
-|---|---|---|
-| ○ | `true` | 部訂共同必修 |
-| △ | `true` | 校訂共同必修 |
-| ☆ | `false` | 共同選修 |
-| ● | `true` | 部訂專業必修 |
-| ▲ | `true` | 校訂專業必修 |
-| ★ | `false` | 專業選修 |
+| ---- | ---------- | ------------------ |
+| ○    | `true`     | 部訂共同必修       |
+| △    | `true`     | 校訂共同必修       |
+| ☆    | `false`    | 共同選修           |
+| ●    | `true`     | 部訂專業必修       |
+| ▲    | `true`     | 校訂專業必修       |
+| ★    | `false`    | 專業選修           |
 
 原始欄位空白時 `required` 是 `null`,**不是 `false`**。篩選時 `null` 要當第三態。
 
 ⚠️ **上表是完整的可能值,不是當期的實際值。** `115-1` 實測只出現其中 4 種,
 且 `required` 全為布林、**沒有 `null`**:
 
-| `requirement_type` | 課數 |
-|---|---:|
-| 專業選修 | 1,029 |
-| 校訂共同必修 | 813 |
-| 校訂專業必修 | 794 |
-| 共同選修 | 81 |
+| `requirement_type` |  課數 |
+| ------------------ | ----: |
+| 專業選修           | 1,029 |
+| 校訂共同必修       |   813 |
+| 校訂專業必修       |   794 |
+| 共同選修           |    81 |
 
 所以「部訂共同必修」「部訂專業必修」在 115-1 一門都沒有。篩選選項**必須由當期資料
 動態產生**(掃 index 收 distinct 值),與 §1.3.4 的語言篩選同一原則 —— hard-code 六個
@@ -167,11 +167,11 @@ C  20:20-21:10    D  21:10-22:00
 
 `115-1/index.json` 實測 2,717 門課:
 
-| `language` 值 | 課數 | 佔比 |
-|---|---:|---:|
-| `null`(中文) | 2,218 | 81.6% |
-| `英語` | 488 | 18.0% |
-| `中英雙語` | 11 | 0.4% |
+| `language` 值 |  課數 |  佔比 |
+| ------------- | ----: | ----: |
+| `null`(中文)  | 2,218 | 81.6% |
+| `英語`        |   488 | 18.0% |
+| `中英雙語`    |    11 |  0.4% |
 
 **篩選器必須做成三態**(中文 / 英語 / 中英雙語),不可寫成 `isEnglish` 布林。
 `中英雙語` 這個值是實測才發現的,未來可能還有其他值 —— 篩選選項應由**資料動態產生**
@@ -187,11 +187,11 @@ C  20:20-21:10    D  21:10-22:00
 **但 `syllabus_url` 在完整課程物件裡,所以前端在載入課程時就知道有沒有大綱,
 不必靠 404 判斷。** UI 必須做成三態:
 
-| 狀態 | 判斷依據 | UI |
-|---|---|---|
-| 沒有大綱 | 課程物件的 `syllabus_url === null` | **不顯示**大綱分頁 |
-| 老師未填 | 大綱檔的 `has_content === false` | 顯示「授課教師尚未填寫大綱」+ 原始頁面連結 |
-| 有內容 | `has_content === true` | 正常渲染 |
+| 狀態     | 判斷依據                           | UI                                         |
+| -------- | ---------------------------------- | ------------------------------------------ |
+| 沒有大綱 | 課程物件的 `syllabus_url === null` | **不顯示**大綱分頁                         |
+| 老師未填 | 大綱檔的 `has_content === false`   | 顯示「授課教師尚未填寫大綱」+ 原始頁面連結 |
+| 有內容   | `has_content === true`             | 正常渲染                                   |
 
 抽樣 5 門(`360744` 國文、`362908` 物理、`364336` 基因工程學、`366048` 永續公民實踐、
 `366570` 文化經濟研究專題)的 `has_content` 全為 `true`,
@@ -298,11 +298,11 @@ GitHub Pages 會忽略未知的 query string 照樣回傳檔案,但**瀏覽器�
 
 版本號的來源:
 
-| 資源 | 版本來源 |
-|---|---|
-| `meta.json` | **不加版本,永遠 network-first**(僅 2.4 KB)。失敗時 fallback 到快取 |
-| `{semester}/**` | `meta.semesters[找到該學期].generated_at` |
-| `changes.json`、`syllabus.json`、`enrollment.json` | `meta.generated_at` |
+| 資源                                               | 版本來源                                                           |
+| -------------------------------------------------- | ------------------------------------------------------------------ |
+| `meta.json`                                        | **不加版本,永遠 network-first**(僅 2.4 KB)。失敗時 fallback 到快取 |
+| `{semester}/**`                                    | `meta.semesters[找到該學期].generated_at`                          |
+| `changes.json`、`syllabus.json`、`enrollment.json` | `meta.generated_at`                                                |
 
 **舊學期的 `generated_at` 永遠不變**,所以翻歷史資料只會下載一次,之後永久命中。
 這一招同時解掉上面三個問題。
@@ -322,7 +322,7 @@ async function fetchVersioned<T>(path: string, version: string): Promise<T> {
   const res = await fetch(url)
   if (!res.ok) throw new ApiError(res.status, path)
   await cache.put(url, res.clone())
-  void evictOtherVersions(cache, path)   // 清掉同路徑的舊版本
+  void evictOtherVersions(cache, path) // 清掉同路徑的舊版本
   return res.json()
 }
 ```
@@ -371,14 +371,14 @@ NFKC 會把全形英數轉半形,解決「使用者打半形但資料是全形�
 
 查詢字串按空白切成多個 token,**全部命中才算數(AND)**。排序權重:
 
-| 命中位置 | 分數 |
-|---|---:|
+| 命中位置     | 分數 |
+| ------------ | ---: |
 | 課名完全相等 | 1000 |
-| 課名開頭 | 100 |
-| 課名包含 | 50 |
-| 教師姓名 | 30 |
-| 課號 | 20 |
-| 其他欄位 | 10 |
+| 課名開頭     |  100 |
+| 課名包含     |   50 |
+| 教師姓名     |   30 |
+| 課號         |   20 |
+| 其他欄位     |   10 |
 
 同分時按課名排序,確保結果穩定(不會因為資料順序變動而跳動)。
 
@@ -399,20 +399,20 @@ NFKC 會把全形英數轉半形,解決「使用者打半形但資料是全形�
 所有篩選條件放在 URL search params,**網址可分享、可加書籤、上一頁行為正確**。
 這是選 TanStack Router 的主因(型別安全的 search param 驗證)。
 
-| 路徑 | 頁面 |
-|---|---|
-| `/` | 首頁:搜尋框、我的課表摘要、收藏、最近異動摘要 |
-| `/search` | 搜尋結果(條件全在 search params,見下) |
-| `/course/$semester/$courseId` | 課程詳情(含大綱分頁) |
-| `/dept/$semester/$deptId` | 系所課表 |
-| `/teacher/$semester/$teacherId` | 教師課表 |
-| `/class/$semester/$classId` | 班級課表 |
-| `/program/$semester/$programName` | 學程課程 |
-| `/classroom/$semester/$classroomId` | 教室課表 |
-| `/browse` | 瀏覽入口(學院 → 系所 → 班級 / 教師 / 學程 / 教室) |
-| `/schedule` | 我的課表 |
-| `/changes` | 最近異動 |
-| `/about` | 關於、資料來源、免責聲明、API 說明 |
+| 路徑                                | 頁面                                              |
+| ----------------------------------- | ------------------------------------------------- |
+| `/`                                 | 首頁:搜尋框、我的課表摘要、收藏、最近異動摘要     |
+| `/search`                           | 搜尋結果(條件全在 search params,見下)             |
+| `/course/$semester/$courseId`       | 課程詳情(含大綱分頁)                              |
+| `/dept/$semester/$deptId`           | 系所課表                                          |
+| `/teacher/$semester/$teacherId`     | 教師課表                                          |
+| `/class/$semester/$classId`         | 班級課表                                          |
+| `/program/$semester/$programName`   | 學程課程                                          |
+| `/classroom/$semester/$classroomId` | 教室課表                                          |
+| `/browse`                           | 瀏覽入口(學院 → 系所 → 班級 / 教師 / 學程 / 教室) |
+| `/schedule`                         | 我的課表                                          |
+| `/changes`                          | 最近異動                                          |
+| `/about`                            | 關於、資料來源、免責聲明、API 說明                |
 
 `/search` 的 search params:
 
@@ -456,20 +456,20 @@ NFKC 會把全形英數轉半形,解決「使用者打半形但資料是全形�
             "name_zh": "數位影像處理",
             "teachers": ["白敦文"],
             "teacher_codes": ["12095"],
-            "time_slots": [{ "day": 5, "periods": ["2","3","4"] }],
+            "time_slots": [{ "day": 5, "periods": ["2", "3", "4"] }],
             "classrooms": ["六教727(e)"],
             "credits": 3.0,
-            "department_ids": ["59"]
-          }
-        }
-      ]
-    }
+            "department_ids": ["59"],
+          },
+        },
+      ],
+    },
   },
   "favorites": {
     "courses": ["115-1:364893"],
-    "teachers": ["12095"]
+    "teachers": ["12095"],
   },
-  "settings": { "theme": "system", "showWeekend": false }
+  "settings": { "theme": "system", "showWeekend": false },
 }
 ```
 
@@ -511,19 +511,19 @@ NFKC 會把全形英數轉半形,解決「使用者打半形但資料是全形�
 
 #### 篩選器
 
-| 篩選 | 資料來源 | UI |
-|---|---|---|
-| 關鍵字 | index 的 haystack | 搜尋框 |
-| 學期 | `meta.semesters` | 下拉(51 項,分「最近」與「歷年」兩組) |
-| 學院 / 系所 | `departments.json` 的 `colleges` | 兩層樹狀多選 |
-| 必選修 | index 的 `requirement_type` | 多選(6 個完整類別,不是必/選兩顆) |
-| 星期 / 節次 | index 的 `time_slots` | **14×7 網格點選**(比兩個下拉好用得多) |
-| 學分 | index 的 `credits` | 範圍滑桿 |
-| 授課語言 | index 的 `language` | 三態(中文 / 英語 / 中英雙語),選項由資料動態產生 |
-| 學程 | `programs.json` | 下拉;選定後取 `course_ids` 建 Set 過濾 |
-| 教室 | `classrooms.json` | 下拉;同上 |
-| 教師 | `teachers.json` | 可搜尋下拉,值是 `teacher_codes` |
-| 班級 | `classes.json` | 可搜尋下拉 |
+| 篩選        | 資料來源                         | UI                                              |
+| ----------- | -------------------------------- | ----------------------------------------------- |
+| 關鍵字      | index 的 haystack                | 搜尋框                                          |
+| 學期        | `meta.semesters`                 | 下拉(51 項,分「最近」與「歷年」兩組)            |
+| 學院 / 系所 | `departments.json` 的 `colleges` | 兩層樹狀多選                                    |
+| 必選修      | index 的 `requirement_type`      | 多選(6 個完整類別,不是必/選兩顆)                |
+| 星期 / 節次 | index 的 `time_slots`            | **14×7 網格點選**(比兩個下拉好用得多)           |
+| 學分        | index 的 `credits`               | 範圍滑桿                                        |
+| 授課語言    | index 的 `language`              | 三態(中文 / 英語 / 中英雙語),選項由資料動態產生 |
+| 學程        | `programs.json`                  | 下拉;選定後取 `course_ids` 建 Set 過濾          |
+| 教室        | `classrooms.json`                | 下拉;同上                                       |
+| 教師        | `teachers.json`                  | 可搜尋下拉,值是 `teacher_codes`                 |
+| 班級        | `classes.json`                   | 可搜尋下拉                                      |
 
 **時間篩選的語意要明確**:提供「包含這些時段」與「**只在這些時段**」兩種模式。
 後者才是「幫我找星期五下午有空可以塞的課」這個真實需求。
@@ -625,12 +625,12 @@ NFKC 會把全形英數轉半形,解決「使用者打半形但資料是全形�
 
 進頁面時把 `snapshot` 與最新資料比對:
 
-| 情況 | 標示 |
-|---|---|
-| 課號在最新資料中不存在 | 🔴「此課已停開」+ 保留在課表但灰掉 |
-| `time_slots` 不同 | 🟠「時段已異動」+ 顯示 舊 → 新,一鍵更新快照 |
-| `teacher_codes` 不同 | 🟠「授課教師已更換」 |
-| `credits` 不同 | 🟠「學分數已異動」 |
+| 情況                   | 標示                                        |
+| ---------------------- | ------------------------------------------- |
+| 課號在最新資料中不存在 | 🔴「此課已停開」+ 保留在課表但灰掉          |
+| `time_slots` 不同      | 🟠「時段已異動」+ 顯示 舊 → 新,一鍵更新快照 |
+| `teacher_codes` 不同   | 🟠「授課教師已更換」                        |
+| `credits` 不同         | 🟠「學分數已異動」                          |
 
 比對成功且無異動時靜默更新快照(教室、人數等會變的欄位)。
 
@@ -645,14 +645,14 @@ NFKC 會把全形英數轉半形,解決「使用者打半形但資料是全形�
 
 讀 `changes.json`,依日期分組的時間軸。
 
-| `type` | 呈現 |
-|---|---|
-| `course_added` | 綠色「加開」+ 課名(連結)+ 系所 / 班級 |
-| `course_removed` | 紅色「停開」 |
-| `course_changed` | 黃色「異動」+ **逐欄位 舊 → 新 的 diff 表** |
-| `teacher_added` / `teacher_removed` | 教師增減 + 開課數 |
-| `baseline` | 灰色「首次收錄此學期」+ 課程數 |
-| `bulk_change` | **特殊卡片**,見下 |
+| `type`                              | 呈現                                        |
+| ----------------------------------- | ------------------------------------------- |
+| `course_added`                      | 綠色「加開」+ 課名(連結)+ 系所 / 班級       |
+| `course_removed`                    | 紅色「停開」                                |
+| `course_changed`                    | 黃色「異動」+ **逐欄位 舊 → 新 的 diff 表** |
+| `teacher_added` / `teacher_removed` | 教師增減 + 開課數                           |
+| `baseline`                          | 灰色「首次收錄此學期」+ 課程數              |
+| `bulk_change`                       | **特殊卡片**,見下                           |
 
 #### `bulk_change` 卡片
 
@@ -836,12 +836,12 @@ NFKC 會把全形英數轉半形,解決「使用者打半形但資料是全形�
 
 ### Cloudflare Pages
 
-| 設定 | 值 |
-|---|---|
-| Build command | `npm run build` |
-| Output directory | `dist` |
-| Node version | 22 |
-| 環境變數 | `VITE_API_BASE=https://tntrock.github.io/ntut-course-crawler` |
+| 設定             | 值                                                            |
+| ---------------- | ------------------------------------------------------------- |
+| Build command    | `npm run build`                                               |
+| Output directory | `dist`                                                        |
+| Node version     | 22                                                            |
+| 環境變數         | `VITE_API_BASE=https://tntrock.github.io/ntut-course-crawler` |
 
 ### `public/_redirects`
 
@@ -878,14 +878,14 @@ Cloudflare Web Analytics —— 無 cookie、不追蹤個人,**不需要 cookie 
 
 ## 6. 效能預算
 
-| 指標 | 目標 |
-|---|---|
-| JS bundle(gzip,首屏) | < 150 KB |
-| 首屏資料 | 85 KB(meta 2.4 + index 83) |
-| LCP(4G、中階手機) | < 1.5 s |
-| 搜尋輸入 → 結果更新 | < 50 ms |
-| 二次進站(快取命中) | 零資料請求(除 meta.json 2.4 KB) |
-| Lighthouse Performance | ≥ 95 |
+| 指標                   | 目標                            |
+| ---------------------- | ------------------------------- |
+| JS bundle(gzip,首屏)   | < 150 KB                        |
+| 首屏資料               | 85 KB(meta 2.4 + index 83)      |
+| LCP(4G、中階手機)      | < 1.5 s                         |
+| 搜尋輸入 → 結果更新    | < 50 ms                         |
+| 二次進站(快取命中)     | 零資料請求(除 meta.json 2.4 KB) |
+| Lighthouse Performance | ≥ 95                            |
 
 超出預算時的處理順序:code splitting → 移除依賴 → 才考慮改架構。
 **每個 Phase 結束都要量一次,不要等到 Phase 6 才發現超標。**
@@ -894,18 +894,18 @@ Cloudflare Web Analytics —— 無 cookie、不追蹤個人,**不需要 cookie 
 
 ## 7. 已知風險與限制
 
-| # | 風險 | 影響 | 緩解 |
-|---|---|---|---|
-| 1 | **GitHub Pages 是單點** | 掛掉則全站無資料 | 離線快取讓已看過的資料仍可用;錯誤頁明確說明是資料來源問題而非本站。退路:加一層 Cloudflare Functions 代理(`VITE_API_BASE` 換掉即可,程式不用改) |
-| 2 | `schema_version` 從 2 升到 3 | 欄位語意可能改變 | 啟動時檢查並顯示警告橫幅,仍嘗試渲染。升版時對照 crawler README 的 v3 說明再修 |
-| 3 | **只有 115-1 有教學大綱** | 舊學期大綱頁無內容 | 明確顯示「本學期未收錄」,不讓使用者白點 |
-| 4 | 30% 的課沒有 `syllabus_url` | 大綱分頁對這些課無意義 | 用 `syllabus_url === null` 判斷,不顯示分頁,不發 404 請求 |
-| 5 | 退選率分母未定 | 數字可能誤導 | 主顯示原始人數,退選率為次要並附註,不做預設排序 |
-| 6 | 課號跨學期不穩定 | 收藏/課表無法跨學期沿用 | 以 `{semester}:{courseId}` 為 key,各學期獨立,不做遷移 |
-| 7 | 個人資料只在 localStorage | 換裝置、清瀏覽器資料就沒了 | 提供 JSON 匯出/匯入;首次使用時在設定頁說明 |
-| 8 | 學校改版導致 crawler 抓不到 | 資料變空或殘缺 | 檢查 `meta.semesters[].failed_department_count > 0` 與 `partial`,在站上顯示提示 |
-| 9 | PNG 匯出的字型相容性 ❓ | Safari 可能走樣 | Phase 6 三瀏覽器實測;走樣則改 canvas 手繪 |
-| 10 | 免責聲明的法律風險 | 使用者誤把非官方資料當官方 | 頁尾**每頁**顯示 `meta.disclaimer`,`/about` 完整說明,不可只放在關於頁 |
+| #   | 風險                         | 影響                       | 緩解                                                                                                                                          |
+| --- | ---------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **GitHub Pages 是單點**      | 掛掉則全站無資料           | 離線快取讓已看過的資料仍可用;錯誤頁明確說明是資料來源問題而非本站。退路:加一層 Cloudflare Functions 代理(`VITE_API_BASE` 換掉即可,程式不用改) |
+| 2   | `schema_version` 從 2 升到 3 | 欄位語意可能改變           | 啟動時檢查並顯示警告橫幅,仍嘗試渲染。升版時對照 crawler README 的 v3 說明再修                                                                 |
+| 3   | **只有 115-1 有教學大綱**    | 舊學期大綱頁無內容         | 明確顯示「本學期未收錄」,不讓使用者白點                                                                                                       |
+| 4   | 30% 的課沒有 `syllabus_url`  | 大綱分頁對這些課無意義     | 用 `syllabus_url === null` 判斷,不顯示分頁,不發 404 請求                                                                                      |
+| 5   | 退選率分母未定               | 數字可能誤導               | 主顯示原始人數,退選率為次要並附註,不做預設排序                                                                                                |
+| 6   | 課號跨學期不穩定             | 收藏/課表無法跨學期沿用    | 以 `{semester}:{courseId}` 為 key,各學期獨立,不做遷移                                                                                         |
+| 7   | 個人資料只在 localStorage    | 換裝置、清瀏覽器資料就沒了 | 提供 JSON 匯出/匯入;首次使用時在設定頁說明                                                                                                    |
+| 8   | 學校改版導致 crawler 抓不到  | 資料變空或殘缺             | 檢查 `meta.semesters[].failed_department_count > 0` 與 `partial`,在站上顯示提示                                                               |
+| 9   | PNG 匯出的字型相容性 ❓      | Safari 可能走樣            | Phase 6 三瀏覽器實測;走樣則改 canvas 手繪                                                                                                     |
+| 10  | 免責聲明的法律風險           | 使用者誤把非官方資料當官方 | 頁尾**每頁**顯示 `meta.disclaimer`,`/about` 完整說明,不可只放在關於頁                                                                         |
 
 ---
 
@@ -973,19 +973,19 @@ crawler 目前沒有這筆資料,課程查詢系統也不提供(在教務處行�
 
 ## 10. 決策存檔
 
-| 決策 | 選了 | 沒選 | 理由 |
-|---|---|---|---|
-| 渲染 | 純靜態 SPA | SSR / SSG | 14 萬門課無法預渲染,資料每 4 小時變,首屏資料僅 85 KB |
-| 框架 | React + TanStack Router | Nuxt / SvelteKit / Astro | 型別安全的 search params 直接解決「篩選狀態要能分享」 |
-| 搜尋 | 自寫 substring + Worker | Fuse.js / MiniSearch | 中文無空白分詞,模糊比對結果差;2,717 筆不需要索引 |
-| 索引來源 | `{semester}/index.json` | 頂層 `index.json` | 省一半流量,舊/新學期走同一套邏輯 |
-| 快取 | 自寫 Cache Storage + `generated_at` 版本 | SW runtime caching | 要表達「永久快取但版本變就失效」,且 dev/prod 行為要一致 |
-| PWA 更新 | `prompt` | `autoUpdate` | 排課到一半被換掉程式碼是很糟的體驗 |
-| 課表儲存 | 課號 + 快照 | 只存課號 | 離線可渲染,且能比對出停開/調課/換老師 |
-| 匯出 | 只做 PNG | PNG + ICS | ICS 需校曆,crawler 無此資料;PNG 是學生真正常用的行為 |
-| 退選率 | 顯示原始人數為主 | 退選率為主要指標 | 分母定義未經學校確認,兩種算法在單課差距可達 20 個百分點 |
-| 分析 | Cloudflare Web Analytics | Google Analytics | 無 cookie,不需要同意橫幅,與 Pages 同一個後台 |
-| 部署 | CF Pages Git 整合 | GH Actions + wrangler | 不必管 API token,PR preview 免設定 |
+| 決策     | 選了                                     | 沒選                     | 理由                                                    |
+| -------- | ---------------------------------------- | ------------------------ | ------------------------------------------------------- |
+| 渲染     | 純靜態 SPA                               | SSR / SSG                | 14 萬門課無法預渲染,資料每 4 小時變,首屏資料僅 85 KB    |
+| 框架     | React + TanStack Router                  | Nuxt / SvelteKit / Astro | 型別安全的 search params 直接解決「篩選狀態要能分享」   |
+| 搜尋     | 自寫 substring + Worker                  | Fuse.js / MiniSearch     | 中文無空白分詞,模糊比對結果差;2,717 筆不需要索引        |
+| 索引來源 | `{semester}/index.json`                  | 頂層 `index.json`        | 省一半流量,舊/新學期走同一套邏輯                        |
+| 快取     | 自寫 Cache Storage + `generated_at` 版本 | SW runtime caching       | 要表達「永久快取但版本變就失效」,且 dev/prod 行為要一致 |
+| PWA 更新 | `prompt`                                 | `autoUpdate`             | 排課到一半被換掉程式碼是很糟的體驗                      |
+| 課表儲存 | 課號 + 快照                              | 只存課號                 | 離線可渲染,且能比對出停開/調課/換老師                   |
+| 匯出     | 只做 PNG                                 | PNG + ICS                | ICS 需校曆,crawler 無此資料;PNG 是學生真正常用的行為    |
+| 退選率   | 顯示原始人數為主                         | 退選率為主要指標         | 分母定義未經學校確認,兩種算法在單課差距可達 20 個百分點 |
+| 分析     | Cloudflare Web Analytics                 | Google Analytics         | 無 cookie,不需要同意橫幅,與 Pages 同一個後台            |
+| 部署     | CF Pages Git 整合                        | GH Actions + wrangler    | 不必管 API token,PR preview 免設定                      |
 
 ---
 
@@ -1057,3 +1057,52 @@ curl -s $BASE/syllabus.json | python -c "import json,sys; [print(s) for s in jso
 # 實際 gzip 傳輸大小
 curl -s -H 'Accept-Encoding: gzip' -o /dev/null -w '%{size_download}\n' $BASE/115-1/index.json
 ```
+
+---
+
+## 附錄 D — 實作與規劃的偏離紀錄
+
+規劃書寫於實作之前,以下是實際動手後與原規劃不同的地方。**以本節為準。**
+
+### D.1 版本與工具鏈(Phase 0)
+
+| §0.3 原訂         | 實際                              | 原因                                                                                                                            |
+| ----------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Vite 7            | **Vite 8**                        | `npm create vite` 的當前預設                                                                                                    |
+| —                 | TypeScript 6                      | 同上。`baseUrl` 已棄用,`paths` 直接相對於 tsconfig                                                                              |
+| ESLint + Prettier | **oxlint + Prettier**             | oxlint 是 Vite 樣板現在的預設,快很多。規則已針對路由檔豁免 `only-export-components`(檔案式路由一定要同時 export `Route` 與元件) |
+| shadcn/ui(Radix)  | shadcn/ui **base-nova + Base UI** | shadcn 現行版本已改用 Base UI。`cn` 也改成同名的 npm 套件,取代 clsx + tailwind-merge                                            |
+
+**TypeScript 嚴格度**比原訂更嚴:除 `strict` 外另開了
+`noUncheckedIndexedAccess`、`exactOptionalPropertyTypes`、`noImplicitOverride`。
+另外樣板預設的 `erasableSyntaxOnly` 禁用建構子參數屬性,`ApiError` 因此改成
+明寫欄位。
+
+### D.2 `routeTree.gen.ts` 要進版控
+
+`build` 是 `tsc -b && vite build`,型別檢查跑在 Vite 之前,而這個檔案平常由
+Vite plugin 產生 —— CI 上沒有它會直接失敗。做法:檔案進版控,且 `build`
+前先跑 `tsr generate`(`@tanstack/router-cli`)確保它是最新的。
+
+### D.3 資料層的兩處調整
+
+1. **`evictOtherVersions` 改成 `await`,不是 `void`。**
+   §2.2 原本寫成背景執行。實際上它只是一次 `cache.keys()` 掃描,成本極低,
+   而 fire-and-forget 會讓行為不可測(測試無從得知何時清完)。確定性優先。
+
+2. **`fetchMeta()` 回傳 `{ data, fromCache }` 而非 `Meta`。**
+   §6 的離線橫幅需要知道「這份 meta 是不是來自快取」,把它做進回傳值,
+   比讓 UI 另外猜測乾淨。
+
+### D.4 §1.3.3 必選修的補充
+
+原表列的 6 種 `requirement_type` 是**可能值**,`115-1` 實測只出現 4 種,
+且 `required` 全為布林、沒有 `null`。篩選選項必須由當期資料動態產生,
+詳見該節已補上的說明。
+
+### D.5 端點包裝函式採需要時才加
+
+`lib/api.ts` 目前只有 `fetchMeta` / `fetchVersioned` / `fetchSemesterIndex` /
+`semesterVersion`。departments、teachers、classrooms 等包裝**刻意不預先寫**
+—— 它們都是 `fetchVersioned` 的一行包裝,等 Phase 3 真的用到時連同測試一起加,
+避免現在寫一堆沒有測試涵蓋、也沒人呼叫的程式碼。
