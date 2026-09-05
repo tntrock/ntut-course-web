@@ -27,7 +27,7 @@ export function DetailShell({
   children: React.ReactNode
 }) {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="mx-auto max-w-6xl px-4 py-6">
       <Link
         to="/browse"
         search={{ sem: semester, tab: browseTab }}
@@ -52,7 +52,8 @@ export function DetailShell({
         )}
       </header>
 
-      <div className="bg-card shadow-card mt-4 rounded-xl px-4 py-1">{children}</div>
+      {/* 課程列表本身就是一格一格的卡片,外面再包一層卡片會變成卡片裡的卡片 */}
+      <div className="mt-5">{children}</div>
     </div>
   )
 }

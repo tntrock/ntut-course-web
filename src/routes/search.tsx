@@ -213,8 +213,15 @@ function SearchPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-[15rem_1fr]">
+        {/*
+          側欄釘在工具列下方,但**高度要收在視窗內**。
+          展開「學院 / 系所」後面板有 1,300px 高,視窗只有 800px —— 純 sticky 會把
+          超出的部分永遠釘在畫面外,底下的「星期 / 節次」與「學分」再也點不到。
+
+          內部捲軸只在展開長分區時才出現(分區預設收合),不是常駐的那種。
+        */}
         <aside
-          className={`md:sticky md:top-24 md:block md:self-start ${
+          className={`md:sticky md:top-24 md:block md:max-h-[calc(100dvh-7rem)] md:self-start md:overflow-y-auto md:pr-1 ${
             filtersOpen ? 'block' : 'hidden'
           }`}
         >

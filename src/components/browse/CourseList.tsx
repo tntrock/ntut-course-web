@@ -7,10 +7,10 @@ import { CourseCard } from '@/components/search/CourseCard'
 const EMPTY_SCORES: ReadonlyMap<string, number> = new Map()
 
 /**
- * 明細頁的課程列表。
+ * 明細頁的課程列表。版面與搜尋結果一致 —— 同樣的卡片、同樣的多欄網格。
  *
  * **不做虛擬捲動** —— 明細頁最多的是通識中心的 227 門,和搜尋頁的 2,717 門差一個
- * 數量級。虛擬捲動要固定高度的捲動容器,在一般的頁面捲動裡反而卡手。
+ * 數量級。這個量直接用 CSS grid 排就好,不必為了它再引入一個量測與定位的機制。
  */
 export function CourseList({
   courses,
@@ -38,16 +38,19 @@ export function CourseList({
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3 border-b py-2.5">
-        <p className="text-muted-foreground text-sm">
-          {courses.length.toLocaleString('zh-TW')} 門課
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-sm">
+          <span className="font-medium tabular-nums">
+            {courses.length.toLocaleString('zh-TW')}
+          </span>
+          <span className="text-muted-foreground"> 門課</span>
         </p>
         <select
           name="sort"
           value={sort}
           aria-label="排序"
           onChange={(e) => setSort(e.target.value as SortKey)}
-          className="bg-background rounded-lg border px-2 py-1 text-sm"
+          className="bg-card rounded-lg border px-2 py-1.5 text-sm"
         >
           <option value="name">課名</option>
           <option value="credits">學分</option>
@@ -55,14 +58,17 @@ export function CourseList({
         </select>
       </div>
 
-      {sorted.map((course) => (
-        <CourseCard
-          key={course.id}
-          course={course}
-          semester={semester}
-          periods={periods}
-        />
-      ))}
+      {/* 斷點與搜尋頁的 useColumns 一致,兩邊改的時候要一起改 */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {sorted.map((course) => (
+          <CourseCard
+            key={course.id}
+            course={course}
+            semester={semester}
+            periods={periods}
+          />
+        ))}
+      </div>
     </div>
   )
 }
