@@ -13,6 +13,7 @@ import { departmentsQueryOptions } from '@/hooks/useDepartments'
 import { confirmedSyllabusVersion, syllabusState } from '@/lib/syllabus'
 import { formatSlotClock, formatTimeSlots } from '@/lib/formatTime'
 import { LANGUAGE_ZH } from '@/lib/filters'
+import { BackLink } from '@/components/BackLink'
 import { SyllabusPanel } from '@/components/course/SyllabusPanel'
 import type { Course, Meta, SemesterPath } from '@/types/api'
 
@@ -172,13 +173,18 @@ function CourseDetail() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
-      <Link
-        to="/search"
-        search={{ sem: semester }}
-        className="text-muted-foreground text-sm underline underline-offset-4"
-      >
-        ← 回搜尋
-      </Link>
+      {/* 這一頁可能從搜尋、系所、教師、教室、學程任何一處進來 */}
+      <BackLink
+        fallback={
+          <Link
+            to="/search"
+            search={{ sem: semester }}
+            className="text-muted-foreground text-sm underline underline-offset-4"
+          >
+            ← 回搜尋
+          </Link>
+        }
+      />
 
       <header className="mt-4">
         <div className="flex items-start justify-between gap-3">

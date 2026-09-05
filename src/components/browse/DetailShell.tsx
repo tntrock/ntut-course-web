@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { BackLink } from '@/components/BackLink'
 
 /**
  * 五個明細頁(系所 / 教師 / 班級 / 學程 / 教室)共用的外框。
@@ -28,13 +29,18 @@ export function DetailShell({
 }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
-      <Link
-        to="/browse"
-        search={{ sem: semester, tab: browseTab }}
-        className="text-muted-foreground text-sm underline underline-offset-4"
-      >
-        ← 回瀏覽
-      </Link>
+      {/* 系所頁可能從瀏覽進來,也可能從某一門課的「系所」連結進來 */}
+      <BackLink
+        fallback={
+          <Link
+            to="/browse"
+            search={{ sem: semester, tab: browseTab }}
+            className="text-muted-foreground text-sm underline underline-offset-4"
+          >
+            ← 回瀏覽
+          </Link>
+        }
+      />
 
       <header className="mt-4">
         <p className="text-muted-foreground text-xs">{kind}</p>

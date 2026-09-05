@@ -72,12 +72,24 @@ function Section({
             {active}
           </span>
         )}
-        <span
+        {/*
+          用 SVG 而不是 `›` 這個字元:文字字符帶著字型的側邊間距,實測會凸出
+          容器右緣 3.33px,而 sticky 側欄設了 overflow-y 之後 overflow-x 會被
+          CSS 規範連帶算成 auto —— 於是就為了 3px 長出一條左右橫移的捲軸。
+          SVG 的邊界是精確的,沒有這個問題。
+        */}
+        <svg
           aria-hidden
-          className="text-muted-foreground transition-transform group-open:rotate-90"
+          viewBox="0 0 16 16"
+          className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-90"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          ›
-        </span>
+          <path d="M6 3.5 10.5 8 6 12.5" />
+        </svg>
       </summary>
       <div className="pb-4">{children}</div>
     </details>

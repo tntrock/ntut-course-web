@@ -219,9 +219,13 @@ function SearchPage() {
           超出的部分永遠釘在畫面外,底下的「星期 / 節次」與「學分」再也點不到。
 
           內部捲軸只在展開長分區時才出現(分區預設收合),不是常駐的那種。
+
+          `overflow-x-hidden` 是必要的:CSS 規範規定 `overflow-y` 一旦不是
+          `visible`,`overflow-x` 就會跟著算成 `auto` —— 內容只要凸出幾個像素,
+          就會冒出一條左右橫移的捲軸。這裡沒有任何東西需要橫向捲動。
         */}
         <aside
-          className={`md:sticky md:top-24 md:block md:max-h-[calc(100dvh-7rem)] md:self-start md:overflow-y-auto md:pr-1 ${
+          className={`md:sticky md:top-24 md:block md:max-h-[calc(100dvh-7rem)] md:self-start md:overflow-x-hidden md:overflow-y-auto md:pr-1 ${
             filtersOpen ? 'block' : 'hidden'
           }`}
         >
