@@ -1,4 +1,4 @@
-import type { CourseIndex, Meta, SemesterPath } from '@/types/api'
+import type { CourseIndex, DepartmentsResponse, Meta, SemesterPath } from '@/types/api'
 
 const BASE = (
   import.meta.env.VITE_API_BASE ?? 'https://tntrock.github.io/ntut-course-crawler'
@@ -99,6 +99,17 @@ export function fetchSemesterIndex(
 ): Promise<CourseIndex> {
   return fetchVersioned<CourseIndex>(
     `${semester}/index.json`,
+    semesterVersion(meta, semester),
+  )
+}
+
+/** 學院 / 系所 / 班級三層對照。gzip 約 5 KB。 */
+export function fetchDepartments(
+  meta: Meta,
+  semester: SemesterPath,
+): Promise<DepartmentsResponse> {
+  return fetchVersioned<DepartmentsResponse>(
+    `${semester}/departments.json`,
     semesterVersion(meta, semester),
   )
 }

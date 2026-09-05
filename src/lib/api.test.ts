@@ -222,3 +222,29 @@ describe('對未知欄位的容忍度', () => {
     expect(Reflect.get(index, 'another_new_top_level_field')).toBe(42)
   })
 })
+
+describe('fetchDepartments', () => {
+  const meta = {
+    schema_version: 2,
+    generated_at: '2026-09-05T03:34:59Z',
+    latest: '115-1',
+    semesters: [{ path: '115-1', generated_at: '2026-09-05T03:34:59Z' }],
+  } as unknown as import('@/types/api').Meta
+
+  it('帶該學期的版本號抓學院/系所對照', async () => {
+    const { fetchDepartments } = await import('./api')
+    const fetchMock = createFakeFetch({
+      '115-1/departments.json': {
+        departments: [{ id: '59', name: '資工系' }],
+        colleges: [{ name: '電資學院', department_ids: ['59'] }],
+      },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const data = await fetchDepartments(meta, '115-1')
+
+    expect(data.departments[0]?.id).toBe('59')
+    expect(fetchMock.calls[0]).toContain('115-1/departments.json')
+    expect(fetchMock.calls[0]).toContain('v=2026-09-05T03%3A34%3A59Z')
+  })
+})

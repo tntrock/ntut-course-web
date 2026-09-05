@@ -10,6 +10,9 @@ import { normalize, tokenize } from './normalize'
  * 3. 零依賴、行為可預測 —— 打「白敦文」就是找含這三個字的,沒有模糊比對的驚喜
  */
 
+/** 與 sort.ts 同理:共用定序器,避免每次比較都重建。 */
+const collator = new Intl.Collator('zh-Hant')
+
 /** 命中位置的權重。數字大小本身沒有意義,只有相對順序有。 */
 const SCORE = {
   nameExact: 1000,
@@ -98,10 +101,7 @@ export function search(docs: readonly SearchDoc[], query: string): SearchResult[
   const nameById = new Map(docs.map((d) => [d.id, d.displayName]))
   results.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score
-    const byName = (nameById.get(a.id) ?? '').localeCompare(
-      nameById.get(b.id) ?? '',
-      'zh-Hant',
-    )
+    const byName = collator.compare(nameById.get(a.id) ?? '', nameById.get(b.id) ?? '')
     return byName !== 0 ? byName : a.id.localeCompare(b.id)
   })
 

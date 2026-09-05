@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
+import { parseSearch, stringifySearch } from './lib/searchParams'
 import { routeTree } from './routeTree.gen'
 import './index.css'
 
@@ -25,6 +26,9 @@ const router = createRouter({
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,
   scrollRestoration: true,
+  // 陣列參數用重複 key,網址才讀得懂;預設的 JSON 編碼會變成一團 %5B%22
+  parseSearch,
+  stringifySearch,
 })
 
 declare module '@tanstack/react-router' {

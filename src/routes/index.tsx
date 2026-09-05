@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 
 import { useMeta } from '@/hooks/useMeta'
 import { formatTaipei } from '@/lib/datetime'
@@ -20,8 +20,15 @@ function Home() {
     <div className="mx-auto max-w-2xl px-4 py-16">
       <h1 className="text-3xl font-semibold tracking-tight">北科課程</h1>
       <p className="text-muted-foreground mt-2 text-sm">
-        資料層已就緒。搜尋功能建置中。
+        查課程、看教學大綱、排課表。非官方網站。
       </p>
+
+      <Link
+        to="/search"
+        className="bg-primary text-primary-foreground focus-visible:ring-ring mt-6 inline-block rounded-lg px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+      >
+        開始搜尋
+      </Link>
 
       <dl className="mt-8 grid grid-cols-2 gap-4 text-sm">
         <Stat label="最新學期" value={meta.latest} />
