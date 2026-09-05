@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ntut-course-web",
+  "compatibility_date": "2026-09-03",
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "dist",
+    // SPA fallback。Workers Static Assets 用這個設定,**不能**用 _redirects 寫
+    // `/* /index.html 200` —— 那會被判定成無限迴圈,部署直接失敗。
+    // 直接開 /course/115-1/364893 這種深層網址時,回傳 index.html 由前端路由接手。
+    "not_found_handling": "single-page-application",
+  },
+}

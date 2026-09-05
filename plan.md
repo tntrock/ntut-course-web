@@ -834,22 +834,52 @@ NFKC 會把全形英數轉半形,解決「使用者打半形但資料是全形�
 
 ## 5. 部署設定
 
-### Cloudflare Pages
+### Cloudflare Workers(Static Assets)
 
-| 設定             | 值                                                            |
-| ---------------- | ------------------------------------------------------------- |
-| Build command    | `npm run build`                                               |
-| Output directory | `dist`                                                        |
-| Node version     | 22                                                            |
-| 環境變數         | `VITE_API_BASE=https://tntrock.github.io/ntut-course-crawler` |
+> ⚠️ **2026-09-05 更正**:Cloudflare 已把 Pages 併進 Workers。從 dashboard 接 Git
+> 建立的是 **Worker**(部署命令 `npx wrangler deploy`),不是舊的 Pages 專案。
+> 設定方式因此與原規劃不同。
 
-### `public/_redirects`
+| 設定             | 值                                                |
+| ---------------- | ------------------------------------------------- |
+| Build command    | `npm run build`                                   |
+| Deploy command   | `npx wrangler deploy`                             |
+| Output directory | `dist`(由 `wrangler.jsonc` 指定,dashboard 不必填) |
+| Node version     | 由 `.nvmrc` 決定(22)                              |
+| 環境變數         | `VITE_API_BASE`(可省略,程式碼有預設值)            |
+
+### `wrangler.jsonc`
+
+```jsonc
+{
+  "name": "ntut-course-web",
+  "compatibility_date": "2026-09-03",
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "dist",
+    "not_found_handling": "single-page-application",
+  },
+}
+```
+
+**這個檔案必須進版控。** 沒有它,`wrangler deploy` 會在 CI 上跑互動式初始化,
+並且多跑一次 build。
+
+### SPA fallback:不要用 `_redirects`
+
+原規劃的 `public/_redirects` 寫 `/*  /index.html  200` —— 在 Workers Static Assets
+上**部署會直接失敗**:
 
 ```
-/*    /index.html   200
+Invalid _redirects configuration:
+Line 2: Infinite loop detected in this rule.
 ```
 
-SPA fallback。**沒有這行,所有深層連結都會 404。**
+Workers Assets 自己會處理 `.html` / `/index` 的解析,再加一條全域改寫會被判定成
+無限迴圈。正解是 `assets.not_found_handling: "single-page-application"`。
+已用 `wrangler dev` 實測 `/course/115-1/364893` 回傳 200 與 app 的 HTML。
+
+`_headers` **仍然支援**,不受影響,繼續使用。
 
 ### `public/_headers`
 
@@ -1106,3 +1136,18 @@ Vite plugin 產生 —— CI 上沒有它會直接失敗。做法:檔案進版�
 `semesterVersion`。departments、teachers、classrooms 等包裝**刻意不預先寫**
 —— 它們都是 `fetchVersioned` 的一行包裝,等 Phase 3 真的用到時連同測試一起加,
 避免現在寫一堆沒有測試涵蓋、也沒人呼叫的程式碼。
+
+### D.6 部署目標其實是 Workers,不是 Pages
+
+§0.3 與 §10 都寫「Cloudflare Pages」。實際從 dashboard 接 Git 時,Cloudflare 建立的
+是 **Worker + Static Assets**,部署命令是 `npx wrangler deploy`。第一次部署因此失敗
+—— `_redirects` 的 SPA 規則在 Workers Assets 上是不合法的。§5 已整段更正。
+
+對本專案的實質影響:
+
+- **`_redirects` 刪除**,SPA fallback 改由 `wrangler.jsonc` 的
+  `not_found_handling` 處理
+- **`wrangler.jsonc` 進版控**,否則 CI 上會跑互動式初始化並重複 build
+- `_headers` 不受影響
+- §10 決策表裡「CF Pages Git 整合 vs GH Actions + wrangler」的結論仍然成立
+  —— 只是 Git 整合現在產生的是 Worker。PR preview 仍然有

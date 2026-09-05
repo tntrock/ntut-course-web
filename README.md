@@ -28,6 +28,7 @@ npm run dev          # http://localhost:5173
 | `npm run test:watch` | 監看模式                                                        |
 | `npm run lint`       | oxlint                                                          |
 | `npm run format`     | Prettier                                                        |
+| `npm run deploy`     | build 後部署到 Cloudflare(需先 `wrangler login`)                |
 
 ### 環境變數
 
@@ -74,7 +75,7 @@ crawler 承諾:新增欄位不升 `schema_version`,移除欄位 / 改型別 / �
 ## 技術棧
 
 Vite 8、React 19、TypeScript(嚴格模式)、TanStack Router / Query、
-Tailwind CSS v4、shadcn/ui(Base UI)、Vitest。部署在 Cloudflare Pages。
+Tailwind CSS v4、shadcn/ui(Base UI)、Vitest。部署在 Cloudflare Workers(Static Assets)。
 
 ## 授權
 
