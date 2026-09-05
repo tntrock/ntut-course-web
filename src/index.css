@@ -3,48 +3,83 @@
 /* 深色模式採 class 策略,由 <html class="dark"> 控制,可跟隨系統或手動覆寫 */
 @custom-variant dark (&:is(.dark *));
 
-/* shadcn/ui neutral 色票 */
+/*
+ * 色票。原本是 shadcn 的 neutral —— 純灰階、零彩度,結果整個站沒有任何視覺錨點。
+ *
+ * 兩個原則:
+ * 1. **只有一個強調色。** 它保留給「可以按」與「目前選中」,不當裝飾用。
+ *    到處都是重點等於沒有重點。
+ * 2. **卡片靠表面亮度分層,不靠 1px 框線。** 滿畫面的細框線會讓列表看起來像
+ *    試算表;把卡片墊高一階,邊界自然就出來了。
+ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --radius: 0.75rem;
+
+  /* 頁面比卡片暗一階 —— 卡片才浮得起來 */
+  --background: oklch(0.978 0.003 255);
+  --foreground: oklch(0.17 0.012 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: var(--foreground);
+  /* 比卡片再高一階,給下拉、彈出層用 */
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.53 0.19 258);
+  --primary-foreground: oklch(0.99 0 0);
+  /* 強調色的淡底,給「選中」的晶片與區塊用 */
+  --primary-muted: oklch(0.95 0.03 258);
+
+  --secondary: oklch(0.955 0.005 255);
+  --secondary-foreground: oklch(0.32 0.014 255);
+  --muted: oklch(0.955 0.005 255);
+  --muted-foreground: oklch(0.5 0.014 255);
+  --accent: oklch(0.94 0.008 255);
+  --accent-foreground: var(--foreground);
+
+  --destructive: oklch(0.55 0.21 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.55 0.13 155);
+  --warning: oklch(0.68 0.15 70);
+
+  --border: oklch(0.9 0.006 255);
+  --input: oklch(0.88 0.008 255);
+  --ring: var(--primary);
+
+  --shadow-card: 0 1px 2px oklch(0.17 0.012 255 / 6%);
+  --shadow-raised: 0 4px 16px oklch(0.17 0.012 255 / 10%);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.269 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 18%);
-  --ring: oklch(0.556 0 0);
+  --background: oklch(0.165 0.008 260);
+  --foreground: oklch(0.97 0.003 255);
+  --card: oklch(0.215 0.009 260);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.25 0.01 260);
+  --popover-foreground: var(--foreground);
+
+  /* 深色底下要更亮才有足夠對比,不能沿用淺色的那一支 */
+  --primary: oklch(0.72 0.15 255);
+  --primary-foreground: oklch(0.17 0.02 260);
+  --primary-muted: oklch(0.3 0.06 258);
+
+  --secondary: oklch(0.27 0.01 260);
+  --secondary-foreground: oklch(0.93 0.004 255);
+  --muted: oklch(0.27 0.01 260);
+  --muted-foreground: oklch(0.7 0.012 255);
+  --accent: oklch(0.32 0.012 260);
+  --accent-foreground: var(--foreground);
+
+  --destructive: oklch(0.68 0.19 25);
+  --destructive-foreground: oklch(0.15 0.02 260);
+  --success: oklch(0.72 0.14 155);
+  --warning: oklch(0.78 0.14 70);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: var(--primary);
+
+  --shadow-card: none;
+  --shadow-raised: 0 8px 28px oklch(0 0 0 / 45%);
 }
 
 @theme inline {
@@ -68,6 +103,10 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-primary-muted: var(--primary-muted);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -82,6 +121,16 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+
+  /*
+   * 捲軸細一點。搜尋頁同時出現多條捲軸時,預設寬度會讓畫面看起來很吵。
+   */
+  @supports (scrollbar-width: thin) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
   }
 
   html {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { toFilters, validateSearchParams, type SearchParams } from '@/lib/searchParams'
@@ -8,7 +8,6 @@ import { activeFilterCount } from '@/lib/filters'
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
 import { semesterIndexQueryOptions, useSemesterIndex } from '@/hooks/useSemesterIndex'
 import { useCourseSearch } from '@/hooks/useCourseSearch'
-import { useDebounced } from '@/hooks/useDebounced'
 import { FilterPanel, type FilterValues } from '@/components/search/FilterPanel'
 import { ResultList } from '@/components/search/ResultList'
 import { EmptyResults } from '@/components/search/EmptyResults'
@@ -83,35 +82,8 @@ function SearchPage() {
   const index = useSemesterIndex(meta, semester)
   const departments = useSuspenseQuery(departmentsQueryOptions(meta, semester)).data
 
-  // 輸入框自己維持狀態,debounce 之後才寫回網址 ——
-  // 每個按鍵都推一次歷史紀錄的話,上一頁會變成一個字一個字倒退
-  const [draft, setDraft] = useState(params.q ?? '')
-
-  // 網址上的關鍵字變了(上一頁、點了建議、外部連結)就同步回輸入框。
-  // 用 render 期調整而不是 useEffect —— effect 會多跑一輪 render,
-  // 而且輸入框會先閃一下舊值。這是 React 官方對「prop 變了要重設 state」的建議做法。
-  const [lastQ, setLastQ] = useState(params.q)
-  if (params.q !== lastQ) {
-    setLastQ(params.q)
-    setDraft(params.q ?? '')
-  }
-
-  const debounced = useDebounced(draft)
-
-  useEffect(() => {
-    if (debounced === (params.q ?? '')) return
-    void navigate({
-      search: (prev: SearchParams) => {
-        const next = { ...prev }
-        // exactOptionalPropertyTypes 下不能塞 undefined,要真的把 key 拿掉
-        if (debounced === '') delete next.q
-        else next.q = debounced
-        return next
-      },
-      replace: true,
-    })
-  }, [debounced, params.q, navigate])
-
+  // 關鍵字輸入框在頁首(見 components/AppHeader)。搜尋頁只從網址讀值 ——
+  // 兩個地方各放一個搜尋框,使用者就得猜哪一個才算數。
   const filters = useMemo(() => toFilters(params, null), [params])
   const sort: SortKey = params.sort ?? 'relevance'
   const result = useCourseSearch(index.courses, params.q ?? '', filters, sort)
@@ -144,22 +116,49 @@ function SearchPage() {
     })
   }
 
+  /** 清除所有篩選條件,但**留著關鍵字與學期** —— 那兩個不是「篩選」。 */
+  const clearFilters = () => {
+    void navigate({
+      search: (prev: SearchParams) => {
+        const next: SearchParams = { ...prev }
+        for (const key of [
+          'dept',
+          'req',
+          'lang',
+          'slot',
+          'time',
+          'cmin',
+          'cmax',
+        ] as const) {
+          delete next[key]
+        }
+        return next
+      },
+    })
+  }
+
   const [filtersOpen, setFiltersOpen] = useState(false)
   const appliedCount = activeFilterCount(filters)
 
   return (
-    <div className="mx-auto max-w-6xl px-4">
-      <div className="bg-background sticky top-0 z-10 flex items-center gap-2 py-3">
-        <input
-          type="search"
-          name="q"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="課名、教師、課號"
-          aria-label="搜尋課程"
-          autoFocus
-          className="bg-background focus-visible:ring-ring flex-1 rounded-lg border px-3 py-2 focus-visible:ring-2 focus-visible:outline-none"
-        />
+    <div className="mx-auto max-w-6xl px-4 pb-10">
+      {/*
+        工具列黏在頁首下方(頁首高 3.25rem)。原本搜尋框、學期、排序、篩選鈕
+        全部擠在同一列,寬螢幕下右邊一大片空的、手機上又擠成一團。
+      */}
+      <div className="bg-background/85 sticky top-13 z-20 flex items-center gap-2 py-2.5 backdrop-blur">
+        <p className="flex-1 text-sm" aria-live="polite">
+          {result.loading ? (
+            <span className="text-muted-foreground">建立索引中…</span>
+          ) : (
+            <>
+              <span className="font-medium tabular-nums">
+                {result.total.toLocaleString('zh-TW')}
+              </span>
+              <span className="text-muted-foreground"> 門課</span>
+            </>
+          )}
+        </p>
 
         <select
           name="sem"
@@ -170,7 +169,7 @@ function SearchPage() {
               search: (prev: SearchParams) => ({ ...prev, sem: e.target.value }),
             })
           }
-          className="bg-background rounded-lg border px-2 py-2 text-sm"
+          className="bg-card rounded-lg border px-2 py-1.5 text-sm"
         >
           {meta.semesters.map((s) => (
             <option key={s.path} value={s.path}>
@@ -191,7 +190,7 @@ function SearchPage() {
               }),
             })
           }
-          className="bg-background hidden rounded-lg border px-2 py-2 text-sm sm:block"
+          className="bg-card hidden rounded-lg border px-2 py-1.5 text-sm sm:block"
         >
           <option value="relevance">相關度</option>
           <option value="name">課名</option>
@@ -202,15 +201,20 @@ function SearchPage() {
         <button
           type="button"
           onClick={() => setFiltersOpen((v) => !v)}
-          className="hover:bg-accent rounded-lg border px-3 py-2 text-sm md:hidden"
+          aria-expanded={filtersOpen}
+          className={`focus-visible:ring-ring rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none md:hidden ${
+            appliedCount > 0
+              ? 'bg-primary text-primary-foreground border-transparent'
+              : 'bg-card hover:bg-accent'
+          }`}
         >
-          篩選{appliedCount > 0 ? ` (${appliedCount})` : ''}
+          篩選{appliedCount > 0 ? ` ${appliedCount}` : ''}
         </button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-[16rem_1fr]">
+      <div className="grid gap-6 md:grid-cols-[15rem_1fr]">
         <aside
-          className={`md:sticky md:top-16 md:block md:self-start ${
+          className={`md:sticky md:top-24 md:block md:self-start ${
             filtersOpen ? 'block' : 'hidden'
           }`}
         >
@@ -220,16 +224,11 @@ function SearchPage() {
             periods={meta.periods}
             values={values}
             onChange={applyFilterChange}
+            onClear={clearFilters}
           />
         </aside>
 
-        <main>
-          <p className="text-muted-foreground py-2 text-sm" aria-live="polite">
-            {result.loading
-              ? '建立索引中…'
-              : `${result.total.toLocaleString('zh-TW')} 門課`}
-          </p>
-
+        <main className="min-w-0">
           {!result.loading && result.total === 0 ? (
             <EmptyResults
               suggestions={result.suggestions}

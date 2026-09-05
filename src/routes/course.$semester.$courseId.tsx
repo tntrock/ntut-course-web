@@ -207,7 +207,7 @@ function CourseDetail() {
         </p>
       )}
 
-      <div className="mt-6 flex gap-1 border-b" role="tablist">
+      <div className="mt-6 flex gap-1 border-b" role="tablist" aria-label="課程分頁">
         <TabButton
           active={active === 'info'}
           onClick={() => void navigate({ search: {} })}
@@ -224,7 +224,9 @@ function CourseDetail() {
         )}
       </div>
 
-      <div className="py-2">
+      {/* 內容放在卡片上,和頁面底色分層 —— 原本整段直接躺在背景上,
+          只靠一堆 1px 分隔線,看起來像沒排版的表格 */}
+      <div className="bg-card shadow-card mt-3 rounded-xl px-4 py-1">
         {active === 'info' ? (
           <CourseInfo
             course={course}

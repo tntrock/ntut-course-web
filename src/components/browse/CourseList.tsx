@@ -38,7 +38,7 @@ export function CourseList({
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3 border-b py-2">
+      <div className="flex items-center justify-between gap-3 border-b py-2.5">
         <p className="text-muted-foreground text-sm">
           {courses.length.toLocaleString('zh-TW')} 門課
         </p>

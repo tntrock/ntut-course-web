@@ -55,7 +55,7 @@ function Home() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border p-4">
+    <div className="bg-card shadow-card rounded-xl p-4">
       <dt className="text-muted-foreground text-xs">{label}</dt>
       <dd className="mt-1 text-lg font-medium tabular-nums">{value}</dd>
     </div>

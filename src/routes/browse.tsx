@@ -133,7 +133,7 @@ function BrowsePage() {
           value={semester}
           aria-label="學期"
           onChange={(e) => setSearch({ sem: e.target.value })}
-          className="bg-background rounded-lg border px-2 py-1 text-sm"
+          className="bg-card rounded-lg border px-2 py-1 text-sm"
         >
           {meta.semesters.map((s) => (
             <option key={s.path} value={s.path}>
@@ -229,7 +229,8 @@ function DeptTab({ meta, semester, query }: TabProps) {
           <h2 className="text-muted-foreground mb-1 text-xs font-medium">
             {group.name}
           </h2>
-          <div className="border-t">
+          {/* 60 個系所排成一長條要捲很久。寬螢幕分兩欄,一眼看得完一個學院 */}
+          <div className="grid gap-2 sm:grid-cols-2">
             {group.departments.map((d) => (
               <DeptRow key={d.id} dept={d} semester={semester} />
             ))}
@@ -242,8 +243,8 @@ function DeptTab({ meta, semester, query }: TabProps) {
 
 function DeptRow({ dept, semester }: { dept: Department; semester: string }) {
   return (
-    <div className="border-b">
-      <div className="flex items-center gap-3 py-2.5">
+    <div className="bg-card shadow-card rounded-xl px-3 py-1">
+      <div className="flex items-center gap-3 py-2">
         <Link
           to="/dept/$semester/$deptId"
           params={{ semester, deptId: dept.id }}
@@ -299,7 +300,7 @@ function TeacherTab({ meta, semester, query }: TabProps) {
           <h2 className="text-muted-foreground mb-1 text-xs font-medium">
             {group.initial}
           </h2>
-          <div className="border-t">
+          <div className="bg-card shadow-card grid rounded-xl px-3 sm:grid-cols-2 sm:gap-x-4">
             {group.items.map((t) => (
               <TeacherRow
                 key={t.id}
@@ -347,7 +348,7 @@ function ProgramTab({ meta, semester, query }: TabProps) {
   if (matched.length === 0) return <Empty what="學程" />
 
   return (
-    <div className="border-t">
+    <div className="bg-card shadow-card grid rounded-xl px-3 sm:grid-cols-2 sm:gap-x-4">
       {matched.map((p: Program) => (
         <Link
           key={p.name}
@@ -370,7 +371,7 @@ function ClassroomTab({ meta, semester, query }: TabProps) {
   if (matched.length === 0) return <Empty what="教室" />
 
   return (
-    <div className="border-t">
+    <div className="bg-card shadow-card grid rounded-xl px-3 sm:grid-cols-2 sm:gap-x-4">
       {matched.map((c: Classroom) => (
         <Link
           key={c.id}

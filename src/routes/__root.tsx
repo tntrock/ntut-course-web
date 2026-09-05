@@ -2,6 +2,7 @@ import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
 
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
+import { AppHeader } from '@/components/AppHeader'
 import { OfflineNotice } from '@/components/OfflineNotice'
 import { SchemaWarning } from '@/components/SchemaWarning'
 import { ApiError } from '@/lib/api'
@@ -26,6 +27,8 @@ function RootLayout() {
     <div className="flex min-h-dvh flex-col">
       <SchemaWarning version={meta.schema_version} />
       {fromCache && <OfflineNotice generatedAt={meta.generated_at} />}
+
+      <AppHeader />
 
       <main className="flex-1">
         <Outlet />

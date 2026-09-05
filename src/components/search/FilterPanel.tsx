@@ -41,12 +41,46 @@ function distinct(courses: readonly CourseIndexEntry[]) {
 
 const LANGUAGE_LABELS: Record<string, string> = { [LANGUAGE_ZH]: '中文' }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+/**
+ * 可收合的篩選分區。
+ *
+ * 原本五個分區全部攤開,一進站就是一整面長得一模一樣的灰色晶片 ——
+ * 光是系所就有 60 個。收起來之後,畫面上剩下的是「有哪些條件可以用」,
+ * 而不是「這裡有幾百個按鈕」。
+ *
+ * 用原生 `<details>`:鍵盤操作與無障礙都是瀏覽器內建的,自己用 state 做一份
+ * 只會少掉這些。已經套用條件的分區自動展開 —— 看不到自己套了什麼最糟。
+ */
+function Section({
+  title,
+  active,
+  defaultOpen = false,
+  children,
+}: {
+  title: string
+  /** 這個分區目前套用了幾個條件。0 就不顯示。 */
+  active: number
+  defaultOpen?: boolean
+  children: React.ReactNode
+}) {
   return (
-    <section className="border-b py-4">
-      <h3 className="mb-2 text-sm font-medium">{title}</h3>
-      {children}
-    </section>
+    <details open={defaultOpen || active > 0} className="group border-b">
+      <summary className="flex cursor-pointer list-none items-center gap-2 py-3 text-sm font-medium select-none marker:content-none">
+        <span className="flex-1">{title}</span>
+        {active > 0 && (
+          <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[11px] tabular-nums">
+            {active}
+          </span>
+        )}
+        <span
+          aria-hidden
+          className="text-muted-foreground transition-transform group-open:rotate-90"
+        >
+          ›
+        </span>
+      </summary>
+      <div className="pb-4">{children}</div>
+    </details>
   )
 }
 
@@ -64,10 +98,10 @@ function Chip({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`focus-visible:ring-ring rounded-full border px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+      className={`focus-visible:ring-ring rounded-full px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none ${
         active
-          ? 'bg-primary text-primary-foreground border-transparent'
-          : 'hover:bg-accent'
+          ? 'bg-primary text-primary-foreground'
+          : 'bg-secondary text-secondary-foreground hover:bg-accent'
       }`}
     >
       {children}
@@ -85,22 +119,47 @@ export function FilterPanel({
   periods,
   values,
   onChange,
+  onClear,
 }: {
   courses: readonly CourseIndexEntry[]
   departments: DepartmentsResponse
   periods: readonly PeriodDef[]
   values: FilterValues
   onChange: (patch: Partial<FilterValues>) => void
+  onClear: () => void
 }) {
   const options = distinct(courses)
+  const creditsActive = values.cmin !== undefined || values.cmax !== undefined
+  const total =
+    values.dept.length +
+    values.req.length +
+    values.lang.length +
+    values.slot.length +
+    (creditsActive ? 1 : 0)
 
   return (
     <div className="text-sm">
-      <Section title="學院 / 系所">
-        <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
-          {/* `colleges[].name` 有一個是 `null`(教務處、體育室、通識中心、
-              師培中心、校院級課程這 5 個)。直接渲染會變成一個沒有標題的區塊,
-              使用者只看到五個孤兒按鈕 —— 一律經過 collegeGroups() 換成「校級單位」 */}
+      <div className="flex h-9 items-center justify-between gap-2">
+        <span className="text-muted-foreground text-xs">
+          {total > 0 ? `已套用 ${total} 個條件` : '篩選'}
+        </span>
+        {total > 0 && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="text-primary hover:bg-accent focus-visible:ring-ring rounded-md px-2 py-1 text-xs focus-visible:ring-2 focus-visible:outline-none"
+          >
+            清除
+          </button>
+        )}
+      </div>
+
+      <Section title="學院 / 系所" active={values.dept.length}>
+        {/*
+          原本這一塊自己開了一個 max-h + overflow 的捲動框,於是畫面上出現第三條
+          捲軸。收合之後就不需要了 —— 展開時讓整頁一起捲就好。
+        */}
+        <div className="space-y-3">
           {collegeGroups(departments).map((college) => (
             <div key={college.name}>
               <p className="text-muted-foreground mb-1 text-xs">{college.name}</p>
@@ -120,7 +179,7 @@ export function FilterPanel({
         </div>
       </Section>
 
-      <Section title="必選修">
+      <Section title="必選修" active={values.req.length} defaultOpen>
         <div className="flex flex-wrap gap-1">
           {options.requirementTypes.map((type) => (
             <Chip
@@ -134,7 +193,7 @@ export function FilterPanel({
         </div>
       </Section>
 
-      <Section title="授課語言">
+      <Section title="授課語言" active={values.lang.length} defaultOpen>
         <div className="flex flex-wrap gap-1">
           {options.languages.map((lang) => (
             <Chip
@@ -148,7 +207,7 @@ export function FilterPanel({
         </div>
       </Section>
 
-      <Section title="星期 / 節次">
+      <Section title="星期 / 節次" active={values.slot.length}>
         <TimeGrid
           periods={periods}
           selected={values.slot}
@@ -159,7 +218,7 @@ export function FilterPanel({
         />
       </Section>
 
-      <Section title="學分">
+      <Section title="學分" active={creditsActive ? 1 : 0}>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -175,7 +234,7 @@ export function FilterPanel({
                 cmin: e.target.value === '' ? undefined : Number(e.target.value),
               })
             }
-            className="bg-background w-20 rounded border px-2 py-1 tabular-nums"
+            className="bg-card w-20 rounded-lg border px-2 py-1 tabular-nums"
           />
           <span className="text-muted-foreground">–</span>
           <input
@@ -192,7 +251,7 @@ export function FilterPanel({
                 cmax: e.target.value === '' ? undefined : Number(e.target.value),
               })
             }
-            className="bg-background w-20 rounded border px-2 py-1 tabular-nums"
+            className="bg-card w-20 rounded-lg border px-2 py-1 tabular-nums"
           />
         </div>
       </Section>

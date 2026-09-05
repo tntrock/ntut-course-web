@@ -52,7 +52,7 @@ export function DetailShell({
         )}
       </header>
 
-      <div className="mt-4">{children}</div>
+      <div className="bg-card shadow-card mt-4 rounded-xl px-4 py-1">{children}</div>
     </div>
   )
 }
