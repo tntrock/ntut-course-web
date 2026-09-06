@@ -300,8 +300,14 @@ HTML 與 `sw.js` 不快取。
 
 環境變數只有 `VITE_API_BASE`。資料來源掛掉時可以換成一層代理，程式不用改。
 
-**尚未啟用**：Cloudflare Web Analytics（Worker → Analytics → Web Analytics，
-只需在儀表板開啟，不需要改程式）。
+**分析**分成兩件事，別搞混：
+
+- `wrangler.jsonc` 的 `observability` 是**伺服器端**——請求數、錯誤、CPU 時間、
+  Workers Logs。但這個 Worker 沒有 `main`（純 Static Assets），沒有程式在跑，
+  所以 Logs 是空的。留著是為了哪天真的加了 Worker 邏輯。
+- **訪客端**要 Cloudflare Web Analytics，beacon 手動放在 `index.html`。
+  自動注入只對 DNS proxy 的網站與 Cloudflare Pages 生效，Workers 自訂網域不算。
+  不用 cookie、不做跨站識別；token 是公開的網站識別碼。
 
 ---
 

@@ -33,5 +33,17 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!--
+      Cloudflare Web Analytics。不用 cookie、不做跨站識別,收的是瀏覽量與
+      Core Web Vitals。token 是公開的網站識別碼,本來就會出現在 HTML 裡。
+
+      放在 body 最後、不加 defer —— 它是 type="module",本來就延後執行,
+      不會擋住首屏。
+    -->
+    <script
+      type="module"
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "b0f4b2f063c74614827b8e783f48253a"}'
+    ></script>
   </body>
 </html>

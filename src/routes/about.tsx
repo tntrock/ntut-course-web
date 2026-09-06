@@ -179,6 +179,13 @@ function AboutPage() {
           </Link>
           底下有匯出 / 匯入 JSON，建議偶爾備份一份。
         </p>
+        {/* 站上多了一個第三方 script,就要在這裡講 —— 上面那句「不會上傳到
+            任何地方」講的是個人資料,不能讓它順便把訪客統計也蓋掉 */}
+        <p>
+          站上有一段 Cloudflare Web Analytics，用來看有多少人在用、頁面跑得快不快。 它
+          <strong className="text-foreground font-semibold">不用 cookie</strong>
+          、不做跨站識別，也讀不到你的課表與收藏。
+        </p>
       </Section>
 
       <Section title="資料是開放的">
