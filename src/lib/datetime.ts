@@ -44,3 +44,24 @@ export function hoursSince(iso: string, now: Date = new Date()): number {
   if (diffMs <= 0) return 0
   return Math.floor(diffMs / (1000 * 60 * 60))
 }
+
+const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: TAIPEI,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
+
+/**
+ * `"2026-09-04T18:00:00Z"` → `"2026-09-05"`(台北時間)。
+ *
+ * **不能直接切 ISO 字串的前 10 個字。** UTC 傍晚在台北已經是隔天,異動時間軸
+ * 依日期分組,分錯天等於資訊是錯的。
+ *
+ * 用 `en-CA` 是因為它的短日期格式剛好就是 `YYYY-MM-DD`。
+ */
+export function taipeiDate(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  return dateFormatter.format(date)
+}

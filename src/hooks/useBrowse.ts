@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import {
+  fetchChanges,
   fetchClassCourses,
   fetchClasses,
   fetchClassrooms,
@@ -83,6 +84,15 @@ export function departmentCoursesQueryOptions(
   return queryOptions({
     queryKey: ['department-courses', semester, departmentId, version(meta, semester)],
     queryFn: () => fetchDepartmentCourses(meta, semester, departmentId),
+    staleTime: Infinity,
+  })
+}
+
+/** 異動事件流。跨學期,版本號用 `meta.generated_at`。 */
+export function changesQueryOptions(meta: Meta) {
+  return queryOptions({
+    queryKey: ['changes', meta.generated_at],
+    queryFn: () => fetchChanges(meta),
     staleTime: Infinity,
   })
 }

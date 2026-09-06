@@ -88,6 +88,7 @@ export function AppHeader() {
           <NavLink to="/search">搜尋</NavLink>
           <NavLink to="/browse">瀏覽</NavLink>
           <NavLink to="/schedule">課表</NavLink>
+          <NavLink to="/changes">異動</NavLink>
         </nav>
       </div>
     </header>
@@ -98,7 +99,7 @@ function NavLink({
   to,
   children,
 }: {
-  to: '/search' | '/browse' | '/schedule'
+  to: '/search' | '/browse' | '/schedule' | '/changes'
   children: string
 }) {
   return (

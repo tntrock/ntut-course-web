@@ -1,4 +1,5 @@
 import type {
+  Changes,
   ClassCourses,
   ClassesResponse,
   ClassroomsResponse,
@@ -256,6 +257,15 @@ export function fetchClassrooms(
     `${semester}/classrooms.json`,
     semesterVersion(meta, semester),
   )
+}
+
+/**
+ * 課程與教師的異動事件流。
+ *
+ * 跨學期,所以版本號用 `meta.generated_at` 而不是某個學期的。
+ */
+export function fetchChanges(meta: Meta): Promise<Changes> {
+  return fetchVersioned<Changes>('changes.json', meta.generated_at)
 }
 
 /**

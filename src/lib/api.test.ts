@@ -411,3 +411,26 @@ describe('瀏覽層的端點', () => {
     expect(fetchMock.calls[0]).toContain('teachers/a%20b%2Fc.json')
   })
 })
+
+describe('fetchChanges', () => {
+  const meta = {
+    schema_version: 3,
+    generated_at: '2026-09-06T03:35:46Z',
+    latest: '115-1',
+    semesters: [{ path: '115-1', generated_at: '2026-09-05T08:17:49Z' }],
+  } as unknown as import('@/types/api').Meta
+
+  it('用 meta.generated_at 當版本號 —— 異動事件跨學期,不屬於任何一個', async () => {
+    const { fetchChanges } = await import('./api')
+    const fetchMock = createFakeFetch({
+      'changes.json': { schema_version: 3, event_count: 15, events: [] },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const data = await fetchChanges(meta)
+
+    expect(data.event_count).toBe(15)
+    expect(fetchMock.calls[0]).toContain('changes.json')
+    expect(fetchMock.calls[0]).toContain('v=2026-09-06T03%3A35%3A46Z')
+  })
+})
