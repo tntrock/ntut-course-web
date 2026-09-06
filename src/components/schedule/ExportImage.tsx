@@ -14,7 +14,7 @@ import { dayName } from '@/lib/formatTime'
  *    computed style 塞進 SVG,顏色函式與變數在那條路徑上是額外的風險 ——
  *    而且分享出去的課表是淺色比較好讀、好印。
  * 3. **不用 webfont**,全站中文本來就走系統字型堆疊。字型嵌不進去的話,
- *    中文會整片變成豆腐(plan §3.5 的已知風險)。
+ *    中文會整片變成豆腐。
  */
 
 const FONT =

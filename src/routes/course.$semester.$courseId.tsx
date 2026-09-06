@@ -31,7 +31,7 @@ export const Route = createFileRoute('/course/$semester/$courseId')({
   /**
    * 冷啟動(直接開分享連結)的請求安排。實測線上冷快取約 1.25 秒,
    * 其中三個來回就佔了約 700ms —— 這是「沒有 lookup.json」的固有成本
-   * (要拿系所代碼就得先載整份索引),plan §9 記了解法。這裡榨乾的是排程:
+   * (要拿系所代碼就得先載整份索引)。這裡榨乾的是排程:
    *
    * ```
    * meta ─┬─ 索引 ────── 系所檔 ─┐
@@ -89,7 +89,7 @@ function CourseNotFound() {
       <h1 className="text-2xl font-semibold">查無此課</h1>
       <p className="text-muted-foreground mt-2 text-sm">
         {semester} 沒有課號 {courseId}。
-        {/* 課號跨學期不穩定（plan §1.3.7）—— 這是最常見的原因，直接講出來 */}
+        {/* 課號跨學期不穩定—— 這是最常見的原因，直接講出來 */}
         課號在不同學期並不通用，舊連結換到別的學期通常就查不到了。
       </p>
       <Link to="/search" className="mt-6 inline-block text-sm underline">
@@ -186,7 +186,7 @@ function CourseDetail() {
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {/*
             **學期一定要看得見。** 分享連結進來的人不知道自己看的是哪一學期，
-            而課號跨學期不通用（plan §1.3.7）—— 沒有這個標示，一門 114-2 的課
+            而課號跨學期不通用—— 沒有這個標示，一門 114-2 的課
             看起來會跟本學期的課一模一樣。
           */}
           <span className="text-muted-foreground text-xs tabular-nums">
@@ -234,8 +234,8 @@ function CourseDetail() {
         )}
       </div>
 
-      {/* 內容放在卡片上，和頁面底色分層 —— 原本整段直接躺在背景上，
-          只靠一堆 1px 分隔線，看起來像沒排版的表格 */}
+      {/* 內容放在卡片上，和頁面底色分層 —— 只靠 1px 分隔線的話
+          看起來像沒排版的表格 */}
       <div className="bg-card shadow-card mt-3 rounded-xl px-4 py-1">
         {active === 'info' ? (
           <CourseInfo

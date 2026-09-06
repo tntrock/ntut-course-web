@@ -66,9 +66,8 @@ function Home() {
           <Stat label="系所" value={latest ? String(latest.department_count) : '—'} />
           <Stat label="班級" value={latest ? String(latest.class_group_count) : '—'} />
           {/*
-            這裡原本放 `merged_course_count`（合開課數），但「其中合開 309」在首頁
-            是個沒有上下文就看不懂的數字。換成收錄學期數 —— 那是這個站真正的
-            特點，而且看得懂。
+            放收錄學期數而不是 `merged_course_count` —— 「其中合開 309」在首頁是個
+            沒有上下文就看不懂的數字，學期數才是這個站真正的特點。
           */}
           <Stat label="收錄學期" value={String(meta.semesters.length)} />
         </dl>

@@ -7,7 +7,7 @@ import { parseSearch, stringifySearch } from './lib/searchParams'
 import { routeTree } from './routeTree.gen'
 import './index.css'
 
-// 資料的新鮮度由 api.ts 的 generated_at 版本號決定(見 plan §2.2),
+// 資料的新鮮度由 api.ts 的 generated_at 版本號決定,
 // 所以 Query 這層不需要再自己過期 —— 設成永不 stale,避免重複請求。
 const queryClient = new QueryClient({
   defaultOptions: {

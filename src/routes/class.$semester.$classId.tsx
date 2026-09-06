@@ -41,7 +41,7 @@ function ClassPage() {
       kind="班級"
       title={group.name}
       semester={semester}
-      // 班級沒有自己的瀏覽分頁 —— 它展開在系所底下(plan §3.4)
+      // 班級沒有自己的瀏覽分頁 —— 它展開在系所底下
       browseTab="dept"
       sourceUrl={group.url}
       meta={

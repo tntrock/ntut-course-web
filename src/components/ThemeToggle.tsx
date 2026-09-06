@@ -7,8 +7,8 @@ const DARK_QUERY = '(prefers-color-scheme: dark)'
 /**
  * 外觀切換。
  *
- * 設定本來就存在 store 裡,`index.html` 的首屏腳本也讀它 —— 但**沒有任何 UI
- * 可以改,也沒有人在執行期套用**,所以在這之前深色模式其實只跟隨系統。
+ * 設定存在 store 裡,`index.html` 的首屏腳本會先讀它一次避免閃白;
+ * 這個元件負責執行期的套用與切換。
  */
 export function ThemeToggle() {
   const theme = useStore().settings.theme

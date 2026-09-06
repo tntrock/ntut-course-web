@@ -16,7 +16,7 @@ export const BACKUP_KEY = 'ntut-course-web:v1.backup'
 export const STORE_VERSION = 1
 
 /**
- * 課程快照。**存快照而不只存課號**的兩個理由(plan §2.5):
+ * 課程快照。**存快照而不只存課號**的兩個理由:
  *
  * 1. 離線時直接拿來畫課表,不需要任何請求
  * 2. 連上線後與最新資料比對,課被停開、調課、換老師、改學分都能標出來
@@ -42,12 +42,12 @@ export interface SavedCourse {
 
 export interface Store {
   version: number
-  /** 各學期獨立。**課號跨學期不通用,所以不做遷移**(plan §7 風險 6)。 */
+  /** 各學期獨立。**課號跨學期不通用,所以不做遷移**。 */
   schedules: Record<SemesterPath, { courses: SavedCourse[] }>
   favorites: {
     /** `{semester}:{courseId}`。 */
     courses: string[]
-    /** 教師**代碼**,不是姓名(§1.3.6)。 */
+    /** 教師**代碼**,不是姓名 —— 有同名老師。 */
     teachers: string[]
   }
   settings: { theme: 'system' | 'light' | 'dark'; showWeekend: boolean }
@@ -249,7 +249,7 @@ export function saveStore(store: Store): SaveResult {
 /**
  * 匯出成人看得懂的 JSON。
  *
- * 沒有帳號同步,這個檔案是換裝置唯一的路(plan §7 風險 7),所以縮排排版 ——
+ * 沒有帳號同步,這個檔案是換裝置唯一的路,所以縮排排版 ——
  * 使用者要能自己打開來確認裡面有什麼。
  */
 export function serializeStore(store: Store): string {

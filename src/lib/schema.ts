@@ -7,7 +7,7 @@ export type SchemaCompatibility = 'ok' | 'newer' | 'older'
  *
  * crawler 的承諾:新增欄位 / 新增端點不升版,移除欄位 / 改型別 / 改語意才升版。
  * 所以版本不符代表**可能有欄位的語意變了**,必須讓使用者知道 ——
- * 但仍要盡量把畫面渲染出來,不可白畫面(plan §1.4)。
+ * 但仍要盡量把畫面渲染出來,不可白畫面。
  */
 export function checkSchema(version: number): SchemaCompatibility {
   if (version === SUPPORTED_SCHEMA_VERSION) return 'ok'

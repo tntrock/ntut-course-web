@@ -6,7 +6,7 @@ import { addToSchedule, isInSchedule, removeFromSchedule } from '@/lib/storeActi
 /**
  * 加入 / 移出課表。
  *
- * **不擋衝堂**(plan §3.5)—— 使用者可能正在比較兩個方案,課表頁會標紅提醒。
+ * **不擋衝堂**—— 使用者可能正在比較兩個方案,課表頁會標紅提醒。
  */
 export function ScheduleToggle({
   course,

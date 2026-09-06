@@ -2,7 +2,7 @@ import type { CourseIndexEntry } from '@/types/api'
 import { normalize, tokenize } from './normalize'
 
 /**
- * 為什麼不用 Fuse.js / MiniSearch(plan §2.3):
+ * 為什麼不用 Fuse.js / MiniSearch:
  *
  * 1. 中文沒有空白分詞。模糊比對按字元算編輯距離,對中文會給出大量無關結果
  * 2. 2,717 筆 × 幾個查詢詞的 `indexOf` 在手機上是 10ms 等級。

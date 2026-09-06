@@ -143,8 +143,8 @@ function SearchPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10">
       {/*
-        工具列黏在頁首下方（頁首高 3.25rem）。原本搜尋框、學期、排序、篩選鈕
-        全部擠在同一列，寬螢幕下右邊一大片空的、手機上又擠成一團。
+        工具列黏在頁首下方（頁首高 3.25rem）。搜尋框、學期、排序、篩選鈕不能擠在
+        同一列 —— 寬螢幕下右邊會空一大片，手機上又擠成一團。
       */}
       <div className="bg-background/85 sticky top-13 z-20 flex items-center gap-2 py-2.5 backdrop-blur">
         <p className="flex-1 text-sm" aria-live="polite">

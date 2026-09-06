@@ -61,7 +61,7 @@ export function diffSnapshot(
     changes.push({ kind: 'time', from: snapshot.time_slots, to: current.time_slots })
   }
 
-  // 教師以**代碼**比對,不是姓名 —— 同名老師有兩位(§1.3.6),
+  // 教師以**代碼**比對,不是姓名 —— 同名老師有兩位,
   // 而改名字不算換人
   const before = [...snapshot.teacher_codes].sort()
   const after = [...current.teacher_codes].sort()
@@ -92,7 +92,7 @@ export interface Grid {
 /**
  * 把課排進格子並找出衝堂。
  *
- * **衝堂只警告不阻擋**(plan §3.5)—— 使用者可能正在比較兩個方案。
+ * **衝堂只警告不阻擋**—— 使用者可能正在比較兩個方案。
  */
 export function buildGrid(courses: readonly SavedCourse[]): Grid {
   const cells = new Map<string, SavedCourse[]>()

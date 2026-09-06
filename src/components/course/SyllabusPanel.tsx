@@ -86,7 +86,7 @@ export function SyllabusPanel({
   /**
    * `null` 代表大綱進度還沒回來,狀態還算不出來。
    *
-   * 大綱不擋整頁渲染(見 plan D.17),所以「還不知道」是正常的一刻 ——
+   * 大綱不擋整頁渲染,所以「還不知道」是正常的一刻 ——
    * 這時說「尚未收錄」是錯的,它會閃一下錯誤訊息再變成內容。
    */
   state: SyllabusState | null
@@ -221,7 +221,7 @@ export function SyllabusPanel({
         </Block>
       )}
 
-      {/* 學校加了新欄位時要看得見，不能默默吞掉（plan §3.3） */}
+      {/* 學校加了新欄位時要看得見，不能默默吞掉 */}
       {unknown.map((field) => (
         <Block key={field.key} title={field.key}>
           {Array.isArray(field.value) ? (

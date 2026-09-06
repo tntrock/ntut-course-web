@@ -8,9 +8,8 @@ import type {
 /**
  * 教學大綱的四種狀態。
  *
- * plan §1.3.5 原本寫成三態,但實測 `syllabus.json` 的 `fetched` 對照後多出
- * 第四態:**有大綱連結、crawler 還沒抓到**。這在大綱正在補齊的期間會大量出現,
- * 和「這門課根本沒有大綱」是完全不同的意思,不能混為一談。
+ * 關鍵是第四態:**有大綱連結、crawler 還沒抓到**。大綱正在往回補的期間會大量
+ * 出現,和「這門課根本沒有大綱」是完全不同的意思,不能混為一談。
  */
 export type SyllabusState =
   /** 這個學期整個沒有收錄大綱 —— 不要讓使用者一門一門點進去撞空。 */
@@ -134,9 +133,8 @@ function isEmpty(value: unknown): boolean {
 /**
  * 列出型別沒宣告的欄位,讓學校新加的內容不會憑空消失。
  *
- * plan §3.3 原本指定渲染 `extra` 欄位,但實測 273 份大綱都沒有這個欄位 ——
- * schema v2 是平鋪的。所以這裡列的是**所有未知的頂層欄位**,並額外支援
- * `extra` 這種包裝形式,兩種都涵蓋。
+ * 大綱是平鋪的,實測沒有任何一份有 `extra` 欄位。所以這裡列的是**所有未知的
+ * 頂層欄位**,並額外支援 `extra` 這種包裝形式,兩種都涵蓋。
  */
 export function unknownSyllabusFields(syllabus: Syllabus): UnknownField[] {
   const source = syllabus as unknown as Record<string, unknown>

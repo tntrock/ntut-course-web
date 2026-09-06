@@ -1,13 +1,13 @@
 /**
  * ntut-course-crawler 靜態 API 的 TypeScript 型別。
  *
- * 依 `plan.md` §1 手寫,並對線上實際資料逐欄位核對過
+ * 逐欄位對線上實際資料核對過
  * (base: https://tntrock.github.io/ntut-course-crawler/)。
  *
  * 兩條規則:
  * 1. **只宣告用得到的欄位。** crawler 承諾新增欄位不升 `schema_version`,
  *    所以型別必須容得下沒宣告的欄位 —— 不要用 exact object type,
- *    也不要在 runtime 驗證形狀(見 plan §1.4)。
+ *    也不要在 runtime 驗證形狀。
  * 2. **`null` 是常態,不是例外。** 原始頁面用全形空白表示「沒有這欄」,
  *    crawler 已一律正規化成 `null`(陣列欄位為 `[]`)。
  */
@@ -82,7 +82,7 @@ export interface SemesterMeta {
   class_group_count: number
   course_count: number
   merged_course_count: number
-  /** 大於 0 代表有系所抓取失敗,該學期資料可能有缺(plan §7 風險 8)。 */
+  /** 大於 0 代表有系所抓取失敗,該學期資料可能有缺。 */
   failed_department_count: number
 }
 
@@ -94,7 +94,7 @@ export interface EndpointDef {
 export interface Meta extends SchemaVersioned {
   generated_at: string
   source: { name: string; url: string }
-  /** 免責聲明。plan §7 要求**每頁**頁尾顯示。 */
+  /** 免責聲明。**每一頁**的頁尾都要顯示。 */
   disclaimer: string
   /** 目前最新學期,例如 `"115-1"`。**絕對不可把學期寫死在前端。** */
   latest: SemesterPath
@@ -202,7 +202,7 @@ export interface CourseIndex extends SemesterScoped {
 // 瀏覽層
 // ─────────────────────────────────────────────────────────────
 
-/** 系所底下的班級。**是物件不是字串** —— plan §1 原本記成 `string[]`。 */
+/** 系所底下的班級。**是物件不是字串**。 */
 export interface ClassGroupSummary {
   id: string
   name: string
@@ -385,7 +385,7 @@ export interface SyllabusProgress extends SchemaVersioned {
   generated_at: string
   semesters: SyllabusProgressEntry[]
   /**
-   * 學期 → 課號 → 該門大綱的抓取資訊。**不是數量**(plan §1 原本記成 `number`)。
+   * 學期 → 課號 → 該門大綱的抓取資訊。**是物件不是數量。**
    *
    * schema v3 把值從**時間字串**改成 `{ at }` 物件。字串型別留著是為了
    * 爬蟲回退版本時不會整頁壞掉 —— 讀取一律經過 `syllabusState()`。

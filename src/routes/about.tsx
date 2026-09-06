@@ -17,11 +17,10 @@ export const Route = createFileRoute('/about')({
 /**
  * 這一頁是**拿來讀的**，不是拿來掃的，所以排版規則和其他頁面不同：
  *
- * - 標題要真的看起來像標題。原本 `h2` 是 `text-sm font-medium`，和內文同一個
- *   級數，整頁於是變成一根沒有分段的灰色長條 —— 這是「不好閱讀」的主因。
- * - 內文用 `text-foreground/85` 而不是 `text-muted-foreground`。整頁都調暗的話
+ * - 標題要明顯大於內文。同一個級數的話整頁會變成一根沒有分段的灰色長條。
+ * - 內文用 `text-foreground/85` 而不是 `text-muted-foreground`。整頁都調暗
  *   等於沒有強調可言，`<strong>` 也就失去意義。灰色留給真正次要的東西。
- * - 行距放到 `leading-7`。中文沒有空白斷詞，行距不夠會黏成一片。
+ * - 行距 `leading-7`。中文沒有空白斷詞，行距不夠會黏成一片。
  */
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -52,9 +51,8 @@ function Out({ href, children }: { href: string; children: React.ReactNode }) {
 /**
  * 一條已知限制：**粗體的結論 + 破折號 + 說明**。
  *
- * 原本七條各自用不同的強調方式（有的 `<strong>` 標在句中、有的把前半句染色、
- * 有的完全沒標），讀者無從判斷被標起來的東西代表什麼。統一成「只讀粗體也能
- * 讀完整段」的結構，要細節再往下看。
+ * 七條用同一種強調方式，讀者才知道被標起來的東西代表什麼。結構是「只讀粗體也能
+ * 讀完整段」，要細節再往下看。
  */
 function Limit({ head, children }: { head: string; children: React.ReactNode }) {
   return (
@@ -78,9 +76,8 @@ function AboutPage() {
   const { data: meta } = useMeta()
 
   /*
-   * 大綱的涵蓋範圍**用算的，不寫死**。爬蟲正在往回逐期補，原本寫死的
-   * 「只涵蓋 110-1 以後」在補到 110-2 的那天就已經是錯的 —— 而且讀起來仍然
-   * 很合理，不會有人發現。
+   * 大綱的涵蓋範圍**用算的，不寫死**。爬蟲正在往回逐期補，任何寫死的範圍都會在
+   * 某一天悄悄變錯 —— 而且它讀起來仍然很合理，不會有人發現。
    *
    * 不用 suspense：這一頁的主體不該為了一句附註而空白。
    */
@@ -203,8 +200,8 @@ function AboutPage() {
           <summary className="text-foreground cursor-pointer text-sm select-none">
             看目前的 {meta.endpoints.length} 個端點
           </summary>
-          {/* 原本 code 和說明排在同一行，每一行的說明從不同的 x 座標開始，
-              眼睛得一行一行重新找。改成兩欄對齊，說明就排成一直線 */}
+          {/* 兩欄對齊。排在同一行的話，每一行的說明會從不同的 x 座標開始，
+              眼睛得一行一行重新找 */}
           <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[13px]">
             {meta.endpoints.map((endpoint) => (
               <div key={endpoint.path} className="contents">

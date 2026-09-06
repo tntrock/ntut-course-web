@@ -116,7 +116,7 @@ describe('diffSnapshot', () => {
   })
 
   it('教師以代碼比對,不是姓名', () => {
-    // 同名老師有兩位(§1.3.6)。改名字不算換人,換代碼才是
+    // 同名老師有兩位。改名字不算換人,換代碼才是
     const renamed = course({
       teachers: ['白老師'],
       teacher_codes: ['10000'],
@@ -210,7 +210,7 @@ describe('scheduleStats', () => {
   })
 
   it('必修與選修分開算,`required` 為 null 的第三態另計', () => {
-    // required 是三態(§1.3.3),把 null 當成選修會讓學分試算悄悄算錯
+    // required 是三態,把 null 當成選修會讓學分試算悄悄算錯
     const stats = scheduleStats(
       [
         saved('a', { credits: 3, required: true }),

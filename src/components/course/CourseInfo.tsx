@@ -93,7 +93,7 @@ export function CourseInfo({
         ) : (
           <div className="flex flex-wrap gap-x-3 gap-y-1">
             {/* 連結一律走**教師代碼**，不是姓名 —— 實測有兩組同名老師，
-                用姓名會把兩個人的課混在一起（plan §1.3.6） */}
+                用姓名會把兩個人的課混在一起 */}
             {course.teachers.map((name, i) => (
               <NameLink
                 key={course.teacher_codes[i] ?? name}
