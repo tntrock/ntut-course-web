@@ -6,6 +6,7 @@ import {
   fetchClassrooms,
   fetchDepartmentCourses,
   fetchPrograms,
+  fetchSchedule,
   fetchTeacherCourses,
   fetchTeachers,
 } from '@/lib/api'
@@ -93,6 +94,15 @@ export function changesQueryOptions(meta: Meta) {
   return queryOptions({
     queryKey: ['changes', meta.generated_at],
     queryFn: () => fetchChanges(meta),
+    staleTime: Infinity,
+  })
+}
+
+/** 星期 × 節次 → 課號。空教室查詢用,見 `lib/rooms.ts`。 */
+export function scheduleQueryOptions(meta: Meta, semester: SemesterPath) {
+  return queryOptions({
+    queryKey: ['schedule', semester, version(meta, semester)],
+    queryFn: () => fetchSchedule(meta, semester),
     staleTime: Infinity,
   })
 }

@@ -10,6 +10,7 @@ import type {
   DepartmentsResponse,
   Meta,
   ProgramsResponse,
+  ScheduleResponse,
   SemesterPath,
   Syllabus,
   SyllabusProgress,
@@ -263,6 +264,22 @@ export function fetchClassrooms(
 ): Promise<ClassroomsResponse> {
   return fetchVersioned<ClassroomsResponse>(
     `${semester}/classrooms.json`,
+    semesterVersion(meta, semester),
+  )
+}
+
+/**
+ * 星期 × 節次 → 課號。空教室查詢用的。
+ *
+ * 它與 `classrooms.json` 交叉就能算出某個時段哪些教室沒課 —— 兩個檔案加起來
+ * gzip 18 KB,比下載 60 個系所檔便宜兩個數量級。
+ */
+export function fetchSchedule(
+  meta: Meta,
+  semester: SemesterPath,
+): Promise<ScheduleResponse> {
+  return fetchVersioned<ScheduleResponse>(
+    `${semester}/schedule.json`,
     semesterVersion(meta, semester),
   )
 }

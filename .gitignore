@@ -32,3 +32,6 @@ dist-ssr
 
 # TanStack Router plugin 的暫存檔
 .tanstack
+
+# 驗證用的暫存截圖
+.tmp-*

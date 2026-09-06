@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as ChangesRouteImport } from './routes/changes'
+import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ClassSemesterClassIdRouteImport } from './routes/class.$semester.$classId'
@@ -40,6 +41,11 @@ const BrowseRoute = BrowseRouteImport.update({
 const ChangesRoute = ChangesRouteImport.update({
   id: '/changes',
   path: '/changes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsRoute = RoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScheduleRoute = ScheduleRouteImport.update({
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/browse': typeof BrowseRoute
   '/changes': typeof ChangesRoute
+  '/rooms': typeof RoomsRoute
   '/schedule': typeof ScheduleRoute
   '/search': typeof SearchRoute
   '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/browse': typeof BrowseRoute
   '/changes': typeof ChangesRoute
+  '/rooms': typeof RoomsRoute
   '/schedule': typeof ScheduleRoute
   '/search': typeof SearchRoute
   '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/browse': typeof BrowseRoute
   '/changes': typeof ChangesRoute
+  '/rooms': typeof RoomsRoute
   '/schedule': typeof ScheduleRoute
   '/search': typeof SearchRoute
   '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/browse'
     | '/changes'
+    | '/rooms'
     | '/schedule'
     | '/search'
     | '/class/$semester/$classId'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/browse'
     | '/changes'
+    | '/rooms'
     | '/schedule'
     | '/search'
     | '/class/$semester/$classId'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/browse'
     | '/changes'
+    | '/rooms'
     | '/schedule'
     | '/search'
     | '/class/$semester/$classId'
@@ -179,6 +191,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   BrowseRoute: typeof BrowseRoute
   ChangesRoute: typeof ChangesRoute
+  RoomsRoute: typeof RoomsRoute
   ScheduleRoute: typeof ScheduleRoute
   SearchRoute: typeof SearchRoute
   ClassSemesterClassIdRoute: typeof ClassSemesterClassIdRoute
@@ -217,6 +230,13 @@ declare module '@tanstack/react-router' {
       path: '/changes'
       fullPath: '/changes'
       preLoaderRoute: typeof ChangesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms': {
+      id: '/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof RoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/schedule': {
@@ -283,6 +303,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   BrowseRoute: BrowseRoute,
   ChangesRoute: ChangesRoute,
+  RoomsRoute: RoomsRoute,
   ScheduleRoute: ScheduleRoute,
   SearchRoute: SearchRoute,
   ClassSemesterClassIdRoute: ClassSemesterClassIdRoute,

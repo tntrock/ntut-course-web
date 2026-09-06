@@ -314,6 +314,31 @@ export interface ClassroomsResponse extends SemesterScoped {
 }
 
 // ─────────────────────────────────────────────────────────────
+// 星期 × 節次 → 課號
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * `{semester}/schedule.json`。空教室查詢用的 —— 它與 `classrooms.json` 交叉
+ * 就能算出某個時段哪些教室沒課,不必下載 60 個系所檔。
+ */
+export interface SchedulePeriodBucket {
+  code: PeriodCode
+  course_count: number
+  course_ids: string[]
+}
+
+export interface ScheduleDay {
+  day: Day
+  day_name: string
+  periods: SchedulePeriodBucket[]
+}
+
+export interface ScheduleResponse extends SemesterScoped {
+  periods: PeriodDef[]
+  days: ScheduleDay[]
+}
+
+// ─────────────────────────────────────────────────────────────
 // 教學大綱
 // ─────────────────────────────────────────────────────────────
 

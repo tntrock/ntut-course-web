@@ -17,43 +17,51 @@ export function TimeGrid({
 }: {
   periods: readonly PeriodDef[]
   selected: readonly string[]
-  mode: TimeMode
   onToggle: (key: string) => void
-  onToggleMode: (mode: TimeMode) => void
   onClear: () => void
+  /**
+   * 「包含 / 只在」的切換。空教室查詢沒有這個選擇（一律是每一格都要空),
+   * 兩個都不給就不顯示那一列。
+   */
+  mode?: TimeMode
+  onToggleMode?: (mode: TimeMode) => void
 }) {
   const chosen = new Set(selected)
 
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <div
-          role="radiogroup"
-          aria-label="時段比對方式"
-          className="bg-muted inline-flex rounded-md p-0.5 text-xs"
-        >
-          {(
-            [
-              ['includes', '包含這些時段'],
-              ['only', '只在這些時段'],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={mode === value}
-              onClick={() => onToggleMode(value)}
-              className={
-                mode === value
-                  ? 'bg-background rounded px-2 py-1 font-medium shadow-sm'
-                  : 'text-muted-foreground rounded px-2 py-1'
-              }
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        {mode !== undefined && onToggleMode !== undefined ? (
+          <div
+            role="radiogroup"
+            aria-label="時段比對方式"
+            className="bg-muted inline-flex rounded-md p-0.5 text-xs"
+          >
+            {(
+              [
+                ['includes', '包含這些時段'],
+                ['only', '只在這些時段'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={mode === value}
+                onClick={() => onToggleMode(value)}
+                className={
+                  mode === value
+                    ? 'bg-background rounded px-2 py-1 font-medium shadow-sm'
+                    : 'text-muted-foreground rounded px-2 py-1'
+                }
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <span />
+        )}
 
         {selected.length > 0 && (
           <button
