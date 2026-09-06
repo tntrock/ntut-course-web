@@ -11,12 +11,10 @@ import {
   diffSnapshot,
   scheduleStats,
   visibleDays,
-  type ScheduleChange,
 } from '@/lib/schedule'
-import { refreshSnapshot, removeFromSchedule } from '@/lib/storeActions'
-import { formatTimeSlots } from '@/lib/formatTime'
-import type { CourseIndexEntry, PeriodDef } from '@/types/api'
-import type { SavedCourse } from '@/lib/storage'
+import { ChangeList } from '@/components/schedule/ChangeList'
+import { SavedCourseRow } from '@/components/schedule/SavedCourseRow'
+import { ScheduleStats } from '@/components/schedule/ScheduleStats'
 import { Timetable } from '@/components/schedule/Timetable'
 import { ExportImage } from '@/components/schedule/ExportImage'
 import { DataTransfer, Favorites } from '@/components/schedule/PersonalData'
@@ -158,7 +156,7 @@ function SchedulePage() {
             </section>
           )}
 
-          <Stats stats={stats} />
+          <ScheduleStats stats={stats} />
 
           <section className="mt-6">
             <h2 className="text-muted-foreground text-xs font-medium">
@@ -280,169 +278,6 @@ function Empty({ semester }: { semester: string }) {
       >
         去找課
       </Link>
-    </div>
-  )
-}
-
-function SavedCourseRow({
-  course,
-  semester,
-  periods,
-  conflicted,
-}: {
-  course: SavedCourse
-  semester: string
-  periods: readonly PeriodDef[]
-  conflicted: boolean
-}) {
-  return (
-    <div
-      className={`bg-card shadow-card flex items-center gap-3 rounded-xl px-3 py-2.5 ${
-        conflicted ? 'ring-destructive/40 ring-1' : ''
-      }`}
-    >
-      <div className="min-w-0 flex-1">
-        <Link
-          to="/course/$semester/$courseId"
-          params={{ semester, courseId: course.id }}
-          className="block truncate text-sm font-medium underline-offset-4 hover:underline"
-        >
-          {course.snapshot.name_zh}
-        </Link>
-        <p className="text-muted-foreground truncate text-xs">
-          {course.snapshot.teachers.join('、') || '未定'}
-          <span className="mx-1.5">·</span>
-          {formatTimeSlots(course.snapshot, periods)}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={() => updateStore((s) => removeFromSchedule(s, semester, course.id))}
-        aria-label={`從課表移除 ${course.snapshot.name_zh}`}
-        className="text-muted-foreground hover:bg-accent focus-visible:ring-ring shrink-0 rounded-lg px-2 py-1 text-sm focus-visible:ring-2 focus-visible:outline-none"
-      >
-        移除
-      </button>
-    </div>
-  )
-}
-
-interface ChangedEntry {
-  course: SavedCourse
-  changes: ScheduleChange[]
-  current: CourseIndexEntry | undefined
-}
-
-function describe(change: ScheduleChange): string {
-  switch (change.kind) {
-    case 'removed':
-      return '此課已停開'
-    case 'time':
-      return '時段已異動'
-    case 'teachers':
-      return '授課教師已更換'
-    case 'credits':
-      return `學分數已異動 ${change.from ?? '—'} → ${change.to ?? '—'}`
-  }
-}
-
-/**
- * 把 crawler 的異動偵測接到使用者最在乎的地方:他自己那幾門課。
- *
- * 停開的課**留在課表裡但標紅**,不自動移除 —— 替使用者做決定會讓他不知道
- * 自己原本選了什麼。
- */
-function ChangeList({
-  entries,
-  semester,
-  periods,
-}: {
-  entries: ChangedEntry[]
-  semester: string
-  /** 判斷節次相不相鄰一定要用 meta 的順序,不然 `7、8` 會被寫成兩段。 */
-  periods: readonly PeriodDef[]
-}) {
-  return (
-    <section className="border-warning bg-warning/10 mt-4 rounded-lg border-l-2 px-3 py-2.5">
-      <h2 className="text-sm font-medium">{entries.length} 門課有異動</h2>
-      <ul className="mt-2 space-y-2">
-        {entries.map(({ course, changes, current }) => (
-          <li key={course.id} className="text-sm">
-            <Link
-              to="/course/$semester/$courseId"
-              params={{ semester, courseId: course.id }}
-              className="font-medium underline underline-offset-4"
-            >
-              {course.snapshot.name_zh}
-            </Link>
-            <span className="text-muted-foreground ml-2 text-xs">
-              {changes.map(describe).join('、')}
-            </span>
-
-            {changes.map((change) =>
-              change.kind === 'time' ? (
-                <p key="time" className="text-muted-foreground mt-0.5 text-xs">
-                  {formatTimeSlots({ time_slots: change.from }, periods)}
-                  <span className="mx-1.5">→</span>
-                  {formatTimeSlots({ time_slots: change.to }, periods)}
-                </p>
-              ) : null,
-            )}
-
-            {current && (
-              <button
-                type="button"
-                onClick={() =>
-                  updateStore((s) => refreshSnapshot(s, semester, course.id, current))
-                }
-                className="text-primary hover:bg-accent mt-1 rounded-md px-2 py-0.5 text-xs"
-              >
-                更新為最新資料
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-function Stats({ stats }: { stats: ReturnType<typeof scheduleStats> }) {
-  return (
-    <section className="mt-6">
-      <h2 className="text-muted-foreground text-xs font-medium">統計</h2>
-      <dl className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="總學分" value={String(stats.totalCredits)} />
-        <Stat label="必修" value={String(stats.requiredCredits)} />
-        <Stat label="選修" value={String(stats.electiveCredits)} />
-        <Stat label="門數" value={String(stats.courseCount)} />
-      </dl>
-
-      {/* 這兩種課會讓總學分看起來不對，不講清楚使用者會以為程式壞了 */}
-      {stats.unclassifiedCredits > 0 && (
-        <p className="text-muted-foreground mt-2 text-xs">
-          另有 {stats.unclassifiedCredits} 學分的課沒有標示必選修，未計入上面兩欄。
-        </p>
-      )}
-      {stats.unknownCreditCount > 0 && (
-        <p className="text-muted-foreground mt-1 text-xs">
-          {stats.unknownCreditCount} 門課沒有提供學分數，未計入總學分。
-        </p>
-      )}
-      {stats.earliest && stats.latest && (
-        <p className="text-muted-foreground mt-1 text-xs">
-          最早第 {stats.earliest} 節，最晚第 {stats.latest} 節。
-        </p>
-      )}
-    </section>
-  )
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-card shadow-card rounded-xl p-3">
-      <dt className="text-muted-foreground text-xs">{label}</dt>
-      <dd className="mt-0.5 text-xl font-medium tabular-nums">{value}</dd>
     </div>
   )
 }

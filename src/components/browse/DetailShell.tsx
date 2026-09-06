@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { BackLink } from '@/components/BackLink'
+import type { BrowseTab } from '@/lib/browseTabs'
 
 /**
  * 五個明細頁(系所 / 教師 / 班級 / 學程 / 教室)共用的外框。
@@ -23,7 +24,7 @@ export function DetailShell({
   meta?: React.ReactNode
   /** 學校原始頁面。沒有就不顯示。 */
   sourceUrl?: string | null
-  browseTab: 'dept' | 'teacher' | 'program' | 'classroom'
+  browseTab: BrowseTab
   semester: string
   children: React.ReactNode
 }) {
