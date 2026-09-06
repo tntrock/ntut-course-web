@@ -152,7 +152,10 @@ export interface CourseIndexEntry {
 export interface Course extends CourseIndexEntry {
   /** 永遠是 `null`(無資料來源)。不要在 UI 上留英文課名的位置。 */
   name_en: null
-  /** 年級。 */
+  /**
+   * 學校表格的「階段」欄,**不是年級** —— 年級在 `classes`（資工四）。
+   * 96% 的課是 `"1"`,顯示規則見 `lib/course.ts` 的 `stageBadge()`。
+   */
   stage: string | null
   hours: number | null
   classes: string[]

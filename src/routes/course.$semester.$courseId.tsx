@@ -10,6 +10,7 @@ import {
   syllabusQueryOptions,
 } from '@/hooks/useCourseDetail'
 import { departmentsQueryOptions } from '@/hooks/useDepartments'
+import { stageBadge } from '@/lib/course'
 import { confirmedSyllabusVersion, syllabusState } from '@/lib/syllabus'
 import { formatSlotClock, formatTimeSlots } from '@/lib/formatTime'
 import { LANGUAGE_ZH } from '@/lib/filters'
@@ -180,6 +181,7 @@ function CourseDetail() {
   const deptName = new Map(departments.departments.map((d) => [d.id, d.name]))
   // 沒有大綱的課連分頁都不顯示,不讓使用者點進去撲空。
   // 這一條只看 `syllabus_url`,不等大綱進度 —— 否則分頁會晚一拍才冒出來
+  const stage = stageBadge(course.stage)
   const showSyllabusTab = course.syllabus_url !== null
   const active = tab === 'syllabus' && showSyllabusTab ? 'syllabus' : 'info'
 
@@ -231,7 +233,7 @@ function CourseDetail() {
           )}
           {course.credits !== null && <Badge tone="quiet">{course.credits} 學分</Badge>}
           {course.hours !== null && <Badge tone="quiet">{course.hours} 小時</Badge>}
-          {course.stage && <Badge tone="quiet">{course.stage} 年級</Badge>}
+          {stage && <Badge tone="quiet">{stage}</Badge>}
         </div>
       </header>
 

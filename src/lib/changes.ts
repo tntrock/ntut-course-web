@@ -77,7 +77,7 @@ const FIELD_LABELS: Record<string, string> = {
   language: '授課語言',
   enrolled: '修課人數',
   withdrawn: '撤選人數',
-  stage: '年級',
+  stage: '階段',
   notes: '備註',
   programs: '學程',
 }
