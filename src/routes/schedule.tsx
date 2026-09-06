@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 
@@ -17,6 +18,7 @@ import { formatTimeSlots } from '@/lib/formatTime'
 import type { CourseIndexEntry, PeriodDef } from '@/types/api'
 import type { SavedCourse } from '@/lib/storage'
 import { Timetable } from '@/components/schedule/Timetable'
+import { ExportImage } from '@/components/schedule/ExportImage'
 import { DataTransfer, Favorites } from '@/components/schedule/PersonalData'
 
 interface ScheduleSearch {
@@ -57,6 +59,8 @@ function SchedulePage() {
   const conflictIds = conflictingCourseIds(grid)
   const days = visibleDays(courses, store.settings.showWeekend)
 
+  const exportRef = useRef<HTMLDivElement>(null)
+
   const changed = latestById
     ? courses
         .map((course) => ({
@@ -85,6 +89,9 @@ function SchedulePage() {
             />
             週末
           </label>
+          {courses.length > 0 && (
+            <ExportButton targetRef={exportRef} semester={semester} />
+          )}
           <select
             name="sem"
             value={semester}
@@ -174,7 +181,88 @@ function SchedulePage() {
 
       <Favorites meta={meta} semester={semester} courses={latestById} />
       <DataTransfer />
+
+      {/*
+        匯出用的離屏版面。**不能用 `display: none`** —— 截圖需要真實的版面尺寸,
+        沒有佈局就量不到東西。移到畫面外並對輔助技術隱藏。
+      */}
+      {courses.length > 0 && (
+        <div
+          aria-hidden
+          style={{ position: 'fixed', left: -20000, top: 0, pointerEvents: 'none' }}
+        >
+          <div ref={exportRef}>
+            <ExportImage
+              courses={courses}
+              periods={meta.periods}
+              semester={semester}
+              showWeekend={store.settings.showWeekend}
+              conflictIds={conflictIds}
+            />
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+/**
+ * 把課表存成 PNG。
+ *
+ * 截圖的是離屏那份固定寬度的版面,不是畫面上這一份 —— 畫面上的會跟著視窗寬度與
+ * 深色主題變,匯出的圖不該這樣。
+ */
+function ExportButton({
+  targetRef,
+  semester,
+}: {
+  targetRef: React.RefObject<HTMLDivElement | null>
+  semester: string
+}) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const save = async () => {
+    const node = targetRef.current
+    if (!node) return
+
+    setBusy(true)
+    setError(null)
+    try {
+      const { toPng } = await import('html-to-image')
+      const url = await toPng(node, {
+        // 2 倍解析度,在手機上放大看也不糊
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+      })
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `課表-${semester}.png`
+      link.click()
+    } catch {
+      // 截圖會失敗(記憶體、瀏覽器差異),不能靜靜地什麼都沒發生
+      setError('匯出失敗,可以改用瀏覽器截圖')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <span className="relative">
+      <button
+        type="button"
+        onClick={() => void save()}
+        disabled={busy}
+        className="bg-card hover:bg-accent focus-visible:ring-ring rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60"
+      >
+        {busy ? '匯出中…' : '存成圖片'}
+      </button>
+      {error && (
+        <span className="text-destructive absolute top-full right-0 mt-1 text-xs whitespace-nowrap">
+          {error}
+        </span>
+      )}
+    </span>
   )
 }
 

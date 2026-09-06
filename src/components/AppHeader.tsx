@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useDebounced } from '@/hooks/useDebounced'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 /**
  * 全站頁首。
@@ -61,6 +62,9 @@ export function AppHeader() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
         <Link
           to="/"
+          // 站名在手機版被藏起來(只剩 aria-hidden 的徽章),連結會變成沒有名字。
+          // Lighthouse 的 link-name 就是抓到這個
+          aria-label="北科課程 首頁"
           className="focus-visible:ring-ring flex items-center gap-2 rounded-lg font-semibold tracking-tight focus-visible:ring-2 focus-visible:outline-none"
         >
           <span
@@ -89,6 +93,7 @@ export function AppHeader() {
           <NavLink to="/browse">瀏覽</NavLink>
           <NavLink to="/schedule">課表</NavLink>
           <NavLink to="/changes">異動</NavLink>
+          <ThemeToggle />
         </nav>
       </div>
     </header>

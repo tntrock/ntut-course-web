@@ -239,7 +239,8 @@ function SearchPage() {
           />
         </aside>
 
-        <main className="min-w-0">
+        {/* 撐住高度,結果還沒算完時頁尾才不會先跑上來又被推走(見 __root 的 Loading) */}
+        <main className="min-h-[80dvh] min-w-0">
           {!result.loading && result.total === 0 ? (
             <EmptyResults
               suggestions={result.suggestions}

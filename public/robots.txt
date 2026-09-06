@@ -1,0 +1,6 @@
+# 沒有這個檔案的話,SPA fallback 會把 index.html 當成 robots.txt 回給爬蟲。
+User-agent: *
+Allow: /
+
+# 個人課表只存在瀏覽器,沒有伺服器端內容;這幾頁對搜尋引擎沒有意義
+Disallow: /schedule

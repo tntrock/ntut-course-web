@@ -6,6 +6,7 @@ import { AppHeader } from '@/components/AppHeader'
 import { OfflineNotice } from '@/components/OfflineNotice'
 import { RecoveryNotice } from '@/components/RecoveryNotice'
 import { SchemaWarning } from '@/components/SchemaWarning'
+import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { ApiError } from '@/lib/api'
 
 export interface RouterContext {
@@ -30,6 +31,7 @@ function RootLayout() {
       {fromCache && <OfflineNotice generatedAt={meta.generated_at} />}
       {/* 個人資料損毀過就要講,不能讓課表默默變空 */}
       <RecoveryNotice />
+      <UpdatePrompt />
 
       <AppHeader />
 
@@ -45,9 +47,17 @@ function RootLayout() {
   )
 }
 
+/**
+ * 載入中。
+ *
+ * **要撐滿一個視窗高度。** 不撐的話頁尾會停在視窗中間,內容一到就被推到畫面外 ——
+ * 那被算成一次大幅版面位移(實測 CLS 0.15,全部來自這一下)。
+ */
 function Loading() {
   return (
-    <div className="text-muted-foreground px-4 py-24 text-center text-sm">載入中…</div>
+    <div className="text-muted-foreground min-h-[80dvh] px-4 py-24 text-center text-sm">
+      載入中…
+    </div>
   )
 }
 
