@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
+import { createPageViewTracker } from './lib/analytics'
 import { parseSearch, stringifySearch } from './lib/searchParams'
 import { routeTree } from './routeTree.gen'
 import './index.css'
@@ -36,6 +37,15 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
+
+/*
+ * 換路由不會重新載入文件,GA 的片段因此只會在進站時送一次。這條補上其餘的頁面。
+ *
+ * `window.gtag` 在**呼叫時**才查,不在這裡先取值 —— GA 被擋掉或晚一步載入時,
+ * 先取值會永遠拿到 undefined。
+ */
+const trackPageView = createPageViewTracker((...args) => window.gtag?.(...args))
+router.subscribe('onResolved', () => trackPageView(window.location.href))
 
 const rootElement = document.getElementById('root')
 if (!rootElement) throw new Error('找不到 #root 掛載點')

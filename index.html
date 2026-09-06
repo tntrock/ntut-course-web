@@ -32,14 +32,20 @@
   </head>
   <body>
     <div id="root"></div>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-4K2C16X80Z"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || []
+      function gtag() {
+        dataLayer.push(arguments)
+      }
+      gtag('js', new Date())
+      // 換路由的 page_view 由 src/lib/analytics.ts 送,這裡不重複送第一次
+      gtag('config', 'G-4K2C16X80Z', { send_page_view: false })
+    </script>
     <script type="module" src="/src/main.tsx"></script>
-    <!--
-      Cloudflare Web Analytics。不用 cookie、不做跨站識別,收的是瀏覽量與
-      Core Web Vitals。token 是公開的網站識別碼,本來就會出現在 HTML 裡。
-
-      放在 body 最後、不加 defer —— 它是 type="module",本來就延後執行,
-      不會擋住首屏。
-    -->
     <script
       type="module"
       src="https://static.cloudflareinsights.com/beacon.min.js"

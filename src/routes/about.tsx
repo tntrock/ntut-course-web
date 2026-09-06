@@ -179,12 +179,23 @@ function AboutPage() {
           </Link>
           底下有匯出 / 匯入 JSON，建議偶爾備份一份。
         </p>
-        {/* 站上多了一個第三方 script,就要在這裡講 —— 上面那句「不會上傳到
-            任何地方」講的是個人資料,不能讓它順便把訪客統計也蓋掉 */}
+        {/* 上面那句「不會上傳到任何地方」講的是個人資料。站上有第三方統計就要
+            分開講清楚,不能讓那句順便把訪客統計也蓋掉 */}
         <p>
-          站上有一段 Cloudflare Web Analytics，用來看有多少人在用、頁面跑得快不快。 它
-          <strong className="text-foreground font-semibold">不用 cookie</strong>
-          、不做跨站識別，也讀不到你的課表與收藏。
+          流量統計用的是 Cloudflare Web Analytics 與 Google Analytics，
+          看的是有多少人在用、哪些頁面被開、頁面跑得快不快。
+          <strong className="text-foreground font-semibold">
+            兩者都讀不到你的課表與收藏
+          </strong>
+          —— 那些從來沒有離開過這台裝置。
+        </p>
+        <p>
+          差別在於：Cloudflare 那一份不用 cookie；
+          <strong className="text-foreground font-semibold">
+            Google Analytics 會在瀏覽器放 cookie
+          </strong>
+          ，也會跨網站辨識同一個人。介意的話，瀏覽器的擋追蹤功能或任何一款
+          內容封鎖器都擋得掉，擋掉之後本站的功能完全不受影響。
         </p>
       </Section>
 
