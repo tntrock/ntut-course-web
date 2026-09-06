@@ -172,8 +172,7 @@ function BulkChange({
       )}
 
       <p className="text-muted-foreground mt-3 text-xs">
-        集中在少數幾個單位通常是學校開了一批課;散落在幾十個系所才需要懷疑是
-        資料解析出了問題。
+        集中在少數幾個單位通常是學校開了一批課；散落在幾十個系所才需要懷疑是資料解析出了問題。
       </p>
 
       {event.samples.length > 0 && (

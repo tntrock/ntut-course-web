@@ -18,11 +18,11 @@ export function EmptyResults({
 
       {suggestions.length === 0 ? (
         <p className="text-muted-foreground mt-2 text-sm">
-          試著放寬幾個條件,或換個關鍵字。
+          試著放寬幾個條件，或換個關鍵字。
         </p>
       ) : (
         <>
-          <p className="text-muted-foreground mt-2 text-sm">移除以下條件就會有結果:</p>
+          <p className="text-muted-foreground mt-2 text-sm">移除以下條件就會有結果：</p>
           <div className="mt-3 flex flex-wrap justify-center gap-2">
             {suggestions.map((s) => (
               <button

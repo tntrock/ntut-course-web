@@ -119,7 +119,7 @@ export function SyllabusPanel({
     return (
       <Notice
         title="大綱尚未收錄"
-        detail="這門課有大綱,但本站還沒抓下來。大綱是分批抓取的,過一陣子再回來看。"
+        detail="這門課有大綱，但本站還沒抓下來。大綱是分批抓取的，過一陣子再回來看。"
         url={syllabusUrl}
       />
     )
@@ -132,7 +132,7 @@ export function SyllabusPanel({
     return (
       <Notice
         title="授課教師尚未填寫大綱"
-        detail="大綱頁面存在,但內容是空的。這是老師還沒填,不是本站漏抓。"
+        detail="大綱頁面存在，但內容是空的。這是老師還沒填，不是本站漏抓。"
         url={syllabus.url}
       />
     )
@@ -221,7 +221,7 @@ export function SyllabusPanel({
         </Block>
       )}
 
-      {/* 學校加了新欄位時要看得見,不能默默吞掉(plan §3.3) */}
+      {/* 學校加了新欄位時要看得見，不能默默吞掉（plan §3.3） */}
       {unknown.map((field) => (
         <Block key={field.key} title={field.key}>
           {Array.isArray(field.value) ? (
@@ -233,13 +233,13 @@ export function SyllabusPanel({
       ))}
 
       <footer className="text-muted-foreground border-t pt-4 text-xs">
-        {/* 兩個時間的意義不同,標籤要寫清楚:一個是老師改的,一個是我們抓的 */}
+        {/* 兩個時間的意義不同，標籤要寫清楚：一個是老師改的，一個是我們抓的 */}
         <p>
           {syllabus.updated_at
             ? `教師最後更新 ${formatTaipei(syllabus.updated_at)}`
             : '教師未提供更新時間'}
           {/* 已凍結學期的記錄沒有 fetched_at(schema v3)——
-              沒有就整段不印,不要留一個「本站抓取 」後面空白 */}
+              沒有就整段不印，不要留一個「本站抓取 」後面空白 */}
           {syllabus.fetched_at && (
             <>
               <span className="mx-1.5">·</span>

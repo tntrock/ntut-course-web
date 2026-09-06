@@ -29,3 +29,6 @@ dist-ssr
 
 # wrangler
 .wrangler
+
+# TanStack Router plugin 的暫存檔
+.tanstack

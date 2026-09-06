@@ -54,7 +54,8 @@ function ClassroomPage() {
       meta={
         courses.length === classroom.course_count ? null : (
           <span>
-            教室列了 {classroom.course_count} 門,本學期索引查得到 {courses.length} 門。
+            教室列了 {classroom.course_count} 門，但本學期索引只查得到 {courses.length}{' '}
+            門 —— 少的那幾門在索引裡找不到，下面就列不出來。
           </span>
         )
       }

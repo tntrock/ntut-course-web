@@ -229,7 +229,7 @@ function DeptTab({ meta, semester, query }: TabProps) {
           <h2 className="text-muted-foreground mb-1 text-xs font-medium">
             {group.name}
           </h2>
-          {/* 60 個系所排成一長條要捲很久。寬螢幕分兩欄,一眼看得完一個學院 */}
+          {/* 60 個系所排成一長條要捲很久。寬螢幕分兩欄，一眼看得完一個學院 */}
           <div className="grid gap-2 sm:grid-cols-2">
             {group.departments.map((d) => (
               <DeptRow key={d.id} dept={d} semester={semester} />
@@ -251,7 +251,7 @@ function DeptRow({ dept, semester }: { dept: Department; semester: string }) {
           className="flex-1 text-sm underline-offset-4 hover:underline"
         >
           {dept.name}
-          {/* C0/C2/C5/C7 掛的是院級共同課程,名字又和上層學院一模一樣。
+          {/* C0/C2/C5/C7 掛的是院級共同課程，名字又和上層學院一模一樣。
               不標的話沒有人分得出這是「電資學院的共同課」還是「電資學院所有系」 */}
           {isCollegeWideUnit(dept) && (
             <span className="text-muted-foreground ml-2 text-xs">院級共同課程</span>
@@ -334,7 +334,7 @@ function TeacherRow({
       className="hover:bg-muted/40 flex items-center gap-3 border-b px-1 py-2.5"
     >
       <span className="text-sm">{teacher.name}</span>
-      {/* 同名老師有兩位(林志哲、陳盈竹)。所屬系所是畫面上唯一分得出誰是誰的線索 */}
+      {/* 同名老師有兩位（林志哲、陳盈竹）。所屬系所是畫面上唯一分得出誰是誰的線索 */}
       <span className="text-muted-foreground flex-1 truncate text-xs">{depts}</span>
       <Count n={teacher.course_count} />
     </Link>

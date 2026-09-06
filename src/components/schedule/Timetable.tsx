@@ -56,12 +56,12 @@ export function Timetable({
             className="text-muted-foreground flex flex-col justify-center pr-2 text-right"
           >
             <span className="text-sm font-medium">{period.code}</span>
-            {/* 節次代碼對排課的人是熟語,對第一次看的人不是 */}
+            {/* 節次代碼對排課的人是熟語，對第一次看的人不是 */}
             <span className="text-[10px] tabular-nums">{period.start}</span>
           </div>
         ))}
 
-        {/* 底格。先鋪滿,課再疊上去 —— 空格也要看得出是格子 */}
+        {/* 底格。先鋪滿，課再疊上去 —— 空格也要看得出是格子 */}
         {periods.map((period, row) =>
           days.map((day) => (
             <div

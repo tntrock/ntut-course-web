@@ -44,18 +44,18 @@ function ChangesPage() {
       </p>
 
       {/*
-        這兩件事一定要分清楚,否則使用者會把「爬蟲掛了」當成「學校沒動」:
-        檢查時間是今天但沒有事件 = 學校真的沒動;檢查時間停在幾天前 = 爬蟲沒在跑。
+        這兩件事一定要分清楚，否則使用者會把「爬蟲掛了」當成「學校沒動」:
+        檢查時間是今天但沒有事件 = 學校真的沒動；檢查時間停在幾天前 = 爬蟲沒在跑。
       */}
       {stale && (
         <p className="text-muted-foreground mt-2 text-sm">
-          距離上次檢查已經超過 12 小時,下面的內容可能不是最新的。
+          距離上次檢查已經超過 12 小時，下面的內容可能不是最新的。
         </p>
       )}
 
       <p className="text-muted-foreground mt-3 text-xs">
-        時間是<strong className="font-medium">本站偵測到</strong>異動的時刻,
-        不是學校異動的時刻 —— 實際異動發生在前一次抓取與這次之間。
+        時間是<strong className="font-medium">本站偵測到</strong>
+        異動的時刻，不是學校異動的時刻 —— 實際異動發生在前一次抓取與這次之間。
       </p>
 
       {groups.length === 0 ? (

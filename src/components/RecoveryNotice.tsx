@@ -44,7 +44,7 @@ export function RecoveryNotice() {
       className="border-warning bg-warning/10 flex flex-wrap items-center gap-3 border-b px-4 py-2 text-sm"
     >
       <p className="flex-1">
-        先前儲存的課表與收藏讀不出來,已經重置。原始內容還留著,可以下載回去看。
+        先前儲存的課表與收藏讀不出來，已經重置。原始內容還留著，可以下載回去看。
       </p>
       <button
         type="button"

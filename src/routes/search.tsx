@@ -143,8 +143,8 @@ function SearchPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10">
       {/*
-        工具列黏在頁首下方(頁首高 3.25rem)。原本搜尋框、學期、排序、篩選鈕
-        全部擠在同一列,寬螢幕下右邊一大片空的、手機上又擠成一團。
+        工具列黏在頁首下方（頁首高 3.25rem）。原本搜尋框、學期、排序、篩選鈕
+        全部擠在同一列，寬螢幕下右邊一大片空的、手機上又擠成一團。
       */}
       <div className="bg-background/85 sticky top-13 z-20 flex items-center gap-2 py-2.5 backdrop-blur">
         <p className="flex-1 text-sm" aria-live="polite">
@@ -214,14 +214,14 @@ function SearchPage() {
 
       <div className="grid gap-6 md:grid-cols-[15rem_1fr]">
         {/*
-          側欄釘在工具列下方,但**高度要收在視窗內**。
-          展開「學院 / 系所」後面板有 1,300px 高,視窗只有 800px —— 純 sticky 會把
-          超出的部分永遠釘在畫面外,底下的「星期 / 節次」與「學分」再也點不到。
+          側欄釘在工具列下方，但**高度要收在視窗內**。
+          展開「學院 / 系所」後面板有 1,300px 高，視窗只有 800px —— 純 sticky 會把
+          超出的部分永遠釘在畫面外，底下的「星期 / 節次」與「學分」再也點不到。
 
-          內部捲軸只在展開長分區時才出現(分區預設收合),不是常駐的那種。
+          內部捲軸只在展開長分區時才出現（分區預設收合），不是常駐的那種。
 
-          `overflow-x-hidden` 是必要的:CSS 規範規定 `overflow-y` 一旦不是
-          `visible`,`overflow-x` 就會跟著算成 `auto` —— 內容只要凸出幾個像素,
+          `overflow-x-hidden` 是必要的：CSS 規範規定 `overflow-y` 一旦不是
+          `visible`，`overflow-x` 就會跟著算成 `auto` —— 內容只要凸出幾個像素，
           就會冒出一條左右橫移的捲軸。這裡沒有任何東西需要橫向捲動。
         */}
         <aside
@@ -239,7 +239,7 @@ function SearchPage() {
           />
         </aside>
 
-        {/* 撐住高度,結果還沒算完時頁尾才不會先跑上來又被推走(見 __root 的 Loading) */}
+        {/* 撐住高度，結果還沒算完時頁尾才不會先跑上來又被推走（見 __root 的 Loading） */}
         <main className="min-h-[80dvh] min-w-0">
           {!result.loading && result.total === 0 ? (
             <EmptyResults

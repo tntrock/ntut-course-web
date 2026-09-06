@@ -29,7 +29,7 @@ export function DetailShell({
 }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
-      {/* 系所頁可能從瀏覽進來,也可能從某一門課的「系所」連結進來 */}
+      {/* 系所頁可能從瀏覽進來，也可能從某一門課的「系所」連結進來 */}
       <BackLink
         fallback={
           <Link
@@ -58,7 +58,7 @@ export function DetailShell({
         )}
       </header>
 
-      {/* 課程列表本身就是一格一格的卡片,外面再包一層卡片會變成卡片裡的卡片 */}
+      {/* 課程列表本身就是一格一格的卡片，外面再包一層卡片會變成卡片裡的卡片 */}
       <div className="mt-5">{children}</div>
     </div>
   )
@@ -81,7 +81,7 @@ export function DetailNotFound({
       <h1 className="text-2xl font-semibold">查無此{kind}</h1>
       <p className="text-muted-foreground mt-2 text-sm">
         {semester} 沒有「{id}」這個{kind}。
-        {hint ?? '代碼在不同學期並不通用,舊連結換到別的學期通常就查不到了。'}
+        {hint ?? '代碼在不同學期並不通用，舊連結換到別的學期通常就查不到了。'}
       </p>
       <Link to="/browse" className="mt-6 inline-block text-sm underline">
         回瀏覽

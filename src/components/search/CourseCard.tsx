@@ -33,10 +33,10 @@ export function CourseCard({
       >
         <div className="flex items-start justify-between gap-2">
           {/*
-            課名一律**佔兩行高**,不管實際是一行還是兩行。
-            不固定的話多欄網格會排成錯落的磚牆 —— 空間是省了,但每一列的起點
-            都對不齊,眼睛得重新找位置,那正是「看起來很亂」的來源。
-            超過兩行就截斷,完整課名在詳情頁。
+            課名一律**佔兩行高**，不管實際是一行還是兩行。
+            不固定的話多欄網格會排成錯落的磚牆 —— 空間是省了，但每一列的起點
+            都對不齊，眼睛得重新找位置，那正是「看起來很亂」的來源。
+            超過兩行就截斷，完整課名在詳情頁。
           */}
           <h3 className="line-clamp-2 min-h-[2.75rem] text-[15px] leading-snug font-medium">
             {course.name_zh}
@@ -51,7 +51,7 @@ export function CourseCard({
         </p>
         <p className="mt-0.5 truncate text-sm">{formatTimeSlots(course, periods)}</p>
 
-        {/* 徽章也固定一行:換行會讓卡片變高,整列又跟著錯開。
+        {/* 徽章也固定一行：換行會讓卡片變高，整列又跟著錯開。
             右邊留出加入課表按鈕的位置 */}
         <div className="mt-2.5 flex h-7 items-center gap-1.5 overflow-hidden pr-9">
           {course.requirement_type && (
@@ -69,8 +69,8 @@ export function CourseCard({
       </Link>
 
       {/*
-        放在 `<Link>` **外面** —— 按鈕不能巢狀在連結裡(HTML 不合法,而且點了
-        會同時觸發導頁)。絕對定位到卡片右下角,對齊徽章那一列。
+        放在 `<Link>` **外面** —— 按鈕不能巢狀在連結裡（HTML 不合法，而且點了
+        會同時觸發導頁）。絕對定位到卡片右下角，對齊徽章那一列。
       */}
       <div className="absolute right-3 bottom-3">
         <ScheduleToggle course={course} semester={semester} />

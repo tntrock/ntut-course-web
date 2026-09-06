@@ -38,7 +38,7 @@ function Home() {
         <ActionCard
           to="/search"
           title="搜尋課程"
-          description="關鍵字、系所、時段、學分,條件都留在網址上,可以直接分享。"
+          description="關鍵字、系所、時段、學分，條件都留在網址上，可以直接分享。"
           primary
         />
         <ActionCard
@@ -46,7 +46,7 @@ function Home() {
           title="瀏覽系所與教師"
           description={
             latest
-              ? `${latest.department_count} 個系所、${latest.class_group_count} 個班級,還有教師、學程與教室。`
+              ? `${latest.department_count} 個系所、${latest.class_group_count} 個班級，還有教師、學程與教室。`
               : '系所、班級、教師、學程與教室。'
           }
         />
@@ -66,9 +66,9 @@ function Home() {
           <Stat label="系所" value={latest ? String(latest.department_count) : '—'} />
           <Stat label="班級" value={latest ? String(latest.class_group_count) : '—'} />
           {/*
-            這裡原本放 `merged_course_count`(合開課數),但「其中合開 309」在首頁
+            這裡原本放 `merged_course_count`（合開課數），但「其中合開 309」在首頁
             是個沒有上下文就看不懂的數字。換成收錄學期數 —— 那是這個站真正的
-            特點,而且看得懂。
+            特點，而且看得懂。
           */}
           <Stat label="收錄學期" value={String(meta.semesters.length)} />
         </dl>

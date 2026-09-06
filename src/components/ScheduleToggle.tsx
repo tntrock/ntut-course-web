@@ -33,8 +33,8 @@ export function ScheduleToggle({
       result.ok
         ? null
         : result.reason === 'quota'
-          ? '瀏覽器空間已滿,存不下了'
-          : '這個瀏覽器不允許儲存資料(無痕視窗?)',
+          ? '瀏覽器空間已滿，存不下了'
+          : '這個瀏覽器不允許儲存資料（無痕視窗？）',
     )
   }
 

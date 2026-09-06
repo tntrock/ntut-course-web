@@ -61,7 +61,7 @@ function TeacherPage() {
           ))}
           {/*
             實測 803 個教師代碼只有 801 個不同姓名 —— 林志哲與陳盈竹各有兩位。
-            代碼是這一頁唯一能證明「你看的是哪一位」的東西,所以要看得見。
+            代碼是這一頁唯一能證明「你看的是哪一位」的東西，所以要看得見。
           */}
           <span className="text-xs tabular-nums">代碼 {response.teacher.id}</span>
         </div>

@@ -12,7 +12,7 @@ export function OfflineNotice({ generatedAt }: { generatedAt: string }) {
       role="status"
       className="bg-muted text-muted-foreground border-b px-4 py-2 text-sm"
     >
-      目前連不上資料來源,顯示的是離線快取 —— 資料時間為 {formatTaipei(generatedAt)}。
+      目前連不上資料來源，顯示的是離線快取 —— 資料時間為 {formatTaipei(generatedAt)}。
     </div>
   )
 }

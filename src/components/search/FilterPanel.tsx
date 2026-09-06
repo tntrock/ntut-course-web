@@ -73,10 +73,10 @@ function Section({
           </span>
         )}
         {/*
-          用 SVG 而不是 `›` 這個字元:文字字符帶著字型的側邊間距,實測會凸出
-          容器右緣 3.33px,而 sticky 側欄設了 overflow-y 之後 overflow-x 會被
+          用 SVG 而不是 `›` 這個字元：文字字符帶著字型的側邊間距，實測會凸出
+          容器右緣 3.33px，而 sticky 側欄設了 overflow-y 之後 overflow-x 會被
           CSS 規範連帶算成 auto —— 於是就為了 3px 長出一條左右橫移的捲軸。
-          SVG 的邊界是精確的,沒有這個問題。
+          SVG 的邊界是精確的，沒有這個問題。
         */}
         <svg
           aria-hidden
@@ -168,7 +168,7 @@ export function FilterPanel({
 
       <Section title="學院 / 系所" active={values.dept.length}>
         {/*
-          原本這一塊自己開了一個 max-h + overflow 的捲動框,於是畫面上出現第三條
+          原本這一塊自己開了一個 max-h + overflow 的捲動框，於是畫面上出現第三條
           捲軸。收合之後就不需要了 —— 展開時讓整頁一起捲就好。
         */}
         <div className="space-y-3">

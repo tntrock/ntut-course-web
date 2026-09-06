@@ -175,7 +175,7 @@ export function ExportImage({
       )}
 
       <p style={{ marginTop: 20, fontSize: 11, color: MUTED }}>
-        北科課程 ntut-course.allenyen.net · 非官方網站,一切以學校公告為準
+        北科課程 ntut-course.allenyen.net · 非官方網站，一切以學校公告為準
       </p>
     </div>
   )

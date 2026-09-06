@@ -58,7 +58,7 @@ export function CourseList({
         </select>
       </div>
 
-      {/* 斷點與搜尋頁的 useColumns 一致,兩邊改的時候要一起改 */}
+      {/* 斷點與搜尋頁的 useColumns 一致，兩邊改的時候要一起改 */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {sorted.map((course) => (
           <CourseCard

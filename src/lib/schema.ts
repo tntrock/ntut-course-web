@@ -19,8 +19,8 @@ export function schemaWarning(version: number): string | null {
   const status = checkSchema(version)
   if (status === 'ok') return null
 
-  const shared = `資料格式為第 ${version} 版,本站支援第 ${SUPPORTED_SCHEMA_VERSION} 版。`
+  const shared = `資料格式為第 ${version} 版，本站支援第 ${SUPPORTED_SCHEMA_VERSION} 版。`
   return status === 'newer'
-    ? `${shared}資料來源已更新,本站部分欄位可能顯示不正確,請回報。`
-    : `${shared}讀到的是較舊的資料,部分功能可能無法使用。`
+    ? `${shared}資料來源已更新，本站部分欄位可能顯示不正確，請回報。`
+    : `${shared}讀到的是較舊的資料，部分功能可能無法使用。`
 }

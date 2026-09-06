@@ -89,8 +89,8 @@ function CourseNotFound() {
       <h1 className="text-2xl font-semibold">查無此課</h1>
       <p className="text-muted-foreground mt-2 text-sm">
         {semester} 沒有課號 {courseId}。
-        {/* 課號跨學期不穩定(plan §1.3.7)—— 這是最常見的原因,直接講出來 */}
-        課號在不同學期並不通用,舊連結換到別的學期通常就查不到了。
+        {/* 課號跨學期不穩定（plan §1.3.7）—— 這是最常見的原因，直接講出來 */}
+        課號在不同學期並不通用，舊連結換到別的學期通常就查不到了。
       </p>
       <Link to="/search" className="mt-6 inline-block text-sm underline">
         回搜尋
@@ -212,8 +212,8 @@ function CourseDetail() {
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {/*
-            **學期一定要看得見。** 分享連結進來的人不知道自己看的是哪一學期,
-            而課號跨學期不通用(plan §1.3.7)—— 沒有這個標示,一門 114-2 的課
+            **學期一定要看得見。** 分享連結進來的人不知道自己看的是哪一學期，
+            而課號跨學期不通用（plan §1.3.7）—— 沒有這個標示，一門 114-2 的課
             看起來會跟本學期的課一模一樣。
           */}
           <span className="text-muted-foreground text-xs tabular-nums">
@@ -235,8 +235,8 @@ function CourseDetail() {
         </div>
       </header>
 
-      {/* 合開資訊在 notes 裡,是選課時真正會影響決定的資訊 —— 放在最上面。
-          標上「備註」才知道這是學校寫的,不是本站的提示 */}
+      {/* 合開資訊在 notes 裡，是選課時真正會影響決定的資訊 —— 放在最上面。
+          標上「備註」才知道這是學校寫的，不是本站的提示 */}
       {course.notes && (
         <div className="border-primary bg-primary-muted/40 mt-4 rounded-lg border-l-2 px-3 py-2">
           <p className="text-muted-foreground text-xs">備註</p>
@@ -261,8 +261,8 @@ function CourseDetail() {
         )}
       </div>
 
-      {/* 內容放在卡片上,和頁面底色分層 —— 原本整段直接躺在背景上,
-          只靠一堆 1px 分隔線,看起來像沒排版的表格 */}
+      {/* 內容放在卡片上，和頁面底色分層 —— 原本整段直接躺在背景上，
+          只靠一堆 1px 分隔線，看起來像沒排版的表格 */}
       <div className="bg-card shadow-card mt-3 rounded-xl px-4 py-1">
         {active === 'info' ? (
           <CourseInfo
@@ -370,8 +370,8 @@ function CourseInfo({
           <span className="text-muted-foreground">未定</span>
         ) : (
           <div className="flex flex-wrap gap-x-3 gap-y-1">
-            {/* 連結一律走**教師代碼**,不是姓名 —— 實測有兩組同名老師,
-                用姓名會把兩個人的課混在一起(plan §1.3.6) */}
+            {/* 連結一律走**教師代碼**，不是姓名 —— 實測有兩組同名老師，
+                用姓名會把兩個人的課混在一起（plan §1.3.6） */}
             {course.teachers.map((name, i) => (
               <NameLink
                 key={course.teacher_codes[i] ?? name}
@@ -458,7 +458,7 @@ function CourseInfo({
           <span className="text-muted-foreground">未提供</span>
         ) : (
           <span className="tabular-nums">
-            {/* `enrolled` 是修課人數不是名額上限,文案不能寫「名額」 */}
+            {/* `enrolled` 是修課人數不是名額上限，文案不能寫「名額」 */}
             修課 {course.enrolled} 人
             {withdrawn > 0 && <span className="ml-2">撤選 {withdrawn} 人</span>}
           </span>

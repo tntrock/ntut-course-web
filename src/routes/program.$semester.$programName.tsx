@@ -40,7 +40,7 @@ function ProgramMissing() {
       kind="學程"
       id={programName}
       semester={semester}
-      hint="學程只有中文名沒有代碼,名稱改過的話舊連結就會失效。"
+      hint="學程只有中文名沒有代碼，名稱改過的話舊連結就會失效。"
     />
   )
 }
@@ -67,7 +67,8 @@ function ProgramPage() {
         // 學程檔說有幾門、索引裡查得到幾門,不一致時要看得出來而不是默默少幾門
         courses.length === program.course_count ? null : (
           <span>
-            學程列了 {program.course_count} 門,本學期索引查得到 {courses.length} 門。
+            學程列了 {program.course_count} 門，但本學期索引只查得到 {courses.length} 門
+            —— 少的那幾門在索引裡找不到，下面就列不出來。
           </span>
         )
       }

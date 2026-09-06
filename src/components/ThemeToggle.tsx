@@ -38,8 +38,8 @@ export function ThemeToggle() {
       type="button"
       onClick={cycle}
       // 循環式按鈕要講清楚現在是什麼、按下去會變什麼
-      aria-label={`外觀:${THEME_LABELS[theme]},點擊切換`}
-      title={`外觀:${THEME_LABELS[theme]}`}
+      aria-label={`外觀：${THEME_LABELS[theme]}，點擊切換`}
+      title={`外觀：${THEME_LABELS[theme]}`}
       className="hover:bg-accent focus-visible:ring-ring grid size-9 shrink-0 place-items-center rounded-lg text-base focus-visible:ring-2 focus-visible:outline-none"
     >
       <span aria-hidden>

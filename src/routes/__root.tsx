@@ -29,7 +29,7 @@ function RootLayout() {
     <div className="flex min-h-dvh flex-col">
       <SchemaWarning version={meta.schema_version} />
       {fromCache && <OfflineNotice generatedAt={meta.generated_at} />}
-      {/* 個人資料損毀過就要講,不能讓課表默默變空 */}
+      {/* 個人資料損毀過就要講，不能讓課表默默變空 */}
       <RecoveryNotice />
       <UpdatePrompt />
 
@@ -39,7 +39,7 @@ function RootLayout() {
         <Outlet />
       </main>
 
-      {/* 免責聲明每頁都要看得見,不能只放在關於頁 */}
+      {/* 免責聲明每頁都要看得見，不能只放在關於頁 */}
       <footer className="text-muted-foreground border-t px-4 py-6 text-xs">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-1">
           <p className="flex-1">{meta.disclaimer}</p>
@@ -74,7 +74,7 @@ function LoadFailed({ error }: { error: Error }) {
       <h1 className="text-2xl font-semibold">取不到課程資料</h1>
       <p className="text-muted-foreground mt-2 text-sm">
         {isApiError
-          ? `資料來源回應 HTTP ${error.status}。這是資料來源的問題,不是你的網路。`
+          ? `資料來源回應 HTTP ${error.status}。這是資料來源的問題，不是你的網路。`
           : '連不上資料來源。請確認網路後再重新整理。'}
       </p>
     </div>
@@ -86,7 +86,7 @@ function NotFound() {
     <div className="mx-auto max-w-md px-4 py-24 text-center">
       <h1 className="text-2xl font-semibold">找不到這個頁面</h1>
       <p className="text-muted-foreground mt-2 text-sm">
-        網址可能打錯了,或這個頁面已經移除。
+        網址可能打錯了，或這個頁面已經移除。
       </p>
     </div>
   )

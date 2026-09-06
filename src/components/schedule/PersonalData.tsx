@@ -57,7 +57,7 @@ export function Favorites({
               params={{ semester, courseId: id }}
               className="bg-card shadow-card hover:ring-primary/40 rounded-lg px-3 py-2 text-sm hover:ring-1"
             >
-              {/* 離線時索引拿不到,退回顯示課號而不是空白 */}
+              {/* 離線時索引拿不到，退回顯示課號而不是空白 */}
               {courses?.get(id)?.name_zh ?? id}
             </Link>
           ))}
@@ -109,7 +109,7 @@ export function DataTransfer() {
     if (!result.ok) {
       setMessage(
         result.reason === 'unsupported'
-          ? '這個檔案是較新版本產生的,目前的版本讀不了。'
+          ? '這個檔案是較新版本產生的，目前的版本讀不了。'
           : '這不是本站匯出的檔案。',
       )
       return
@@ -121,7 +121,7 @@ export function DataTransfer() {
       0,
     )
     if (
-      !confirm(`匯入後會覆蓋目前的課表與收藏。檔案裡有 ${courseCount} 門課,確定嗎?`)
+      !confirm(`匯入後會覆蓋目前的課表與收藏。檔案裡有 ${courseCount} 門課，確定嗎？`)
     ) {
       return
     }
@@ -130,7 +130,7 @@ export function DataTransfer() {
     if (!saved.ok) {
       setMessage(
         saved.reason === 'quota'
-          ? '瀏覽器空間不足,匯入失敗。'
+          ? '瀏覽器空間不足，匯入失敗。'
           : '這個瀏覽器不允許儲存資料。',
       )
       return
@@ -143,8 +143,7 @@ export function DataTransfer() {
     <section className="mt-8 border-t pt-5">
       <h2 className="text-muted-foreground text-xs font-medium">資料</h2>
       <p className="text-muted-foreground mt-1 text-xs">
-        課表與收藏只存在這台裝置的瀏覽器裡。換裝置或清除瀏覽器資料就會不見,
-        建議匯出備份。
+        課表與收藏只存在這台裝置的瀏覽器裡。換裝置或清除瀏覽器資料就會不見，建議匯出備份。
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
         <button

@@ -34,7 +34,7 @@ export class ApiError extends Error {
   readonly path: string
 
   constructor(status: number, path: string) {
-    super(`取得 ${path} 失敗(HTTP ${status})`)
+    super(`取得 ${path} 失敗（HTTP ${status}）`)
     this.name = 'ApiError'
     this.status = status
     this.path = path

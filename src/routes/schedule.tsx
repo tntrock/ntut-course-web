@@ -114,9 +114,9 @@ function SchedulePage() {
         <>
           {conflictIds.size > 0 && (
             <p className="bg-destructive/10 text-destructive mt-4 rounded-lg px-3 py-2 text-sm">
-              {grid.conflicts.size} 處衝堂,涉及 {conflictIds.size} 門課。
-              {/* 加課時不阻擋,只在這裡警告 —— 使用者可能正在比較兩個方案 */}
-              課表不會擋你加課,自己確認一下。
+              {grid.conflicts.size} 處衝堂，涉及 {conflictIds.size} 門課。
+              {/* 加課時不阻擋，只在這裡警告 —— 使用者可能正在比較兩個方案 */}
+              這裡只提醒，不會擋你加課 —— 請自己確認實際上課時間。
             </p>
           )}
 
@@ -126,7 +126,7 @@ function SchedulePage() {
 
           {index.isError && (
             <p className="bg-secondary text-muted-foreground mt-4 rounded-lg px-3 py-2 text-sm">
-              連不上資料來源,以下是上次儲存的課表。異動偵測暫時停用。
+              連不上資料來源，以下是上次儲存的課表。異動偵測暫時停用。
             </p>
           )}
 
@@ -183,7 +183,7 @@ function SchedulePage() {
       <DataTransfer />
 
       {/*
-        匯出用的離屏版面。**不能用 `display: none`** —— 截圖需要真實的版面尺寸,
+        匯出用的離屏版面。**不能用 `display: none`** —— 截圖需要真實的版面尺寸，
         沒有佈局就量不到東西。移到畫面外並對輔助技術隱藏。
       */}
       {courses.length > 0 && (
@@ -241,7 +241,7 @@ function ExportButton({
       link.click()
     } catch {
       // 截圖會失敗(記憶體、瀏覽器差異),不能靜靜地什麼都沒發生
-      setError('匯出失敗,可以改用瀏覽器截圖')
+      setError('匯出失敗，可以改用瀏覽器截圖')
     } finally {
       setBusy(false)
     }
@@ -418,20 +418,20 @@ function Stats({ stats }: { stats: ReturnType<typeof scheduleStats> }) {
         <Stat label="門數" value={String(stats.courseCount)} />
       </dl>
 
-      {/* 這兩種課會讓總學分看起來不對,不講清楚使用者會以為程式壞了 */}
+      {/* 這兩種課會讓總學分看起來不對，不講清楚使用者會以為程式壞了 */}
       {stats.unclassifiedCredits > 0 && (
         <p className="text-muted-foreground mt-2 text-xs">
-          另有 {stats.unclassifiedCredits} 學分的課沒有標示必選修,未計入上面兩欄。
+          另有 {stats.unclassifiedCredits} 學分的課沒有標示必選修，未計入上面兩欄。
         </p>
       )}
       {stats.unknownCreditCount > 0 && (
         <p className="text-muted-foreground mt-1 text-xs">
-          {stats.unknownCreditCount} 門課沒有提供學分數,未計入總學分。
+          {stats.unknownCreditCount} 門課沒有提供學分數，未計入總學分。
         </p>
       )}
       {stats.earliest && stats.latest && (
         <p className="text-muted-foreground mt-1 text-xs">
-          最早第 {stats.earliest} 節,最晚第 {stats.latest} 節。
+          最早第 {stats.earliest} 節，最晚第 {stats.latest} 節。
         </p>
       )}
     </section>

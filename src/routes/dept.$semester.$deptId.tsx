@@ -54,10 +54,10 @@ function DeptPage() {
       meta={
         <>
           <span>{college}</span>
-          {/* 名字和上層學院一模一樣的單位,不講清楚沒人分得出差別 */}
+          {/* 名字和上層學院一模一樣的單位，不講清楚沒人分得出差別 */}
           {dept && isCollegeWideUnit(dept) && (
             <p className="mt-1 text-xs">
-              這是院級共同課程,不是{college}底下所有系所的課。
+              這是院級共同課程，不是{college}底下所有系所的課。
             </p>
           )}
         </>
