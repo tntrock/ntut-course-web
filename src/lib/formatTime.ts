@@ -3,6 +3,16 @@ import type { PeriodDef, TimeSlot } from '@/types/api'
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六']
 
 /**
+ * 星期代碼 → 中文單字。API 的 `day` 是 **0 = 週日**。
+ *
+ * 課表、匯出圖、時段網格三處都要這張對照,各自複製一份的話,
+ * 哪天要改成「週日」還是「日」就會有一處漏掉。
+ */
+export function dayName(day: number): string {
+  return DAY_NAMES[day] ?? String(day)
+}
+
+/**
  * 節次的順序**不是字典序** —— `meta.periods` 給的是
  * `1 2 3 4 N 5 6 7 8 9 A B C D`,4 之後是午休 N,9 之後是夜間 A。
  * 一律以那個陣列的順序為準。

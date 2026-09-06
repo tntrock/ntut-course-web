@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { CourseIndexEntry, PeriodDef } from '@/types/api'
 import { sortCourses } from '@/lib/sort'
 import type { SortKey } from '@/lib/searchParams'
+import { COURSE_GRID_CLASS } from '@/hooks/useColumns'
 import { CourseCard } from '@/components/search/CourseCard'
 
 const EMPTY_SCORES: ReadonlyMap<string, number> = new Map()
@@ -58,8 +59,7 @@ export function CourseList({
         </select>
       </div>
 
-      {/* 斷點與搜尋頁的 useColumns 一致，兩邊改的時候要一起改 */}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className={COURSE_GRID_CLASS}>
         {sorted.map((course) => (
           <CourseCard
             key={course.id}

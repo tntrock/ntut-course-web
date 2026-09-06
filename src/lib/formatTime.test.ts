@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatSlotClock, formatTimeSlots } from './formatTime'
+import { dayName, formatSlotClock, formatTimeSlots } from './formatTime'
 import { course, slot } from '@/test/factories'
 import type { PeriodDef } from '@/types/api'
 
@@ -121,5 +121,17 @@ describe('formatSlotClock', () => {
 
   it('沒有時段時回傳空字串,由呼叫端決定要不要顯示', () => {
     expect(clock(slot(5))).toBe('')
+  })
+})
+
+describe('dayName', () => {
+  it('回傳星期的中文單字', () => {
+    expect(dayName(1)).toBe('一')
+    expect(dayName(6)).toBe('六')
+  })
+
+  it('週日是 0，不是 7', () => {
+    // API 的 day 欄位 0 = 週日。四份重複的對照表都是這樣定義的
+    expect(dayName(0)).toBe('日')
   })
 })

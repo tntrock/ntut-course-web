@@ -313,23 +313,6 @@ export interface ClassroomsResponse extends SemesterScoped {
   classrooms: Classroom[]
 }
 
-export interface SchedulePeriodBucket {
-  code: PeriodCode
-  course_count: number
-  course_ids: string[]
-}
-
-export interface ScheduleDay {
-  day: Day
-  day_name: string
-  periods: SchedulePeriodBucket[]
-}
-
-export interface ScheduleResponse extends SemesterScoped {
-  periods: PeriodDef[]
-  days: ScheduleDay[]
-}
-
 // ─────────────────────────────────────────────────────────────
 // 教學大綱
 // ─────────────────────────────────────────────────────────────
@@ -342,8 +325,8 @@ export interface FlexibleLearning {
 /**
  * 單門課的教學大綱。`{semester}/syllabus/{course_id}.json`。
  *
- * **只有 115-1 有大綱**,舊學期一律 404。且 115-1 內也只有約 70% 的課
- * 有 `syllabus_url`,其餘同樣 404 —— 見 `Course.syllabus_url`。
+ * 涵蓋哪些學期**由 `syllabus.json` 決定,不要寫死** —— 爬蟲正在往回逐期補。
+ * 沒有 `syllabus_url` 的課(約 30%)一律 404,判斷邏輯見 `lib/syllabus.ts`。
  */
 export interface Syllabus extends SemesterScoped {
   course_id: string
@@ -511,27 +494,4 @@ export interface Changes extends SchemaVersioned {
   checked_at: string
   event_count: number
   events: ChangeEvent[]
-}
-
-// ─────────────────────────────────────────────────────────────
-// 人數快照
-// ─────────────────────────────────────────────────────────────
-
-export interface EnrollmentSnapshot {
-  semester: SemesterPath
-  year: number
-  sem: number
-  /** `"2026-09-04"` */
-  date: string
-  at: string
-  course_count: number
-  enrolled_total: number
-  withdrawn_total: number
-  path: string
-}
-
-export interface Enrollment extends SchemaVersioned {
-  generated_at: string
-  snapshot_count: number
-  snapshots: EnrollmentSnapshot[]
 }

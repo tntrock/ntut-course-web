@@ -2,6 +2,7 @@ import type { Day, PeriodDef } from '@/types/api'
 import type { SavedCourse } from '@/lib/storage'
 import { layoutRuns, scheduleStats, visibleDays } from '@/lib/schedule'
 import { formatTaipei } from '@/lib/datetime'
+import { dayName } from '@/lib/formatTime'
 
 /**
  * 匯出用的課表版面。
@@ -15,16 +16,6 @@ import { formatTaipei } from '@/lib/datetime'
  * 3. **不用 webfont**,全站中文本來就走系統字型堆疊。字型嵌不進去的話,
  *    中文會整片變成豆腐(plan §3.5 的已知風險)。
  */
-
-const DAY_NAMES: Record<number, string> = {
-  0: '日',
-  1: '一',
-  2: '二',
-  3: '三',
-  4: '四',
-  5: '五',
-  6: '六',
-}
 
 const FONT =
   "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
@@ -92,7 +83,7 @@ export function ExportImage({
             key={day}
             style={{ fontSize: 13, color: MUTED, textAlign: 'center', fontWeight: 600 }}
           >
-            週{DAY_NAMES[day]}
+            週{dayName(day)}
           </div>
         ))}
 

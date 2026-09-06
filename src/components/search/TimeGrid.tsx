@@ -1,17 +1,8 @@
 import type { PeriodDef } from '@/types/api'
 import { slotKey, type TimeMode } from '@/lib/filters'
+import { dayName } from '@/lib/formatTime'
 
 const DAYS = [1, 2, 3, 4, 5, 6, 0] as const
-const DAY_NAMES: Record<number, string> = {
-  0: '日',
-  1: '一',
-  2: '二',
-  3: '三',
-  4: '四',
-  5: '五',
-  6: '六',
-}
-
 /**
  * 14×7 的時段網格。比「星期下拉 + 節次下拉」好用得多 ——
  * 使用者腦中的空堂就是課表上的格子。
@@ -81,7 +72,7 @@ export function TimeGrid({
             <th className="text-muted-foreground w-6 font-normal" />
             {DAYS.map((day) => (
               <th key={day} className="text-muted-foreground font-normal">
-                {DAY_NAMES[day]}
+                {dayName(day)}
               </th>
             ))}
           </tr>
@@ -104,7 +95,7 @@ export function TimeGrid({
                     <button
                       type="button"
                       aria-pressed={isOn}
-                      aria-label={`週${DAY_NAMES[day]} 第 ${period.code} 節`}
+                      aria-label={`週${dayName(day)} 第 ${period.code} 節`}
                       onClick={() => onToggle(key)}
                       className={`focus-visible:ring-ring h-6 w-full rounded-sm transition-colors focus-visible:ring-2 focus-visible:outline-none ${
                         isOn ? 'bg-primary' : 'bg-muted hover:bg-accent'

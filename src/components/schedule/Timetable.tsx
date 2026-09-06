@@ -1,17 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import type { Day, PeriodDef } from '@/types/api'
 import type { SavedCourse } from '@/lib/storage'
+import { dayName } from '@/lib/formatTime'
 import { layoutRuns } from '@/lib/schedule'
-
-const DAY_NAMES: Record<number, string> = {
-  0: '日',
-  1: '一',
-  2: '二',
-  3: '三',
-  4: '四',
-  5: '五',
-  6: '六',
-}
 
 export function Timetable({
   courses,
@@ -45,7 +36,7 @@ export function Timetable({
             key={day}
             className="text-muted-foreground pb-1 text-center text-xs font-medium"
           >
-            週{DAY_NAMES[day]}
+            週{dayName(day)}
           </div>
         ))}
 
