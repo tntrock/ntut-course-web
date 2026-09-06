@@ -193,15 +193,7 @@ CI 在每次 push 跑 lint、格式檢查、測試、build 四關。
 
 ## 部署
 
-部署到 Cloudflare Workers（Static Assets），**手動觸發**：
-
-```bash
-wrangler login     # 第一次,或 token 過期時
-npm run deploy     # build 後 wrangler deploy
-```
-
-推到 `main` **不會**自動部署 —— CI 只跑 lint / 格式 / 測試 / build 四關,
-沒有接 Cloudflare 的 Git 整合。
+推到 `main` 就會自動部署到 Cloudflare Workers（Static Assets）。
 
 深層網址（例如 `/course/115-1/364893`）的 SPA fallback 由 `wrangler.jsonc` 的
 `not_found_handling` 處理 —— **不是** `_redirects`，那在 Workers Assets 上是
