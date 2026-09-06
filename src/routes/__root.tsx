@@ -1,4 +1,4 @@
-import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
+import { Link, Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
 
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
@@ -41,7 +41,12 @@ function RootLayout() {
 
       {/* 免責聲明每頁都要看得見,不能只放在關於頁 */}
       <footer className="text-muted-foreground border-t px-4 py-6 text-xs">
-        <p className="mx-auto max-w-3xl">{meta.disclaimer}</p>
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-1">
+          <p className="flex-1">{meta.disclaimer}</p>
+          <Link to="/about" className="underline underline-offset-4">
+            關於
+          </Link>
+        </div>
       </footer>
     </div>
   )

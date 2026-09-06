@@ -17,9 +17,17 @@ import type {
   TeachersResponse,
 } from '@/types/api'
 
-const BASE = (
+/**
+ * 資料來源的網址。
+ *
+ * **匯出出去** —— 關於頁要顯示它。寫死第二份的話,改了環境變數卻忘了改文案,
+ * 使用者照著頁面上的網址是打不到東西的。
+ */
+export const API_BASE = (
   import.meta.env.VITE_API_BASE ?? 'https://tntrock.github.io/ntut-course-crawler'
 ).replace(/\/+$/, '')
+
+const BASE = API_BASE
 
 export class ApiError extends Error {
   readonly status: number
