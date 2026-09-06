@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 
@@ -12,6 +12,7 @@ import {
   scheduleStats,
   visibleDays,
 } from '@/lib/schedule'
+import { ExportButton } from '@/components/schedule/ExportButton'
 import { ChangeList } from '@/components/schedule/ChangeList'
 import { SavedCourseRow } from '@/components/schedule/SavedCourseRow'
 import { ScheduleStats } from '@/components/schedule/ScheduleStats'
@@ -201,66 +202,6 @@ function SchedulePage() {
         </div>
       )}
     </div>
-  )
-}
-
-/**
- * 把課表存成 PNG。
- *
- * 截圖的是離屏那份固定寬度的版面,不是畫面上這一份 —— 畫面上的會跟著視窗寬度與
- * 深色主題變,匯出的圖不該這樣。
- */
-function ExportButton({
-  targetRef,
-  semester,
-}: {
-  targetRef: React.RefObject<HTMLDivElement | null>
-  semester: string
-}) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const save = async () => {
-    const node = targetRef.current
-    if (!node) return
-
-    setBusy(true)
-    setError(null)
-    try {
-      const { toPng } = await import('html-to-image')
-      const url = await toPng(node, {
-        // 2 倍解析度,在手機上放大看也不糊
-        pixelRatio: 2,
-        backgroundColor: '#ffffff',
-      })
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `課表-${semester}.png`
-      link.click()
-    } catch {
-      // 截圖會失敗(記憶體、瀏覽器差異),不能靜靜地什麼都沒發生
-      setError('匯出失敗，可以改用瀏覽器截圖')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <span className="relative">
-      <button
-        type="button"
-        onClick={() => void save()}
-        disabled={busy}
-        className="bg-card hover:bg-accent focus-visible:ring-ring rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60"
-      >
-        {busy ? '匯出中…' : '存成圖片'}
-      </button>
-      {error && (
-        <span className="text-destructive absolute top-full right-0 mt-1 text-xs whitespace-nowrap">
-          {error}
-        </span>
-      )}
-    </span>
   )
 }
 

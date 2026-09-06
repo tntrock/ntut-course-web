@@ -259,23 +259,32 @@ Service worker（Workbox）**只管 app shell**，完全不碰 API 資料。兩�
 
 ## 3. 已知陷阱
 
-| 陷阱                                          | 症狀               | 對策                                        |
-| --------------------------------------------- | ------------------ | ------------------------------------------- |
-| `routeTree.gen.ts` 沒進版控                   | CI 型別檢查失敗    | 進版控，`build` 先跑 `tsr generate`         |
-| Workers Assets 用 `_redirects`                | 部署被拒           | 用 `wrangler.jsonc` 的 `not_found_handling` |
-| `overflow-y` 一設，`overflow-x` 跟著變 `auto` | 側欄冒出橫向捲軸   | 見下                                        |
-| sticky 側欄比視窗高                           | 底部選項永遠點不到 | `max-h` + 內部 `overflow-y-auto`            |
-| JSX 的中文換行                                | 畫面多一個空格     | 中文行尾接中文行首時不要斷行                |
-| PNG 匯出的字型                                | 中文變豆腐         | 只用系統字型堆疊，不用 webfont              |
+| 陷阱                                          | 症狀                                 | 對策                                        |
+| --------------------------------------------- | ------------------------------------ | ------------------------------------------- |
+| `routeTree.gen.ts` 沒進版控                   | CI 型別檢查失敗                      | 進版控，`build` 先跑 `tsr generate`         |
+| Workers Assets 用 `_redirects`                | 部署被拒                             | 用 `wrangler.jsonc` 的 `not_found_handling` |
+| `overflow-y` 一設，`overflow-x` 跟著變 `auto` | 側欄冒出橫向捲軸                     | 見下                                        |
+| sticky 側欄比視窗高                           | 底部選項永遠點不到                   | `max-h` + 內部 `overflow-y-auto`            |
+| JSX 的中文換行                                | 畫面多一個空格                       | 中文行尾接中文行首時不要斷行                |
+| PNG 匯出的字型                                | 中文變豆腐                           | 只用系統字型堆疊，不用 webfont              |
+| 用 `data:` URL 觸發下載                       | iOS Safari 跳「檢視 / 下載」後沒反應 | 改用 `Blob` + `createObjectURL`             |
 
 **CSS 規範規定 `overflow-y` 一旦不是 `visible`，`overflow-x` 就會跟著算成 `auto`。**
 所以側欄只要內容凸出幾個像素就會長出橫向捲軸。實測凶手是 `›` 這個文字字元——
 它帶著字型的側邊間距，凸出容器右緣 3.33px。改用 inline SVG（邊界精確）
 加 `overflow-x-hidden`。
 
-**PNG 匯出只在 Chrome / Edge 驗過。** `html-to-image` 是把 computed style 塞進 SVG，
-Safari 的行為沒測。匯出版面因此固定寬度 1200px、寫死十六進位色、不吃深色主題——
-顏色函式與 CSS 變數在那條路徑上是額外的風險，而且分享出去的課表淺色比較好讀。
+**PNG 匯出不要直接觸發下載。** 一張 200 KB 的圖轉成 `data:` URL 是 29 萬個字元，
+iOS Safari 的下載管理員接不住——它會跳出「檢視 / 下載」然後什麼都不做，使用者只會
+覺得按鈕壞了。改成 `toBlob()` + `createObjectURL`，並且**先把圖顯示出來再讓使用者
+決定怎麼存**：長按儲存那條路每個平台都通，分享面板則是 iOS 存進「照片」的正路。
+
+`canShare({ files })` 在桌機 Chrome 也是 `true`，所以**不要自動選**分享或下載——
+兩個按鈕都擺出來讓使用者挑。
+
+匯出版面固定寬度 1200px、寫死十六進位色、不吃深色主題——`html-to-image` 是把
+computed style 塞進 SVG，顏色函式與 CSS 變數在那條路徑上是額外的風險，而且分享出去
+的課表淺色比較好讀。
 
 **其他要講清楚的地方**（都是「不講的話使用者會以為程式壞了」）：
 
