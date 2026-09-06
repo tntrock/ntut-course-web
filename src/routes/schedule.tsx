@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 
+import { useClassroomBackfill } from '@/hooks/useClassroomBackfill'
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
 import { semesterIndexQueryOptions } from '@/hooks/useSemesterIndex'
 import { updateStore, useStore } from '@/hooks/useStore'
@@ -46,6 +47,9 @@ function SchedulePage() {
 
   const semester = params.sem ?? meta.latest
   const courses = store.schedules[semester]?.courses ?? []
+
+  // 搜尋結果加入的課沒有教室(輕量索引沒有這個欄位),回頭補起來
+  useClassroomBackfill(meta, semester)
 
   // 非 suspense:沒網路時這一支會失敗,課表照樣要畫出來
   const index = useQuery(semesterIndexQueryOptions(meta, semester))

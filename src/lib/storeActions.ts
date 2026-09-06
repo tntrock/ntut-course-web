@@ -87,10 +87,71 @@ export function refreshSnapshot(
   return withSchedule(
     store,
     semester,
-    courses.map((c) =>
-      c.id === courseId ? { ...c, snapshot: toSnapshot(course) } : c,
-    ),
+    courses.map((c) => {
+      if (c.id !== courseId) return c
+      const next = toSnapshot(course)
+      return {
+        ...c,
+        snapshot: {
+          ...next,
+          // 更新用的是輕量索引,那裡**沒有 classrooms 這個欄位**。照抄的話
+          // 按一下「更新為最新資料」教室就消失了 —— 只有新資料真的帶了教室
+          // 才覆蓋,否則留著舊的
+          classrooms:
+            next.classrooms.length > 0 ? next.classrooms : c.snapshot.classrooms,
+        },
+      }
+    }),
   )
+}
+
+/**
+ * 快照缺教室的課掛在哪些系所(去重)。
+ *
+ * `{semester}/index.json` 沒有 `classrooms` 欄位,所以**從搜尋結果加入的課一律
+ * 沒有教室**,從詳情頁加入的才有 —— 同一份課表於是有的顯示有的不顯示。
+ * 教室只存在系所課程檔裡,要補就得回頭抓那個檔。
+ *
+ * 只回缺的那些,沒有就回空陣列 —— 不要為了已經齊全的課表發請求。
+ */
+export function departmentsNeedingClassrooms(
+  store: Store,
+  semester: SemesterPath,
+): string[] {
+  const ids = new Set<string>()
+  for (const c of semesterCourses(store, semester)) {
+    if (c.snapshot.classrooms.length > 0) continue
+    const dept = c.snapshot.department_ids[0]
+    if (dept !== undefined) ids.add(dept)
+  }
+  return [...ids]
+}
+
+/**
+ * 用系所課程檔補上快照的教室。
+ *
+ * **只補教室,不碰其他欄位。** 這是補救不是「更新為最新資料」—— 順手把學分或
+ * 時段一起改掉的話,會把使用者還沒看到的異動提示悄悄蓋掉。
+ */
+export function fillClassrooms(
+  store: Store,
+  semester: SemesterPath,
+  courses: readonly { id: string; classrooms: readonly string[] }[],
+): Store {
+  const byId = new Map(courses.map((c) => [c.id, c.classrooms]))
+  const saved = semesterCourses(store, semester)
+  let changed = false
+
+  const next = saved.map((c) => {
+    if (c.snapshot.classrooms.length > 0) return c
+    const classrooms = byId.get(c.id)
+    if (!classrooms || classrooms.length === 0) return c
+    changed = true
+    return { ...c, snapshot: { ...c.snapshot, classrooms: [...classrooms] } }
+  })
+
+  // 沒有實際變更就回原本的參考,否則 useSyncExternalStore 會讓整頁重繪
+  return changed ? withSchedule(store, semester, next) : store
 }
 
 function toggle(list: readonly string[], value: string): string[] {

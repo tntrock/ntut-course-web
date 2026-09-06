@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { defaultStore } from './storage'
 import {
   addToSchedule,
+  departmentsNeedingClassrooms,
+  fillClassrooms,
   isFavoriteCourse,
   isFavoriteTeacher,
   isInSchedule,
@@ -123,5 +125,87 @@ describe('收藏', () => {
 
     store = toggleFavoriteTeacher(store, '12095')
     expect(store.favorites.teachers).toEqual([])
+  })
+})
+
+describe('教室的補救', () => {
+  /** 搜尋卡片傳的是輕量索引 —— 那裡**沒有 classrooms 這個欄位**。 */
+  const fromIndex = course({ id: '364893', name_zh: '數位影像處理' })
+  /** 詳情頁傳的是系所課程檔的完整物件。 */
+  const full = { ...fromIndex, classrooms: ['六教727(e)'] }
+
+  it('refreshSnapshot 不會把既有的教室洗掉', () => {
+    // 更新用的是輕量索引,那裡沒有教室。照抄的話按一下「更新為最新資料」
+    // 教室就消失了 —— 使用者只會覺得資料越更新越少
+    const saved = addToSchedule(defaultStore(), '115-1', full)
+    expect(saved.schedules['115-1']?.courses[0]?.snapshot.classrooms).toEqual([
+      '六教727(e)',
+    ])
+
+    const after = refreshSnapshot(saved, '115-1', '364893', fromIndex)
+    expect(after.schedules['115-1']?.courses[0]?.snapshot.classrooms).toEqual([
+      '六教727(e)',
+    ])
+  })
+
+  it('新資料有教室時以新的為準', () => {
+    const saved = addToSchedule(defaultStore(), '115-1', full)
+    const moved = { ...fromIndex, classrooms: ['三教501'] }
+
+    const after = refreshSnapshot(saved, '115-1', '364893', moved)
+    expect(after.schedules['115-1']?.courses[0]?.snapshot.classrooms).toEqual([
+      '三教501',
+    ])
+  })
+
+  it('列出缺教室的課掛在哪些系所', () => {
+    // 只有缺的才要抓,而且同一個系所只抓一次
+    let store = addToSchedule(defaultStore(), '115-1', fromIndex)
+    store = addToSchedule(store, '115-1', course({ id: 'B', department_ids: ['59'] }))
+    const hasRoom = {
+      ...course({ id: 'C', department_ids: ['01'] }),
+      classrooms: ['已經有了'],
+    }
+    store = addToSchedule(store, '115-1', hasRoom)
+
+    expect(departmentsNeedingClassrooms(store, '115-1')).toEqual(['59'])
+  })
+
+  it('沒有課缺教室時回空陣列,不要發沒必要的請求', () => {
+    const store = addToSchedule(defaultStore(), '115-1', full)
+    expect(departmentsNeedingClassrooms(store, '115-1')).toEqual([])
+  })
+
+  it('用系所課程檔補上教室', () => {
+    const store = addToSchedule(defaultStore(), '115-1', fromIndex)
+    const withRoom = { ...fromIndex, classrooms: ['六教727(e)'] }
+    const after = fillClassrooms(store, '115-1', [withRoom])
+
+    expect(after.schedules['115-1']?.courses[0]?.snapshot.classrooms).toEqual([
+      '六教727(e)',
+    ])
+  })
+
+  it('補不到的課保持原樣,而且 store 參考不變', () => {
+    // 沒有實際變更卻回傳新物件的話,useSyncExternalStore 會讓整頁重繪
+    const store = addToSchedule(defaultStore(), '115-1', fromIndex)
+    expect(fillClassrooms(store, '115-1', [])).toBe(store)
+  })
+
+  it('只補教室,不動快照的其他欄位', () => {
+    // 這支是補救,不是「更新為最新資料」。悄悄改掉學分或時段會蓋掉異動提示
+    const store = addToSchedule(defaultStore(), '115-1', fromIndex)
+    const changedElsewhere = {
+      ...fromIndex,
+      name_zh: '改過的名字',
+      credits: 99,
+      classrooms: ['六教727'],
+    }
+    const after = fillClassrooms(store, '115-1', [changedElsewhere])
+
+    const snap = after.schedules['115-1']?.courses[0]?.snapshot
+    expect(snap?.classrooms).toEqual(['六教727'])
+    expect(snap?.name_zh).toBe('數位影像處理')
+    expect(snap?.credits).toBe(fromIndex.credits)
   })
 })
