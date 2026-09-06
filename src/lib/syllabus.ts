@@ -157,3 +157,48 @@ export function unknownSyllabusFields(syllabus: Syllabus): UnknownField[] {
 
   return fields
 }
+
+export interface SyllabusCoverage {
+  /** 有收錄大綱的學期,由新到舊。 */
+  semesters: SemesterPath[]
+  /** 收錄到最舊的那個學期。沒有任何涵蓋時為 `null`。 */
+  oldest: SemesterPath | null
+  /** 已抓下來的大綱總份數。 */
+  total: number
+}
+
+/**
+ * 算出目前收錄了哪些學期的大綱。
+ *
+ * 為什麼要算而不是寫死:大綱正在**往回補**,寫死「只涵蓋 110-1 以後」這種句子
+ * 在補到 109 的那天就變成錯的 —— 而且沒有人會發現,因為它讀起來還是很合理。
+ *
+ * 兩個來源都要看:更新中的學期在 `semesters[]`,抓完的搬到 `frozen`。
+ * 只看其中一邊會漏掉九成的學期。
+ */
+export function syllabusCoverage(
+  progress: SyllabusProgress,
+  order: readonly SemesterPath[],
+): SyllabusCoverage {
+  const counts = new Map<SemesterPath, number>()
+
+  for (const entry of progress.semesters) {
+    if (entry.fetched > 0) counts.set(entry.semester, entry.fetched)
+  }
+  // 凍結的摘要覆蓋掉 `semesters[]` 的同一筆 —— 同一個數字,不會重複累加
+  for (const [semester, frozen] of Object.entries(progress.frozen ?? {})) {
+    if (frozen.fetched > 0) counts.set(semester, frozen.fetched)
+  }
+
+  // meta 的順序才是權威(字串排序會把 109-2 排在 110-1 前面是對的,
+  // 但 99-1 那種舊學期就會排錯)。meta 沒列到的接在後面,不靜默丟掉
+  const known = order.filter((s) => counts.has(s))
+  const extra = [...counts.keys()].filter((s) => !order.includes(s))
+  const semesters = [...known, ...extra]
+
+  return {
+    semesters,
+    oldest: semesters[semesters.length - 1] ?? null,
+    total: [...counts.values()].reduce((sum, n) => sum + n, 0),
+  }
+}

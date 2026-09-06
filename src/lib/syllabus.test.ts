@@ -3,6 +3,7 @@ import type { SyllabusProgress } from '@/types/api'
 import {
   confirmedSyllabusVersion,
   syllabusState,
+  syllabusCoverage,
   unknownSyllabusFields,
 } from './syllabus'
 
@@ -258,5 +259,104 @@ describe('confirmedSyllabusVersion', () => {
     // 這些課由元件在拿到課程物件之後再取,多一個來回換不發錯誤請求
     expect(confirmedSyllabusVersion(progress, '114-2', '353187')).toBeUndefined()
     expect(syllabusState(progress, '114-2', '353187', URL).kind).toBe('available')
+  })
+})
+
+describe('syllabusCoverage', () => {
+  const ORDER = ['115-1', '114-2', '114-1', '113-2', '110-1']
+
+  it('凍結與更新中的學期都算進涵蓋範圍', () => {
+    // 實測 115-1 還在更新(逐課列出),114-2 / 114-1 已凍結(只有摘要)
+    const p: SyllabusProgress = {
+      schema_version: 3,
+      generated_at: '2026-09-06T07:24:53Z',
+      semesters: [
+        {
+          semester: '115-1',
+          fetched: 2,
+          oldest_fetch: null,
+          newest_fetch: null,
+          course_count: 10,
+          with_url: 2,
+        },
+        {
+          semester: '114-2',
+          fetched: 5,
+          oldest_fetch: null,
+          newest_fetch: null,
+          course_count: 10,
+          with_url: 5,
+        },
+      ],
+      fetched: { '115-1': { a: { at: 'x' }, b: { at: 'y' } } },
+      frozen: { '114-2': { fetched: 5, with_url: 5, at: 'z' } },
+    }
+    expect(syllabusCoverage(p, ORDER)).toEqual({
+      semesters: ['115-1', '114-2'],
+      oldest: '114-2',
+      total: 7,
+    })
+  })
+
+  it('依 meta 的學期順序排列,而不是物件的鍵順序', () => {
+    // 鍵順序不保證 —— 「最舊到哪一期」得照 meta 的排序算
+    const p: SyllabusProgress = {
+      schema_version: 3,
+      generated_at: '2026-09-06T07:24:53Z',
+      semesters: [],
+      fetched: {},
+      frozen: {
+        '113-2': { fetched: 1, with_url: 1, at: 'z' },
+        '115-1': { fetched: 2, with_url: 2, at: 'z' },
+        '114-1': { fetched: 3, with_url: 3, at: 'z' },
+      },
+    }
+    expect(syllabusCoverage(p, ORDER)).toEqual({
+      semesters: ['115-1', '114-1', '113-2'],
+      oldest: '113-2',
+      total: 6,
+    })
+  })
+
+  it('抓取數為 0 的學期不算涵蓋', () => {
+    const p: SyllabusProgress = {
+      schema_version: 3,
+      generated_at: '2026-09-06T07:24:53Z',
+      semesters: [
+        {
+          semester: '110-1',
+          fetched: 0,
+          oldest_fetch: null,
+          newest_fetch: null,
+          course_count: 10,
+          with_url: 3,
+        },
+      ],
+      fetched: {},
+    }
+    expect(syllabusCoverage(p, ORDER)).toEqual({
+      semesters: [],
+      oldest: null,
+      total: 0,
+    })
+  })
+
+  it('meta 沒列到的學期仍然算進來,不靜默丟掉', () => {
+    // 大綱可能領先 meta —— 少報一個學期比多報一個更難察覺
+    const p: SyllabusProgress = {
+      schema_version: 3,
+      generated_at: '2026-09-06T07:24:53Z',
+      semesters: [],
+      fetched: {},
+      frozen: {
+        '115-1': { fetched: 1, with_url: 1, at: 'z' },
+        '109-2': { fetched: 4, with_url: 4, at: 'z' },
+      },
+    }
+    expect(syllabusCoverage(p, ORDER)).toEqual({
+      semesters: ['115-1', '109-2'],
+      oldest: '109-2',
+      total: 5,
+    })
   })
 })

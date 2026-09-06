@@ -1,8 +1,11 @@
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 
+import { syllabusProgressQueryOptions } from '@/hooks/useCourseDetail'
 import { useMeta } from '@/hooks/useMeta'
 import { API_BASE } from '@/lib/api'
 import { formatTaipei } from '@/lib/datetime'
+import { syllabusCoverage } from '@/lib/syllabus'
 
 const SITE_REPO = 'https://github.com/tntrock/ntut-course-web'
 const CRAWLER_REPO = 'https://github.com/tntrock/ntut-course-crawler'
@@ -37,6 +40,21 @@ function Out({ href, children }: { href: string; children: React.ReactNode }) {
 
 function AboutPage() {
   const { data: meta } = useMeta()
+
+  /*
+   * 大綱的涵蓋範圍**用算的,不寫死**。爬蟲正在往回逐期補,原本寫死的
+   * 「只涵蓋 110-1 以後」在補到 110-2 的那天就已經是錯的 —— 而且讀起來仍然
+   * 很合理,不會有人發現。
+   *
+   * 不用 suspense:這一頁的主體不該為了一句附註而空白。
+   */
+  const progress = useQuery(syllabusProgressQueryOptions(meta)).data
+  const coverage = progress
+    ? syllabusCoverage(
+        progress,
+        meta.semesters.map((s) => s.path),
+      )
+    : null
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -97,8 +115,20 @@ function AboutPage() {
             等於最終定案值,不代表當年選課期間的即時人數。
           </li>
           <li>
-            教學大綱<strong className="text-foreground">只涵蓋 110-1 以後</strong>
-            ,更早的學期只有課表。 沒有大綱連結的課(跨校選課那類)本來就不會有大綱。
+            教學大綱
+            {coverage && coverage.oldest !== null ? (
+              <>
+                <strong className="text-foreground">
+                  目前收錄 {coverage.semesters.length} 個學期、共{' '}
+                  {coverage.total.toLocaleString('zh-Hant')} 份
+                </strong>
+                ,最舊到 {coverage.oldest}
+              </>
+            ) : (
+              <strong className="text-foreground">只收錄部分學期</strong>
+            )}
+            ,更早的只有課表。大綱是往回逐期補的,這個範圍會跟著資料變。
+            沒有大綱連結的課(跨校選課那類)本來就不會有大綱。
           </li>
           <li>
             <span className="text-foreground">沒有英文課名。</span>
