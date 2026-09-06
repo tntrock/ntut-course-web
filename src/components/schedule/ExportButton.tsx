@@ -128,9 +128,6 @@ function PreviewDialog({
         className="bg-card flex max-h-full w-full max-w-3xl flex-col gap-3 overflow-auto rounded-xl p-4"
       >
         <img src={url} alt="課表" className="w-full rounded-lg" />
-        <p className="text-muted-foreground text-xs">
-          長按圖片也可以直接儲存 —— 手機上這條路最穩。
-        </p>
         <div className="flex flex-wrap justify-end gap-2">
           <button
             type="button"
