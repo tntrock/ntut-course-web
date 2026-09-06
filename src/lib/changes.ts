@@ -52,9 +52,7 @@ export function isStale(checkedAt: string, now: Date = new Date()): boolean {
  * 是白費。實測 15 筆事件裡有 12 筆是 baseline,橫跨 7 個學期,不篩的話等於多打
  * 十幾個請求。
  */
-export function semestersNeedingNames(
-  events: readonly ChangeEvent[],
-): SemesterPath[] {
+export function semestersNeedingNames(events: readonly ChangeEvent[]): SemesterPath[] {
   const semesters = new Set<SemesterPath>()
   for (const event of events) {
     if (event.type === 'baseline') continue
@@ -154,9 +152,11 @@ export function bulkBreakdown(
   translate: (id: string) => string,
   limit = 20,
 ): BulkGroup[] {
-  return Object.entries(counts)
-    .map(([id, count]) => ({ id, name: translate(id), count }))
-    // 數量相同時照代碼排,順序才不會每次 render 都不一樣
-    .sort((a, b) => b.count - a.count || a.id.localeCompare(b.id))
-    .slice(0, limit)
+  return (
+    Object.entries(counts)
+      .map(([id, count]) => ({ id, name: translate(id), count }))
+      // 數量相同時照代碼排,順序才不會每次 render 都不一樣
+      .sort((a, b) => b.count - a.count || a.id.localeCompare(b.id))
+      .slice(0, limit)
+  )
 }

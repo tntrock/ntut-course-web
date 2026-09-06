@@ -134,7 +134,9 @@ describe('formatFieldValue', () => {
 
   it('系所代碼翻成中文名', () => {
     // 「from 31 to B2,31」對使用者毫無意義
-    expect(formatFieldValue('department_ids', ['B2', '31'], names)).toBe('電子系、電機系')
+    expect(formatFieldValue('department_ids', ['B2', '31'], names)).toBe(
+      '電子系、電機系',
+    )
   })
 
   it('班級代碼也翻', () => {
