@@ -52,7 +52,8 @@ export function ResultList({
   // oxlint-disable-next-line react/incompatible-library
   const virtualizer = useWindowVirtualizer({
     count: courses.length,
-    estimateSize: () => 128,
+    // 卡片高度是固定的:170px + 12px 間距。估得準,捲軸才不會邊捲邊長
+    estimateSize: () => 182,
     overscan: 6,
     lanes: columns,
     scrollMargin,

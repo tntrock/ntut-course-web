@@ -54,9 +54,18 @@ export function CourseCard({
         </p>
         <p className="mt-0.5 truncate text-sm">{formatTimeSlots(course, periods)}</p>
 
-        {/* 徽章也固定一行：換行會讓卡片變高，整列又跟著錯開。
-            右邊留出加入課表按鈕的位置 */}
-        <div className="mt-2.5 flex h-7 items-center gap-1.5 overflow-hidden pr-9">
+        {/*
+          徽章固定**兩行高**，理由跟課名一樣：高度一致，整列才對得齊。
+
+          為什麼是兩行：三欄時卡片只有 277px，扣掉內距與按鈕位置剩 213px，
+          而「校訂共同必修 英語 2 學分 修課 30 人 教室 50 人」要 360px。
+          一行放不下，硬擠就是把後面的徽章切掉。
+
+          右邊用 **margin** 而不是 padding 讓出加入課表按鈕的位置：
+          `overflow-hidden` 切在 padding 邊緣，用 padding 的話溢出的徽章
+          照樣畫得到按鈕上。
+        */}
+        <div className="mt-2.5 mr-9 flex h-[2.875rem] flex-wrap content-start gap-1.5 overflow-hidden">
           {course.requirement_type && (
             <Badge tone={isRequired ? 'strong' : 'normal'}>
               {course.requirement_type}
