@@ -52,6 +52,27 @@ export default defineConfig({
         navigateFallback: '/index.html',
         // 資料來源是另一個網域,交給 API 快取層處理
         navigateFallbackDenylist: [/^\/assets\//],
+        /*
+         * 網路字型是跨網域的,不能預先快取(build 時不知道會用到哪幾片),
+         * 所以改成執行期快取。字型檔本身永不改版,拿 CacheFirst 存一年。
+         */
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\//,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'google-fonts-css' },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-files',
+              expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              // 字型是 opaque 回應,狀態碼會是 0
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
       devOptions: { enabled: false },
     }),

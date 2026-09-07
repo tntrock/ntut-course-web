@@ -28,12 +28,22 @@ export function CourseCard({
   // required 是三態(null 代表原始欄位空白),所以用它而不是猜字串
   const isRequired = course.required === true
 
+  /*
+   * **卡片在多欄時固定高度,單欄時不固定。**
+   *
+   * 多欄(≥ sm,見 `useColumns`)要固定,否則徽章一行或兩行會讓同一列的卡片
+   * 高低錯開;多出來的空間用 `mt-auto` 推到時段與徽章之間,讀起來像段落間距,
+   * 全部堆在最底下才會像沒做完。
+   *
+   * 單欄時左右沒有鄰居可以對齊,固定高度只是讓每張卡片白白多佔 40px ——
+   * 手機上捲一頁就差好幾張卡。所以改成順著內容長。
+   */
   return (
-    <article className="bg-card shadow-card hover:ring-primary/40 relative h-full rounded-xl transition-shadow hover:shadow-md hover:ring-1">
+    <article className="bg-card shadow-card hover:ring-primary/40 relative rounded-xl transition-shadow hover:shadow-md hover:ring-1 sm:h-[10.5rem]">
       <Link
         to="/course/$semester/$courseId"
         params={{ semester, courseId: course.id }}
-        className="focus-visible:ring-ring block h-full rounded-xl p-3.5 focus-visible:ring-2 focus-visible:outline-none"
+        className="focus-visible:ring-ring flex h-full flex-col rounded-xl p-3.5 focus-visible:ring-2 focus-visible:outline-none"
       >
         <div className="flex items-start justify-between gap-2">
           {/*
@@ -42,7 +52,7 @@ export function CourseCard({
             都對不齊，眼睛得重新找位置，那正是「看起來很亂」的來源。
             超過兩行就截斷，完整課名在詳情頁。
           */}
-          <h3 className="line-clamp-2 min-h-[2.75rem] text-[15px] leading-snug font-medium">
+          <h3 className="line-clamp-2 text-[15px] leading-snug font-semibold sm:min-h-[2.75rem]">
             {course.name_zh}
           </h3>
           <span className="text-muted-foreground mt-0.5 shrink-0 text-xs tabular-nums">
@@ -53,7 +63,10 @@ export function CourseCard({
         <p className="text-muted-foreground truncate text-sm">
           {course.teachers.length > 0 ? course.teachers.join('、') : '未定'}
         </p>
-        <p className="mt-0.5 truncate text-sm">{formatTimeSlots(course, periods)}</p>
+        {/* 時段是這張卡最常被掃視的一行,給它比教師名重一階 */}
+        <p className="mt-0.5 truncate text-sm font-medium">
+          {formatTimeSlots(course, periods)}
+        </p>
 
         {/*
           徽章固定**兩行高**，理由跟課名一樣：高度一致，整列才對得齊。
@@ -66,7 +79,7 @@ export function CourseCard({
           `overflow-hidden` 切在 padding 邊緣，用 padding 的話溢出的徽章
           照樣畫得到按鈕上。
         */}
-        <div className="mt-2.5 mr-9 flex h-[2.875rem] flex-wrap content-start gap-1.5 overflow-hidden">
+        <div className="mt-2.5 mr-9 flex max-h-[2.875rem] flex-wrap content-end gap-1.5 overflow-hidden sm:mt-auto">
           {course.requirement_type && (
             <Badge tone={isRequired ? 'strong' : 'normal'}>
               {course.requirement_type}

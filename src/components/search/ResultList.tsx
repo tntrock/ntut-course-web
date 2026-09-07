@@ -52,8 +52,9 @@ export function ResultList({
   // oxlint-disable-next-line react/incompatible-library
   const virtualizer = useWindowVirtualizer({
     count: courses.length,
-    // 卡片高度是固定的:170px + 12px 間距。估得準,捲軸才不會邊捲邊長
-    estimateSize: () => 182,
+    // 多欄時卡片固定 168px + 12px 間距;單欄時順著內容長,虛擬捲動會自己量。
+    // 估得準,捲軸才不會邊捲邊長
+    estimateSize: () => 180,
     overscan: 6,
     lanes: columns,
     scrollMargin,

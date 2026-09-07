@@ -8,6 +8,24 @@
     <!-- 行動版瀏覽器的網址列顏色。深淺色各給一組,不然其中一邊會很突兀 -->
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0c0e12" media="(prefers-color-scheme: dark)" />
+    <!--
+      字型。中文用 Noto Sans TC,拉丁字母與數字用 Inter。
+
+      不指定的話 Windows 會拿 Segoe UI 排拉丁、微軟正黑體排中文,同一行
+      「3D列印理論與實務」就是兩套字體設計,粗細與字面大小都對不起來。
+
+      用**可變字重**而不是列舉 400/500/600:實測同一個 CJK 分片,可變版 61 KB、
+      單一字重 32 KB —— 可變版跟「兩種靜態字重」同價,但拿到全部字重。
+      Google Fonts 依 unicode-range 切片,只會下載頁面真的用到的那幾片。
+
+      `display=swap`:字型還沒到之前先用系統字型顯示,不留白。
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+TC:wght@100..900&display=swap"
+    />
     <title>北科課程</title>
     <meta
       name="description"

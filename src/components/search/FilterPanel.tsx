@@ -63,7 +63,10 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <details open={defaultOpen || active > 0} className="group border-b">
+    <details
+      open={defaultOpen || active > 0}
+      className="group border-b last:border-b-0"
+    >
       <summary className="flex cursor-pointer list-none items-center gap-2 py-3 text-sm font-medium select-none marker:content-none">
         <span className="flex-1">{title}</span>
         {active > 0 && (
@@ -149,8 +152,12 @@ export function FilterPanel({
     (creditsActive ? 1 : 0)
 
   return (
-    <div className="text-sm">
-      <div className="flex h-9 items-center justify-between gap-2">
+    /*
+      篩選欄也放在卡片面上。整站的層次語言是「卡片浮在背景上」,只有這一欄
+      是裸的細框線 —— 看起來像還沒套樣式的區塊,而不是刻意的克制。
+    */
+    <div className="bg-card shadow-card rounded-xl px-4 py-1 text-sm">
+      <div className="flex h-11 items-center justify-between gap-2">
         <span className="text-muted-foreground text-xs">
           {total > 0 ? `已套用 ${total} 個條件` : '篩選'}
         </span>

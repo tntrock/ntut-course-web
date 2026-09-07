@@ -15,8 +15,13 @@
 :root {
   --radius: 0.75rem;
 
-  /* 頁面比卡片暗一階 —— 卡片才浮得起來 */
-  --background: oklch(0.978 0.003 255);
+  /*
+   * 頁面比卡片暗一階 —— 卡片才浮得起來。
+   *
+   * 原本是 0.978,跟卡片的 1.0 只差 2.2%,加上很淡的陰影,滿版卡片幾乎貼在
+   * 背景上分不出邊界。拉到 0.965 之後差 3.5%,不靠框線也看得出層次。
+   */
+  --background: oklch(0.965 0.004 255);
   --foreground: oklch(0.17 0.012 255);
   --card: oklch(1 0 0);
   --card-foreground: var(--foreground);
@@ -45,7 +50,9 @@
   --input: oklch(0.88 0.008 255);
   --ring: var(--primary);
 
-  --shadow-card: 0 1px 2px oklch(0.17 0.012 255 / 6%);
+  /* 兩層:貼著邊緣的那層畫出輪廓,散開的那層給高度 */
+  --shadow-card:
+    0 1px 2px oklch(0.17 0.012 255 / 8%), 0 1px 3px oklch(0.17 0.012 255 / 4%);
   --shadow-raised: 0 4px 16px oklch(0.17 0.012 255 / 10%);
 }
 
@@ -111,10 +118,16 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* 中文字型優先,避免瀏覽器落到明體 */
+  /*
+   * Inter 排拉丁與數字,Noto Sans TC 排中文 —— 順序就是分工:
+   * Inter 沒有中文字符,瀏覽器會逐字往下找,中文自然落到 Noto Sans TC。
+   *
+   * 後面那串系統字型是網路字型還沒到(或載不到)時的退路,順序仍然重要:
+   * PingFang TC 給 macOS/iOS、微軟正黑體給 Windows,**不能讓它落到明體**。
+   */
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', 'PingFang TC',
-    'Microsoft JhengHei', 'Helvetica Neue', Arial, sans-serif;
+    Inter, 'Noto Sans TC', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    'PingFang TC', 'Microsoft JhengHei', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', Consolas, monospace;
 }
 
