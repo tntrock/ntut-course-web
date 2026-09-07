@@ -80,3 +80,35 @@ export function groupByBuilding(classrooms: readonly Classroom[]): BuildingGroup
   }
   return [...groups].map(([building, rooms]) => ({ building, rooms }))
 }
+
+export interface RoomSeats {
+  room: Classroom
+  /** 座位數。`null` = 學校沒填,**不是 0**。 */
+  seats: number | null
+}
+
+/** 把容量掛到教室上。查不到就是 `null`。 */
+export function withSeats(
+  classrooms: readonly Classroom[],
+  seats: ReadonlyMap<string, number | null>,
+): RoomSeats[] {
+  return classrooms.map((room) => ({ room, seats: seats.get(room.id) ?? null }))
+}
+
+/**
+ * 依座位數篩選。
+ *
+ * **沒有容量的教室不能悄悄濾掉。** 實測綜科 28 間只有 3 間有容量、設計 24 間
+ * 只有 3 間 —— 濾掉的話使用者會以為那兩棟沒有空教室,而事實是我們不知道它多大。
+ * 所以另外回傳,由畫面標示成「未提供容量」。
+ */
+export function filterBySeats(
+  rooms: readonly RoomSeats[],
+  minSeats: number,
+): { enough: RoomSeats[]; unknown: RoomSeats[] } {
+  if (minSeats <= 0) return { enough: [...rooms], unknown: [] }
+  return {
+    enough: rooms.filter((r) => r.seats !== null && r.seats >= minSeats),
+    unknown: rooms.filter((r) => r.seats === null),
+  }
+}

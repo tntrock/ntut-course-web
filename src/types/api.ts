@@ -314,6 +314,32 @@ export interface ClassroomsResponse extends SemesterScoped {
 }
 
 // ─────────────────────────────────────────────────────────────
+// 教室容量
+// ─────────────────────────────────────────────────────────────
+
+export interface ClassroomCapacity {
+  name: string
+  /** 例如「第三教學大樓307室」。教室清單只有簡稱。 */
+  full_name: string
+  /**
+   * 座位數。**`null` 是常態** —— 學校那一格本來就常常空白（實測 445 間裡
+   * 229 間沒填,多半是實驗室與工作室）。不可把 `null` 當成 0。
+   */
+  capacity: number | null
+  checked_at: string
+}
+
+/**
+ * `capacity.json`。**跨學期共用**,鍵是教室代碼（與 `classrooms.json` 的 `id`、
+ * 課程的 `classroom_codes` 同一組命名空間,實測 0 筆對不上）。
+ */
+export interface CapacityResponse extends SchemaVersioned {
+  generated_at: string
+  classroom_count: number
+  classrooms: Record<string, ClassroomCapacity>
+}
+
+// ─────────────────────────────────────────────────────────────
 // 星期 × 節次 → 課號
 // ─────────────────────────────────────────────────────────────
 

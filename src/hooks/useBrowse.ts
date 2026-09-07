@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import {
+  fetchCapacity,
   fetchChanges,
   fetchClassCourses,
   fetchClasses,
@@ -103,6 +104,15 @@ export function scheduleQueryOptions(meta: Meta, semester: SemesterPath) {
   return queryOptions({
     queryKey: ['schedule', semester, version(meta, semester)],
     queryFn: () => fetchSchedule(meta, semester),
+    staleTime: Infinity,
+  })
+}
+
+/** 教室容量。跨學期共用,所以不帶學期。 */
+export function capacityQueryOptions(meta: Meta) {
+  return queryOptions({
+    queryKey: ['capacity', meta.generated_at],
+    queryFn: () => fetchCapacity(meta),
     staleTime: Infinity,
   })
 }

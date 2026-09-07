@@ -1,9 +1,9 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
 import { semesterIndexQueryOptions, useSemesterIndex } from '@/hooks/useSemesterIndex'
-import { classroomsQueryOptions } from '@/hooks/useBrowse'
+import { capacityQueryOptions, classroomsQueryOptions } from '@/hooks/useBrowse'
 import { coursesByIds } from '@/lib/crossref'
 import { CourseList } from '@/components/browse/CourseList'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
@@ -38,11 +38,14 @@ function ClassroomPage() {
 
   const classrooms = useSuspenseQuery(classroomsQueryOptions(meta, semester)).data
   const index = useSemesterIndex(meta, semester)
+  // 不擋渲染:全名與座位數是附註,課表才是這一頁的主體
+  const capacity = useQuery(capacityQueryOptions(meta)).data
   const classroom = classrooms.classrooms.find((c) => c.id === classroomId)
 
   if (!classroom) throw notFound()
 
   const courses = coursesByIds(index.courses, classroom.course_ids)
+  const info = capacity?.classrooms[classroomId]
 
   return (
     <DetailShell
@@ -52,12 +55,22 @@ function ClassroomPage() {
       browseTab="classroom"
       sourceUrl={classroom.url}
       meta={
-        courses.length === classroom.course_count ? null : (
-          <span>
-            教室列了 {classroom.course_count} 門，但本學期索引只查得到 {courses.length}{' '}
-            門 —— 少的那幾門在索引裡找不到，下面就列不出來。
-          </span>
-        )
+        <>
+          {info && (
+            <span>
+              {info.full_name}
+              {info.capacity !== null && (
+                <span className="ml-2 tabular-nums">{info.capacity} 個座位</span>
+              )}
+            </span>
+          )}
+          {courses.length !== classroom.course_count && (
+            <span className="block">
+              教室列了 {classroom.course_count} 門，但本學期索引只查得到{' '}
+              {courses.length} 門 —— 少的那幾門在索引裡找不到，下面就列不出來。
+            </span>
+          )}
+        </>
       }
     >
       <CourseList courses={courses} semester={semester} periods={meta.periods} />

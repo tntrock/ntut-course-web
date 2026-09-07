@@ -54,11 +54,14 @@ export function CourseInfo({
   semester,
   meta,
   deptName,
+  capacity,
 }: {
   course: Course
   semester: SemesterPath
   meta: Meta
   deptName: ReadonlyMap<string, string>
+  /** 教室代碼 → 座位數。還沒載到時是 `undefined`,不擋整頁渲染。 */
+  capacity: ReadonlyMap<string, number | null> | undefined
 }) {
   const withdrawn = course.withdrawn ?? 0
 
@@ -155,22 +158,33 @@ export function CourseInfo({
       {course.classrooms.length > 0 && (
         <Row label="教室">
           <div className="flex flex-wrap gap-x-3 gap-y-1">
-            {course.classrooms.map((name, i) => (
-              <NameLink
-                key={course.classroom_codes[i] ?? name}
-                name={name}
-                id={course.classroom_codes[i]}
-                render={(id) => (
-                  <Link
-                    to="/classroom/$semester/$classroomId"
-                    params={{ semester, classroomId: id }}
-                    className="underline underline-offset-4"
-                  >
-                    {name}
-                  </Link>
-                )}
-              />
-            ))}
+            {course.classrooms.map((name, i) => {
+              const code = course.classroom_codes[i]
+              const seats = code === undefined ? null : (capacity?.get(code) ?? null)
+              return (
+                <span key={code ?? name} className="inline-flex items-baseline gap-1">
+                  <NameLink
+                    name={name}
+                    id={code}
+                    render={(id) => (
+                      <Link
+                        to="/classroom/$semester/$classroomId"
+                        params={{ semester, classroomId: id }}
+                        className="underline underline-offset-4"
+                      >
+                        {name}
+                      </Link>
+                    )}
+                  />
+                  {/* 選課人數受教室大小限制,所以座位數擺在教室旁邊最有用 */}
+                  {seats !== null && (
+                    <span className="text-muted-foreground text-xs tabular-nums">
+                      {seats} 人
+                    </span>
+                  )}
+                </span>
+              )
+            })}
           </div>
         </Row>
       )}

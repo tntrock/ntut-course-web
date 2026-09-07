@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { buildingOf, freeClassrooms, groupByBuilding, occupiedCourseIds } from './rooms'
+import {
+  buildingOf,
+  filterBySeats,
+  freeClassrooms,
+  groupByBuilding,
+  occupiedCourseIds,
+  withSeats,
+} from './rooms'
 import type { Classroom, ScheduleResponse } from '@/types/api'
 
 /** 星期 × 節次 → 課號。這裡只放測試要用的格子。 */
@@ -115,5 +122,46 @@ describe('groupByBuilding', () => {
       { building: '六教', rooms: [expect.anything()] },
     ])
     expect(groups[0]?.rooms.map((r) => r.name)).toEqual(['三教308', '三教406'])
+  })
+})
+
+describe('withSeats / filterBySeats', () => {
+  const rooms = [
+    room('1', '三教308', []),
+    room('2', '綜科B01', []),
+    room('3', '六教727', []),
+  ]
+  const seats = new Map([
+    ['1', 50],
+    ['3', 120],
+    // '2' 沒有容量 —— 學校那一格本來就常常空白
+  ])
+
+  it('把容量掛到教室上,沒有的就是 null', () => {
+    expect(withSeats(rooms, seats).map((r) => r.seats)).toEqual([50, null, 120])
+  })
+
+  it('沒設門檻時不分組,也不排除任何教室', () => {
+    const { enough, unknown } = filterBySeats(withSeats(rooms, seats), 0)
+    expect(enough).toHaveLength(3)
+    expect(unknown).toEqual([])
+  })
+
+  it('設了門檻就濾掉坐不下的', () => {
+    const { enough } = filterBySeats(withSeats(rooms, seats), 100)
+    expect(enough.map((r) => r.room.name)).toEqual(['六教727'])
+  })
+
+  it('沒有容量的教室不能被悄悄濾掉,要另外列出來', () => {
+    // 綜科整棟 28 間只有 3 間有容量。濾掉的話使用者會以為那裡沒有空教室,
+    // 而事實是我們不知道它多大
+    const { enough, unknown } = filterBySeats(withSeats(rooms, seats), 100)
+    expect(unknown.map((r) => r.room.name)).toEqual(['綜科B01'])
+    expect(enough.some((r) => r.seats === null)).toBe(false)
+  })
+
+  it('容量剛好等於門檻算數得下', () => {
+    const { enough } = filterBySeats(withSeats(rooms, seats), 50)
+    expect(enough.map((r) => r.room.name)).toEqual(['三教308', '六教727'])
   })
 })

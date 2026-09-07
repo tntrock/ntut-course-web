@@ -1,4 +1,5 @@
 import type {
+  CapacityResponse,
   Changes,
   ClassCourses,
   ClassesResponse,
@@ -266,6 +267,14 @@ export function fetchClassrooms(
     `${semester}/classrooms.json`,
     semesterVersion(meta, semester),
   )
+}
+
+/**
+ * 教室容量與全名。**跨學期共用一份**,所以版本號用 `meta.generated_at`。
+ * gzip 只有 7 KB。
+ */
+export function fetchCapacity(meta: Meta): Promise<CapacityResponse> {
+  return fetchVersioned<CapacityResponse>('capacity.json', meta.generated_at)
 }
 
 /**

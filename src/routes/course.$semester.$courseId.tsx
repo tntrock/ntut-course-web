@@ -12,6 +12,7 @@ import {
 import { departmentsQueryOptions } from '@/hooks/useDepartments'
 import { stageBadge } from '@/lib/course'
 import { CourseInfo } from '@/components/course/CourseInfo'
+import { capacityQueryOptions } from '@/hooks/useBrowse'
 import { confirmedSyllabusVersion, syllabusState } from '@/lib/syllabus'
 import { LANGUAGE_ZH } from '@/lib/filters'
 import { BackLink } from '@/components/BackLink'
@@ -152,6 +153,15 @@ function CourseDetail() {
   const deptName = new Map(departments.departments.map((d) => [d.id, d.name]))
   // 沒有大綱的課連分頁都不顯示,不讓使用者點進去撲空。
   // 這一條只看 `syllabus_url`,不等大綱進度 —— 否則分頁會晚一拍才冒出來
+  /*
+   * 教室容量不擋整頁渲染 —— 它只是「教室 50 人」那一小段附註,為了它讓整頁
+   * 空白不划算。跨學期共用一份,gzip 7 KB。
+   */
+  const capacity = useQuery(capacityQueryOptions(meta)).data
+  const seatMap = capacity
+    ? new Map(Object.entries(capacity.classrooms).map(([id, c]) => [id, c.capacity]))
+    : undefined
+
   const stage = stageBadge(course.stage)
   const showSyllabusTab = course.syllabus_url !== null
   const active = tab === 'syllabus' && showSyllabusTab ? 'syllabus' : 'info'
@@ -243,6 +253,7 @@ function CourseDetail() {
             semester={semester}
             meta={meta}
             deptName={deptName}
+            capacity={seatMap}
           />
         ) : (
           <SyllabusPanel
