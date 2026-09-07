@@ -475,8 +475,19 @@ export interface FrozenSemester {
 // 異動事件流
 // ─────────────────────────────────────────────────────────────
 
+/**
+ * **這個聯集是開放的。** crawler 承諾「新增欄位不升 `schema_version`」,新增一個
+ * `type` 也算新增 —— `teacher_added` 就是這樣出現的,而當時的程式碼假設聯集封閉,
+ * 整個異動頁掛掉。所以留一個 `(string & {})` 的出口,強迫呼叫端處理未知型別。
+ */
 export type ChangeEventType =
-  'baseline' | 'course_added' | 'course_removed' | 'course_changed' | 'bulk_change'
+  | 'baseline'
+  | 'course_added'
+  | 'course_removed'
+  | 'course_changed'
+  | 'teacher_added'
+  | 'teacher_removed'
+  | 'bulk_change'
 
 interface ChangeEventBase {
   at: string
@@ -490,12 +501,33 @@ export interface BaselineEvent extends ChangeEventBase {
   course_count: number
 }
 
+/**
+ * 事件是 **append-only** 的,寫下去就不會再改 —— 舊事件可能缺少後來才加的欄位
+ * (crawler README 明講:「`type` 以外的欄位一律當成選填」)。所以除了 `type`
+ * 之外全部宣告成選填,顯示時缺了就降級。
+ */
 interface CourseEventBase extends ChangeEventBase {
   id: string
   name: string
-  teachers: string[]
-  department_ids: string[]
-  class_ids: string[]
+  teachers?: string[]
+  department_ids?: string[]
+  class_ids?: string[]
+}
+
+/** 這學期多了 / 少了一位老師。**沒有 `teachers` 欄位** —— 它自己就是那位老師。 */
+export interface TeacherEvent extends ChangeEventBase {
+  type: 'teacher_added' | 'teacher_removed'
+  /** 教師代碼。 */
+  id: string
+  name: string
+  course_count?: number
+  department_ids?: string[]
+}
+
+/** 認不得的型別。留著才不會因為 crawler 多一種事件就整頁掛掉。 */
+export interface UnknownChangeEvent extends ChangeEventBase {
+  id?: string
+  name?: string
 }
 
 export interface CourseAddedEvent extends CourseEventBase {
@@ -526,10 +558,10 @@ export interface BulkChangeEvent extends ChangeEventBase {
   type: 'bulk_change'
   event_count: number
   counts: Partial<Record<Exclude<ChangeEventType, 'bulk_change'>, number>>
-  by_department: Record<string, number>
-  by_class: Record<string, number>
-  samples: ChangeEvent[]
-  note: string | null
+  by_department?: Record<string, number>
+  by_class?: Record<string, number>
+  samples?: ChangeEvent[]
+  note?: string | null
 }
 
 export type ChangeEvent =
@@ -537,7 +569,9 @@ export type ChangeEvent =
   | CourseAddedEvent
   | CourseRemovedEvent
   | CourseChangedEvent
+  | TeacherEvent
   | BulkChangeEvent
+  | UnknownChangeEvent
 
 export interface Changes extends SchemaVersioned {
   generated_at: string

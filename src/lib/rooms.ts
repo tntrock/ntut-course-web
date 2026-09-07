@@ -112,3 +112,31 @@ export function filterBySeats(
     unknown: rooms.filter((r) => r.seats === null),
   }
 }
+
+/**
+ * 課號 → 教室容量。
+ *
+ * **輕量索引沒有 `classroom_codes`**（plan.md §1.10），所以搜尋結果的卡片本來
+ * 拿不到教室。但 `classrooms.json` 是反過來存的（教室 → 課號），把它反轉就有了
+ * —— 兩個檔加起來 gzip 15 KB，比為了幾個數字下載 60 個系所檔便宜得多。
+ *
+ * 實測反轉結果與系所檔的 `classroom_codes` 逐課比對，資工系 53 門課 53/53 一致。
+ *
+ * 一門課用多間教室時取**最大**的 —— 這個數字是「最多可能坐多少人」的上界。
+ */
+export function courseCapacity(
+  classrooms: readonly Classroom[],
+  seats: ReadonlyMap<string, number | null>,
+): Map<string, number> {
+  const out = new Map<string, number>()
+  for (const room of classrooms) {
+    const n = seats.get(room.id)
+    // 沒有容量就不要放進去 —— 放 0 會讓畫面顯示「教室 0 人」
+    if (n === null || n === undefined) continue
+    for (const id of room.course_ids) {
+      const prev = out.get(id)
+      if (prev === undefined || n > prev) out.set(id, n)
+    }
+  }
+  return out
+}

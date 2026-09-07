@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildingOf,
+  courseCapacity,
   filterBySeats,
   freeClassrooms,
   groupByBuilding,
@@ -163,5 +164,36 @@ describe('withSeats / filterBySeats', () => {
   it('容量剛好等於門檻算數得下', () => {
     const { enough } = filterBySeats(withSeats(rooms, seats), 50)
     expect(enough.map((r) => r.room.name)).toEqual(['三教308', '六教727'])
+  })
+})
+
+describe('courseCapacity', () => {
+  it('把教室→課號反轉成課號→容量', () => {
+    // 輕量索引沒有 classroom_codes（見 plan.md §1.10），但 classrooms.json
+    // 反過來就有。實測用資工系 53 門課比對系所檔，53/53 一致
+    const rooms = [room('A', '三教308', ['c1', 'c2']), room('B', '六教727', ['c2'])]
+    const seats = new Map([
+      ['A', 50],
+      ['B', 120],
+    ])
+    const map = courseCapacity(rooms, seats)
+    expect(map.get('c1')).toBe(50)
+    expect(map.get('c2')).toBe(120)
+  })
+
+  it('一門課用多間教室時取最大的', () => {
+    // 容量是「這門課最多可能坐多少人」的上界，取小的會低估
+    const rooms = [room('A', '小教室', ['c1']), room('B', '大教室', ['c1'])]
+    const seats = new Map([
+      ['A', 30],
+      ['B', 90],
+    ])
+    expect(courseCapacity(rooms, seats).get('c1')).toBe(90)
+  })
+
+  it('教室沒有容量時不要放進去', () => {
+    // 放 0 進去會讓畫面顯示「教室 0 人」
+    const rooms = [room('A', '綜科B01', ['c1'])]
+    expect(courseCapacity(rooms, new Map([['A', null]])).has('c1')).toBe(false)
   })
 })

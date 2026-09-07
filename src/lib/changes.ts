@@ -1,5 +1,6 @@
-import type { ChangeEvent, SemesterPath } from '@/types/api'
+import type { ChangeEvent, PeriodDef, SemesterPath, TimeSlot } from '@/types/api'
 import { hoursSince, taipeiDate } from './datetime'
+import { formatTimeSlots } from './formatTime'
 
 /** 超過這麼久沒檢查就變成警告色。 */
 const STALE_HOURS = 12
@@ -113,6 +114,8 @@ export function formatFieldValue(
   key: string,
   value: unknown,
   names: NameLookup,
+  /** 節次順序。時段要靠它才排得對 —— **順序不是字典序**,沒給就不要猜。 */
+  periods?: readonly PeriodDef[],
 ): string {
   if (value === null || value === undefined) return '無'
 
@@ -124,7 +127,14 @@ export function formatFieldValue(
       return value.map((item) => names[lookup](String(item))).join('、')
     }
 
-    // 物件陣列(時段那種)沒有通用的說法,退回 JSON 也好過 [object Object]
+    // 時段有專門的說法。不接的話畫面上會出現一整串原始 JSON
+    if (key === 'time_slots' && periods) {
+      return (value as TimeSlot[])
+        .map((slot) => formatTimeSlots({ time_slots: [slot] }, periods))
+        .join('、')
+    }
+
+    // 其餘物件陣列沒有通用的說法,退回 JSON 也好過 [object Object]
     if (value.some((item) => typeof item === 'object' && item !== null)) {
       return JSON.stringify(value)
     }

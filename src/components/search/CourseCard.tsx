@@ -14,10 +14,13 @@ export function CourseCard({
   course,
   semester,
   periods,
+  seats,
 }: {
   course: CourseIndexEntry
   semester: string
   periods: readonly PeriodDef[]
+  /** 教室容量。查不到就不顯示 —— 約有一半的課沒有登記教室或學校沒填座位數。 */
+  seats?: number | undefined
 }) {
   const language = languageLabel(course.language)
   // 「校訂共同必修」「校訂專業必修」都是必修,「共同選修」「專業選修」不是。
@@ -65,6 +68,9 @@ export function CourseCard({
             // `enrolled` 是修課人數,不是名額上限 —— 文案不能寫「名額」
             <Badge tone="quiet">修課 {course.enrolled} 人</Badge>
           )}
+          {/* 分開一個徽章而不是寫成「29 / 90」—— 教室容量**不是選課上限**,
+              寫成分數會被讀成名額 */}
+          {seats !== undefined && <Badge tone="quiet">教室 {seats} 人</Badge>}
         </div>
       </Link>
 

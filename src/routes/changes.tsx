@@ -73,6 +73,7 @@ function ChangesPage() {
                     key={`${event.type}-${event.at}-${i}`}
                     event={event}
                     names={names}
+                    periods={meta.periods}
                   />
                 ))}
               </div>

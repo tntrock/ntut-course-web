@@ -3,6 +3,8 @@ import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import type { CourseIndexEntry, PeriodDef } from '@/types/api'
 import { useColumns } from '@/hooks/useColumns'
 import { CourseCard } from './CourseCard'
+import { useCourseCapacity } from '@/hooks/useCourseCapacity'
+import { useMeta } from '@/hooks/useMeta'
 
 const GAP = 12
 
@@ -26,6 +28,9 @@ export function ResultList({
 }) {
   const listRef = useRef<HTMLDivElement>(null)
   const columns = useColumns()
+  const { data: meta } = useMeta()
+  // 在清單層算一次 —— 虛擬捲動下同時有三十張卡片,各自算就是三十遍
+  const capacity = useCourseCapacity(meta, semester)
 
   /*
    * 列表不是從頁面最頂端開始(上面有頁首與工具列),沒有這個位移的話
@@ -75,7 +80,12 @@ export function ResultList({
                 paddingBottom: GAP,
               }}
             >
-              <CourseCard course={course} semester={semester} periods={periods} />
+              <CourseCard
+                course={course}
+                semester={semester}
+                periods={periods}
+                seats={capacity.get(course.id)}
+              />
             </div>
           )
         })}

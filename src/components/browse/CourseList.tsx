@@ -4,6 +4,8 @@ import { sortCourses } from '@/lib/sort'
 import type { SortKey } from '@/lib/searchParams'
 import { COURSE_GRID_CLASS } from '@/hooks/useColumns'
 import { CourseCard } from '@/components/search/CourseCard'
+import { useCourseCapacity } from '@/hooks/useCourseCapacity'
+import { useMeta } from '@/hooks/useMeta'
 
 const EMPTY_SCORES: ReadonlyMap<string, number> = new Map()
 
@@ -24,6 +26,9 @@ export function CourseList({
   periods: readonly PeriodDef[]
   empty?: string
 }) {
+  const { data: meta } = useMeta()
+  const capacity = useCourseCapacity(meta, semester)
+
   // 明細頁沒有查詢字串,相關度排序沒有意義,預設用課名
   const [sort, setSort] = useState<SortKey>('name')
   const sorted = useMemo(
@@ -63,6 +68,7 @@ export function CourseList({
         {sorted.map((course) => (
           <CourseCard
             key={course.id}
+            seats={capacity.get(course.id)}
             course={course}
             semester={semester}
             periods={periods}

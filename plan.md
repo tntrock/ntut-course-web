@@ -208,10 +208,26 @@ N  12:10   5  13:10   6  14:10   7  15:10
 **學程沒有代碼**，識別只能用中文名——這是唯一不能用代碼做交叉連結的地方，
 名稱改過舊連結就會失效。
 
-### 1.13 異動事件裡的 baseline 不是異動
+### 1.13 異動事件的型別是**開放**的
 
-`changes.json` 的 `baseline` 事件代表「這個學期首次被收錄」，不是學校改了東西。
-統計「有幾筆異動」時要排除，否則每加一個歷史學期都會冒出一筆假異動。
+`changes.json` 目前有 7 種 `type`：`course_added` / `course_removed` /
+`course_changed` / `teacher_added` / `teacher_removed` / `baseline` / `bulk_change`。
+
+**但這個清單會長。** 新增一種 `type` 屬於「新增」，不會升 `schema_version` ——
+`teacher_added` 就是這樣冒出來的，而當時的程式碼假設聯集封閉：`KINDS[type]` 回
+`undefined`、教師事件又沒有 `teachers` 欄位，`event.teachers.length` 直接讓整個
+異動頁掛掉（錯誤頁還顯示成「連不上資料來源」，更難查）。
+
+crawler README 明講：**「`type` 以外的欄位一律當成選填，缺了就降級顯示，不要假設
+一定存在。」** 事件是 append-only 的，舊事件確實缺少後來才加的欄位（2026-09-04
+之前的 `bulk_change` 沒有 `by_department` / `by_class` / `samples`）。
+
+所以型別把 `type` 以外全部宣告成選填，UI 用**型別守衛**（`isBaseline` /
+`isBulk` / `isTeacher`）而不是直接比對 `type` —— 守衛會順便確認該有的欄位真的在。
+認不得的型別原樣顯示代碼，不要整頁掛掉。
+
+`baseline` 事件代表「這個學期首次被收錄」，不是學校改了東西。統計「有幾筆異動」
+時要排除，否則每加一個歷史學期都會冒出一筆假異動。
 
 ### 1.14 空值與已棄用欄位
 

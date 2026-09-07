@@ -4,6 +4,7 @@ import {
   bulkBreakdown,
   fieldLabel,
   formatFieldValue,
+  type NameLookup,
   groupByDate,
   isStale,
   semestersNeedingNames,
@@ -194,5 +195,43 @@ describe('bulkBreakdown', () => {
 
   it('沒有分組時回傳空陣列', () => {
     expect(bulkBreakdown({}, translate)).toEqual([])
+  })
+})
+
+describe('formatFieldValue 的時段', () => {
+  const periods = [
+    { code: '1', start: '08:10', end: '09:00' },
+    { code: '2', start: '09:10', end: '10:00' },
+    { code: '3', start: '10:10', end: '11:00' },
+    { code: 'N', start: '12:10', end: '13:00' },
+    { code: '5', start: '13:10', end: '14:00' },
+    { code: '6', start: '14:10', end: '15:00' },
+  ]
+  const names: NameLookup = { department: (id) => id, classGroup: (id) => id }
+
+  it('時段要顯示成人話,不是原始 JSON', () => {
+    // 異動頁原本直接印 [{"day":5,"day_name":"五","periods":["2"]}]
+    const slots = [{ day: 5, day_name: '五', periods: ['2'] }]
+    expect(formatFieldValue('time_slots', slots, names, periods)).toBe('週五 2')
+  })
+
+  it('多個時段用頓號分開', () => {
+    const slots = [
+      { day: 1, day_name: '一', periods: ['5', '6'] },
+      { day: 5, day_name: '五', periods: ['2'] },
+    ]
+    expect(formatFieldValue('time_slots', slots, names, periods)).toBe(
+      '週一 5-6、週五 2',
+    )
+  })
+
+  it('空時段是「無」', () => {
+    expect(formatFieldValue('time_slots', [], names, periods)).toBe('無')
+  })
+
+  it('沒有給節次順序時退回 JSON,不要憑空排序', () => {
+    // 節次順序不是字典序(見 plan.md §1.2)。沒有 meta.periods 就不能猜
+    const slots = [{ day: 5, day_name: '五', periods: ['2'] }]
+    expect(formatFieldValue('time_slots', slots, names)).toContain('day')
   })
 })
