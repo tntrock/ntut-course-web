@@ -10,6 +10,15 @@ import type { Course, Meta, SemesterPath } from '@/types/api'
  * `wide` 給內容會很長的欄位(學程、備註那類)——它們在兩欄版面裡會被擠到換行,
  * 直接讓它們佔滿一整列比較好讀。
  */
+/**
+ * 資訊卡裡的連結。
+ *
+ * **不要永遠加底線。** 這張卡幾乎每個欄位的值都是連結,全部畫底線之後整張卡
+ * 像一頁維基。這些值是定義列表裡的獨立項目、不在句子中間,用顏色區分就夠,
+ * hover 與鍵盤聚焦時再補上底線。
+ */
+const LINK = 'text-primary underline-offset-4 hover:underline focus-visible:underline'
+
 function Row({
   label,
   wide = false,
@@ -107,7 +116,7 @@ export function CourseInfo({
                   <Link
                     to="/teacher/$semester/$teacherId"
                     params={{ semester, teacherId: id }}
-                    className="underline underline-offset-4"
+                    className={LINK}
                   >
                     {name}
                   </Link>
@@ -125,7 +134,7 @@ export function CourseInfo({
               key={id}
               to="/dept/$semester/$deptId"
               params={{ semester, deptId: id }}
-              className="underline underline-offset-4"
+              className={LINK}
             >
               {deptName.get(id) ?? id}
             </Link>
@@ -145,7 +154,7 @@ export function CourseInfo({
                   <Link
                     to="/class/$semester/$classId"
                     params={{ semester, classId: id }}
-                    className="underline underline-offset-4"
+                    className={LINK}
                   >
                     {name}
                   </Link>
@@ -171,7 +180,7 @@ export function CourseInfo({
                       <Link
                         to="/classroom/$semester/$classroomId"
                         params={{ semester, classroomId: id }}
-                        className="underline underline-offset-4"
+                        className={LINK}
                       >
                         {name}
                       </Link>
@@ -210,7 +219,7 @@ export function CourseInfo({
                 key={name}
                 to="/program/$semester/$programName"
                 params={{ semester, programName: name }}
-                className="underline underline-offset-4"
+                className={LINK}
               >
                 {name}
               </Link>

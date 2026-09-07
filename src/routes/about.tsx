@@ -1,3 +1,4 @@
+import { Chevron, SUMMARY_CLASS } from '@/components/ui/Disclosure'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 
@@ -215,7 +216,8 @@ function AboutPage() {
           <Out href={CRAWLER_REPO}>crawler 的 README</Out>。
         </p>
         <details className="group">
-          <summary className="text-foreground cursor-pointer text-sm select-none">
+          <summary className={`text-foreground text-sm ${SUMMARY_CLASS}`}>
+            <Chevron />
             看目前的 {meta.endpoints.length} 個端點
           </summary>
           {/* 兩欄對齊。排在同一行的話，每一行的說明會從不同的 x 座標開始，

@@ -1,3 +1,4 @@
+import { Chevron, SUMMARY_CLASS } from '@/components/ui/Disclosure'
 import { Link } from '@tanstack/react-router'
 import type {
   BaselineEvent,
@@ -302,9 +303,9 @@ function BulkChange({
       </p>
 
       {samples.length > 0 && (
-        <details className="mt-2">
-          <summary className="text-muted-foreground cursor-pointer text-xs">
-            看 {samples.length} 筆樣本
+        <details className="group mt-2">
+          <summary className={`text-muted-foreground text-xs ${SUMMARY_CLASS}`}>
+            <Chevron />看 {samples.length} 筆樣本
           </summary>
           <ul className="mt-1.5 space-y-1">
             {samples.map((sample) => (

@@ -38,7 +38,13 @@ function Home() {
         <ActionCard
           to="/search"
           title="搜尋課程"
-          description="關鍵字、系所、時段、學分，條件都留在網址上，可以直接分享。"
+          description="關鍵字、系所、時段、學分交叉篩選，條件都留在網址上。"
+          icon={
+            <>
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.6-3.6" />
+            </>
+          }
           primary
         />
         <ActionCard
@@ -49,16 +55,31 @@ function Home() {
               ? `${latest.department_count} 個系所、${latest.class_group_count} 個班級，還有教師、學程與教室。`
               : '系所、班級、教師、學程與教室。'
           }
+          icon={
+            <>
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </>
+          }
         />
       </div>
 
       <SchoolWideUnits meta={meta} />
 
+      {/*
+        四個數字放**一張卡的四欄**，不要四個各自的盒子。
+
+        原本一個數字配一個 p-4 的卡片，等於用整整一列的高度講四件小事；
+        而且退選率頁的統計列已經是「一張卡、裡面分欄」，兩邊長得不一樣只是
+        讓同一件事有兩種樣子。
+      */}
       <section className="mt-10">
         <h2 className="text-muted-foreground text-xs font-medium">
           本學期 {meta.latest}
         </h2>
-        <dl className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <dl className="bg-card shadow-card mt-2 grid grid-cols-2 gap-4 rounded-xl p-4 sm:grid-cols-4">
           <Stat
             label="課程"
             value={latest ? latest.course_count.toLocaleString('zh-TW') : '—'}
@@ -84,11 +105,14 @@ function ActionCard({
   to,
   title,
   description,
+  icon,
   primary = false,
 }: {
   to: '/search' | '/browse'
   title: string
   description: string
+  /** 24×24 座標系的線條圖形。 */
+  icon: React.ReactNode
   primary?: boolean
 }) {
   return (
@@ -100,7 +124,19 @@ function ActionCard({
           : 'bg-card shadow-card hover:ring-primary/40 hover:ring-1'
       }`}
     >
-      <p className="font-medium">{title}</p>
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="size-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {icon}
+      </svg>
+      <p className="mt-3 font-medium">{title}</p>
       <p className={`mt-1 text-sm ${primary ? 'opacity-85' : 'text-muted-foreground'}`}>
         {description}
       </p>
@@ -144,9 +180,9 @@ function SchoolWideUnits({ meta }: { meta: Meta }) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-card shadow-card rounded-xl p-4">
+    <div>
       <dt className="text-muted-foreground text-xs">{label}</dt>
-      <dd className="mt-1 text-xl font-medium tabular-nums">{value}</dd>
+      <dd className="text-xl font-semibold tabular-nums">{value}</dd>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import type { CourseIndexEntry, DepartmentsResponse, PeriodDef } from '@/types/api'
 import { LANGUAGE_ZH, type TimeMode } from '@/lib/filters'
 import { collegeGroups } from '@/lib/browse'
+import { Chevron, SUMMARY_CLASS } from '@/components/ui/Disclosure'
 import { TimeGrid } from './TimeGrid'
 
 export interface FilterValues {
@@ -67,31 +68,14 @@ function Section({
       open={defaultOpen || active > 0}
       className="group border-b last:border-b-0"
     >
-      <summary className="flex cursor-pointer list-none items-center gap-2 py-3 text-sm font-medium select-none marker:content-none">
+      <summary className={`${SUMMARY_CLASS} gap-2 py-3 text-sm font-medium`}>
         <span className="flex-1">{title}</span>
         {active > 0 && (
           <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[11px] tabular-nums">
             {active}
           </span>
         )}
-        {/*
-          用 SVG 而不是 `›` 這個字元：文字字符帶著字型的側邊間距，實測會凸出
-          容器右緣 3.33px，而 sticky 側欄設了 overflow-y 之後 overflow-x 會被
-          CSS 規範連帶算成 auto —— 於是就為了 3px 長出一條左右橫移的捲軸。
-          SVG 的邊界是精確的，沒有這個問題。
-        */}
-        <svg
-          aria-hidden
-          viewBox="0 0 16 16"
-          className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-90"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M6 3.5 10.5 8 6 12.5" />
-        </svg>
+        <Chevron className="text-muted-foreground size-4" />
       </summary>
       <div className="pb-4">{children}</div>
     </details>

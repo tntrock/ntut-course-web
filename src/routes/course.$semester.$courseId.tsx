@@ -182,16 +182,7 @@ function CourseDetail() {
       />
 
       <header className="mt-4">
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{course.name_zh}</h1>
-          <div className="flex shrink-0 items-start gap-2">
-            <FavoriteToggle semester={semester} courseId={course.id} />
-            <ShareButton />
-          </div>
-        </div>
-        <div className="mt-3">
-          <ScheduleToggle course={course} semester={semester} variant="button" />
-        </div>
+        <h1 className="text-2xl font-semibold tracking-tight">{course.name_zh}</h1>
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {/*
@@ -215,6 +206,18 @@ function CourseDetail() {
           {course.credits !== null && <Badge tone="quiet">{course.credits} 學分</Badge>}
           {course.hours !== null && <Badge tone="quiet">{course.hours} 小時</Badge>}
           {stage && <Badge tone="quiet">{stage}</Badge>}
+        </div>
+
+        {/*
+          三個動作排成**同一列**,主要動作在最前面。
+
+          原本「加入課表」被擠到第二列、靠右對齊,而次要的收藏與複製連結反而
+          跟標題同一行 —— 主次顛倒,看起來也像沒排好。
+        */}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <ScheduleToggle course={course} semester={semester} variant="button" />
+          <FavoriteToggle semester={semester} courseId={course.id} />
+          <ShareButton />
         </div>
       </header>
 

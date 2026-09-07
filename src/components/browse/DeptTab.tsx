@@ -1,3 +1,4 @@
+import { Chevron, SUMMARY_CLASS } from '@/components/ui/Disclosure'
 import { Link } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 
@@ -26,8 +27,13 @@ export function DeptTab({ meta, semester, query }: TabProps) {
           <h2 className="text-muted-foreground mb-1 text-xs font-medium">
             {group.name}
           </h2>
-          {/* 60 個系所排成一長條要捲很久。寬螢幕分兩欄，一眼看得完一個學院 */}
-          <div className="grid gap-2 sm:grid-cols-2">
+          {/*
+            60 個系所排成一長條要捲很久。寬螢幕分兩欄，一眼看得完一個學院。
+
+            `items-start`:網格預設把同一列拉成等高，展開某個系所的班級之後，
+            旁邊那張卡會跟著長成一大塊空白。
+          */}
+          <div className="grid items-start gap-2 sm:grid-cols-2">
             {group.departments.map((d) => (
               <DeptRow key={d.id} dept={d} semester={semester} />
             ))}
@@ -58,8 +64,9 @@ function DeptRow({ dept, semester }: { dept: Department; semester: string }) {
       </div>
 
       {dept.class_groups.length > 0 && (
-        <details className="pb-2">
-          <summary className="text-muted-foreground cursor-pointer text-xs">
+        <details className="group pb-2">
+          <summary className={`text-muted-foreground text-xs ${SUMMARY_CLASS}`}>
+            <Chevron />
             {dept.class_groups.length} 個班級
           </summary>
           <div className="mt-1.5 flex flex-wrap gap-1">
