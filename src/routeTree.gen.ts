@@ -16,6 +16,7 @@ import { Route as ChangesRouteImport } from './routes/changes'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as WithdrawalRouteImport } from './routes/withdrawal'
 import { Route as ClassSemesterClassIdRouteImport } from './routes/class.$semester.$classId'
 import { Route as ClassroomSemesterClassroomIdRouteImport } from './routes/classroom.$semester.$classroomId'
 import { Route as CourseSemesterCourseIdRouteImport } from './routes/course.$semester.$courseId'
@@ -56,6 +57,11 @@ const ScheduleRoute = ScheduleRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WithdrawalRoute = WithdrawalRouteImport.update({
+  id: '/withdrawal',
+  path: '/withdrawal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClassSemesterClassIdRoute = ClassSemesterClassIdRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/rooms': typeof RoomsRoute
   '/schedule': typeof ScheduleRoute
   '/search': typeof SearchRoute
+  '/withdrawal': typeof WithdrawalRoute
   '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
   '/classroom/$semester/$classroomId': typeof ClassroomSemesterClassroomIdRoute
   '/course/$semester/$courseId': typeof CourseSemesterCourseIdRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/rooms': typeof RoomsRoute
   '/schedule': typeof ScheduleRoute
   '/search': typeof SearchRoute
+  '/withdrawal': typeof WithdrawalRoute
   '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
   '/classroom/$semester/$classroomId': typeof ClassroomSemesterClassroomIdRoute
   '/course/$semester/$courseId': typeof CourseSemesterCourseIdRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/rooms': typeof RoomsRoute
   '/schedule': typeof ScheduleRoute
   '/search': typeof SearchRoute
+  '/withdrawal': typeof WithdrawalRoute
   '/class/$semester/$classId': typeof ClassSemesterClassIdRoute
   '/classroom/$semester/$classroomId': typeof ClassroomSemesterClassroomIdRoute
   '/course/$semester/$courseId': typeof CourseSemesterCourseIdRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/rooms'
     | '/schedule'
     | '/search'
+    | '/withdrawal'
     | '/class/$semester/$classId'
     | '/classroom/$semester/$classroomId'
     | '/course/$semester/$courseId'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/rooms'
     | '/schedule'
     | '/search'
+    | '/withdrawal'
     | '/class/$semester/$classId'
     | '/classroom/$semester/$classroomId'
     | '/course/$semester/$courseId'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/rooms'
     | '/schedule'
     | '/search'
+    | '/withdrawal'
     | '/class/$semester/$classId'
     | '/classroom/$semester/$classroomId'
     | '/course/$semester/$courseId'
@@ -194,6 +206,7 @@ export interface RootRouteChildren {
   RoomsRoute: typeof RoomsRoute
   ScheduleRoute: typeof ScheduleRoute
   SearchRoute: typeof SearchRoute
+  WithdrawalRoute: typeof WithdrawalRoute
   ClassSemesterClassIdRoute: typeof ClassSemesterClassIdRoute
   ClassroomSemesterClassroomIdRoute: typeof ClassroomSemesterClassroomIdRoute
   CourseSemesterCourseIdRoute: typeof CourseSemesterCourseIdRoute
@@ -253,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/withdrawal': {
+      id: '/withdrawal'
+      path: '/withdrawal'
+      fullPath: '/withdrawal'
+      preLoaderRoute: typeof WithdrawalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/class/$semester/$classId': {
       id: '/class/$semester/$classId'
       path: '/class/$semester/$classId'
@@ -306,6 +326,7 @@ const rootRouteChildren: RootRouteChildren = {
   RoomsRoute: RoomsRoute,
   ScheduleRoute: ScheduleRoute,
   SearchRoute: SearchRoute,
+  WithdrawalRoute: WithdrawalRoute,
   ClassSemesterClassIdRoute: ClassSemesterClassIdRoute,
   ClassroomSemesterClassroomIdRoute: ClassroomSemesterClassroomIdRoute,
   CourseSemesterCourseIdRoute: CourseSemesterCourseIdRoute,
