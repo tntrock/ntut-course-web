@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { stageBadge } from './course'
+import { hasEnrolment, stageBadge } from './course'
 
 describe('stageBadge', () => {
   it('把 stage 標成「階段」而不是「年級」', () => {
@@ -23,5 +23,22 @@ describe('stageBadge', () => {
     // 不猜語意,學校給什麼就顯示什麼
     expect(stageBadge('7')).toBe('階段 7')
     expect(stageBadge('上')).toBe('階段 上')
+  })
+})
+
+describe('hasEnrolment', () => {
+  it('有人數就是有', () => {
+    expect(hasEnrolment({ enrolled: 30 })).toBe(true)
+    // 0 人也是「有這個欄位」,不是「未提供」
+    expect(hasEnrolment({ enrolled: 0 })).toBe(true)
+  })
+
+  it('null 是學校那一格空白', () => {
+    expect(hasEnrolment({ enrolled: null })).toBe(false)
+  })
+
+  it('整個欄位不存在 —— 96-1 以前的索引根本沒有這兩欄', () => {
+    // 只比對 null 的話 undefined 會溜過去,畫面上「修課 N 人」的 N 會整個不見
+    expect(hasEnrolment({})).toBe(false)
   })
 })

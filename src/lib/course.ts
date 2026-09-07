@@ -13,3 +13,14 @@ export function stageBadge(stage: string | null): string | null {
   if (!value || value === '1') return null
   return `階段 ${value}`
 }
+
+/**
+ * 這門課有沒有修課人數。
+ *
+ * **`null` 和「欄位不存在」都算沒有。** 96-1 以前的原始課表沒有「人」「撤」
+ * 兩欄,索引裡連鍵都沒有 —— 只比對 `null` 的話 `undefined` 會被當成有值,
+ * 畫面上「修課 N 人」的 N 就會整個不見,只剩下一個空位。
+ */
+export function hasEnrolment(course: { enrolled?: number | null }): boolean {
+  return course.enrolled !== null && course.enrolled !== undefined
+}

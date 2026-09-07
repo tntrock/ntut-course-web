@@ -24,8 +24,8 @@ export function sortCourses<T extends CourseIndexEntry>(
     return byName !== 0 ? byName : a.id.localeCompare(b.id)
   }
 
-  /** `null` 視為最小,排到最後。 */
-  const desc = (a: number | null, b: number | null) =>
+  /** `null` 與「欄位不存在」都視為最小,排到最後。 */
+  const desc = (a: number | null | undefined, b: number | null | undefined) =>
     (b ?? Number.NEGATIVE_INFINITY) - (a ?? Number.NEGATIVE_INFINITY)
 
   const comparators: Record<SortKey, (a: T, b: T) => number> = {

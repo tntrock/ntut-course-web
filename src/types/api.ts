@@ -139,9 +139,15 @@ export interface CourseIndexEntry {
   requirement_type: string | null
   /** `null` = 中文。其餘實測值有 `"英語"`、`"中英雙語"`。**不要當布林用。** */
   language: string | null
-  /** **修課人數**,不是名額上限。UI 文案不可寫成「名額」。 */
-  enrolled: number | null
-  withdrawn: number | null
+  /**
+   * **修課人數**,不是名額上限。UI 文案不可寫成「名額」。
+   *
+   * **96-1 以前整個欄位不存在**(不是 `null`)—— 那時候的原始課表沒有
+   * 「人」「撤」兩欄。所以判斷有沒有值請用 `hasEnrolment()`,
+   * 只比對 `null` 會讓 `undefined` 溜過去。
+   */
+  enrolled?: number | null
+  withdrawn?: number | null
   year: number
   sem: number
 }

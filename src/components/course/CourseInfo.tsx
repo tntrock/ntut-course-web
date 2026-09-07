@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 
+import { hasEnrolment } from '@/lib/course'
 import { formatSlotClock, formatTimeSlots } from '@/lib/formatTime'
 import type { Course, Meta, SemesterPath } from '@/types/api'
 
@@ -190,7 +191,7 @@ export function CourseInfo({
       )}
 
       <Row label="修課人數">
-        {course.enrolled === null ? (
+        {!hasEnrolment(course) ? (
           <span className="text-muted-foreground">未提供</span>
         ) : (
           <span className="tabular-nums">

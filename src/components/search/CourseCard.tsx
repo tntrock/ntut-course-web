@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import type { CourseIndexEntry, PeriodDef } from '@/types/api'
+import { hasEnrolment } from '@/lib/course'
 import { LANGUAGE_ZH } from '@/lib/filters'
 import { formatTimeSlots } from '@/lib/formatTime'
 import { Badge } from '@/components/ui/Badge'
@@ -73,7 +74,7 @@ export function CourseCard({
           )}
           {language && <Badge>{language}</Badge>}
           {course.credits !== null && <Badge tone="quiet">{course.credits} 學分</Badge>}
-          {course.enrolled !== null && course.enrolled > 0 && (
+          {hasEnrolment(course) && (course.enrolled ?? 0) > 0 && (
             // `enrolled` 是修課人數,不是名額上限 —— 文案不能寫「名額」
             <Badge tone="quiet">修課 {course.enrolled} 人</Badge>
           )}
