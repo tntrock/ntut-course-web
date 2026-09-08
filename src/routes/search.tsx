@@ -169,7 +169,7 @@ function SearchPage() {
               search: (prev: SearchParams) => ({ ...prev, sem: e.target.value }),
             })
           }
-          className="bg-card rounded-lg border px-2 py-1.5 text-sm"
+          className="bg-card border-input rounded-lg border px-2 py-1.5 text-sm"
         >
           {meta.semesters.map((s) => (
             <option key={s.path} value={s.path}>
@@ -190,7 +190,7 @@ function SearchPage() {
               }),
             })
           }
-          className="bg-card hidden rounded-lg border px-2 py-1.5 text-sm sm:block"
+          className="bg-card border-input hidden rounded-lg border px-2 py-1.5 text-sm sm:block"
         >
           <option value="relevance">相關度</option>
           <option value="name">課名</option>
@@ -202,7 +202,7 @@ function SearchPage() {
           type="button"
           onClick={() => setFiltersOpen((v) => !v)}
           aria-expanded={filtersOpen}
-          className={`focus-visible:ring-ring rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none md:hidden ${
+          className={`focus-visible:ring-ring border-input rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none md:hidden ${
             appliedCount > 0
               ? 'bg-primary text-primary-foreground border-transparent'
               : 'bg-card hover:bg-accent'

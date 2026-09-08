@@ -149,14 +149,14 @@ export function DataTransfer() {
         <button
           type="button"
           onClick={download}
-          className="hover:bg-accent bg-card rounded-lg border px-3 py-1.5 text-sm"
+          className="hover:bg-accent bg-card border-input rounded-lg border px-3 py-1.5 text-sm"
         >
           匯出 JSON
         </button>
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="hover:bg-accent bg-card rounded-lg border px-3 py-1.5 text-sm"
+          className="hover:bg-accent bg-card border-input rounded-lg border px-3 py-1.5 text-sm"
         >
           匯入 JSON
         </button>

@@ -164,7 +164,7 @@ function WithdrawalPage() {
           value={semester}
           aria-label="起始學期"
           onChange={(e) => set({ sem: e.target.value })}
-          className="bg-card rounded-lg border px-2 py-1 text-sm"
+          className="bg-card border-input rounded-lg border px-2 py-1 text-sm"
         >
           {meta.semesters.map((s) => (
             <option key={s.path} value={s.path}>

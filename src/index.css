@@ -16,44 +16,63 @@
   --radius: 0.75rem;
 
   /*
-   * 頁面比卡片暗一階 —— 卡片才浮得起來。
+   * 淺色是**米白**,不是純白。色相 85 帶一點暖,亮度壓到 0.945 —— 整片純白
+   * 在室內看久了會刺眼,而這個站是拿來一門一門慢慢比的。
    *
-   * 原本是 0.978,跟卡片的 1.0 只差 2.2%,加上很淡的陰影,滿版卡片幾乎貼在
-   * 背景上分不出邊界。拉到 0.965 之後差 3.5%,不靠框線也看得出層次。
+   * 卡片也不用純白(0.988):它佔掉畫面大部分面積,是最大的一片光源。
+   * 跟背景差 4.3% 亮度,靠陰影就分得出層次,不必畫框線。
    */
-  --background: oklch(0.965 0.004 255);
-  --foreground: oklch(0.17 0.012 255);
-  --card: oklch(1 0 0);
+  --background: oklch(0.945 0.018 85);
+  --foreground: oklch(0.2 0.015 75);
+  --card: oklch(0.988 0.009 85);
   --card-foreground: var(--foreground);
   /* 比卡片再高一階,給下拉、彈出層用 */
-  --popover: oklch(1 0 0);
+  --popover: oklch(0.988 0.009 85);
   --popover-foreground: var(--foreground);
 
   --primary: oklch(0.53 0.19 258);
-  --primary-foreground: oklch(0.99 0 0);
-  /* 強調色的淡底,給「選中」的晶片與區塊用 */
+  --primary-foreground: oklch(0.99 0.005 85);
+  /*
+   * 強調色的淡底,給「選中」的晶片與區塊用。
+   * 0.95 不是隨手挑的:再深一點,上面的 `--primary` 文字就掉到 4.4:1,
+   * 差 0.1 不到 AA。
+   */
   --primary-muted: oklch(0.95 0.03 258);
 
-  --secondary: oklch(0.955 0.005 255);
-  --secondary-foreground: oklch(0.32 0.014 255);
-  --muted: oklch(0.955 0.005 255);
-  --muted-foreground: oklch(0.5 0.014 255);
-  --accent: oklch(0.94 0.008 255);
+  --secondary: oklch(0.925 0.016 85);
+  --secondary-foreground: oklch(0.33 0.016 75);
+  --muted: oklch(0.925 0.016 85);
+  --muted-foreground: oklch(0.47 0.016 75);
+  --accent: oklch(0.9 0.02 85);
   --accent-foreground: var(--foreground);
 
-  --destructive: oklch(0.55 0.21 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.55 0.13 155);
-  --warning: oklch(0.68 0.15 70);
+  /*
+   * 語意色**要能當文字用**。異動頁的徽章是「主色文字 + 同色 15% 淡底」,
+   * 對比要拿文字色跟**合成後**的淡底比,不是跟卡片比 —— 用卡片算會高估。
+   * 這三個值都是照 15% 淡底調到 4.5:1 以上(4.71 / 4.82 / 4.83)。
+   */
+  --destructive: oklch(0.5 0.21 25);
+  --destructive-foreground: oklch(0.99 0.005 85);
+  --success: oklch(0.48 0.13 155);
+  --warning: oklch(0.5 0.15 70);
 
-  --border: oklch(0.9 0.006 255);
-  --input: oklch(0.88 0.008 255);
+  /*
+   * **框線分兩種,因為要求不一樣。**
+   *
+   * `--border` 是分隔線(border-b / border-t):只要看得出「這裡分段了」,
+   * 太深會讓列表變成試算表。對卡片 1.81:1。
+   *
+   * `--input` 是**控制項的外框**(輸入框、下拉、晶片、按鈕):那是一個可操作
+   * 元件的邊界,WCAG 1.4.11 要求 3:1。舊值 0.88 對白卡只有 1.35:1,
+   * 難怪看不清楚。現在對卡片 3.54:1、對背景 3.11:1,兩種底色上都過。
+   */
+  --border: oklch(0.8 0.016 85);
+  --input: oklch(0.62 0.02 85);
   --ring: var(--primary);
 
-  /* 兩層:貼著邊緣的那層畫出輪廓,散開的那層給高度 */
-  --shadow-card:
-    0 1px 2px oklch(0.17 0.012 255 / 8%), 0 1px 3px oklch(0.17 0.012 255 / 4%);
-  --shadow-raised: 0 4px 16px oklch(0.17 0.012 255 / 10%);
+  /* 兩層:貼著邊緣的那層畫出輪廓,散開的那層給高度。暖色底就配暖色陰影 */
+  --shadow-card: 0 1px 2px oklch(0.3 0.03 75 / 10%), 0 1px 3px oklch(0.3 0.03 75 / 5%);
+  --shadow-raised: 0 4px 16px oklch(0.3 0.03 75 / 14%);
 }
 
 .dark {
@@ -81,8 +100,9 @@
   --success: oklch(0.72 0.14 155);
   --warning: oklch(0.78 0.14 70);
 
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 16%);
+  /* 同樣分兩種。16% 疊在深色卡片上只有 1.65:1,控制項外框要 35% 才過 3:1 */
+  --border: oklch(1 0 0 / 16%);
+  --input: oklch(1 0 0 / 35%);
   --ring: var(--primary);
 
   --shadow-card: none;

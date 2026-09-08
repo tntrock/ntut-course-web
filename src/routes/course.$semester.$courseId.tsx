@@ -112,7 +112,7 @@ function ShareButton() {
           setTimeout(() => setCopied(false), 2000)
         })
       }}
-      className="hover:bg-accent focus-visible:ring-ring rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none"
+      className="hover:bg-accent focus-visible:ring-ring border-input rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none"
     >
       {copied ? '已複製' : '複製連結'}
     </button>

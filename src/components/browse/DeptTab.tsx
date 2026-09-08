@@ -75,7 +75,7 @@ function DeptRow({ dept, semester }: { dept: Department; semester: string }) {
                 key={c.id}
                 to="/class/$semester/$classId"
                 params={{ semester, classId: c.id }}
-                className="hover:bg-accent rounded-full border px-2.5 py-1 text-xs"
+                className="hover:bg-accent border-input rounded-full border px-2.5 py-1 text-xs"
               >
                 {c.name}
               </Link>

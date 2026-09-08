@@ -49,7 +49,7 @@ export function RecoveryNotice() {
       <button
         type="button"
         onClick={download}
-        className="bg-card hover:bg-accent rounded-lg border px-3 py-1 text-xs"
+        className="bg-card hover:bg-accent border-input rounded-lg border px-3 py-1 text-xs"
       >
         下載原始內容
       </button>

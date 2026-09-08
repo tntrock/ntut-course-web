@@ -95,7 +95,7 @@ export function AppHeader() {
             onChange={(e) => setDraft(e.target.value)}
             placeholder="搜尋課名、教師、課號"
             aria-label="搜尋課程"
-            className="bg-card focus-visible:ring-ring w-full rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none"
+            className="bg-card focus-visible:ring-ring border-input w-full rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none"
           />
         </form>
 

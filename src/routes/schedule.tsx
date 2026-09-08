@@ -100,7 +100,7 @@ function SchedulePage() {
             value={semester}
             aria-label="學期"
             onChange={(e) => void navigate({ search: { sem: e.target.value } })}
-            className="bg-card rounded-lg border px-2 py-1.5 text-sm"
+            className="bg-card border-input rounded-lg border px-2 py-1.5 text-sm"
           >
             {meta.semesters.map((s) => (
               <option key={s.path} value={s.path}>

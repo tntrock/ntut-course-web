@@ -56,7 +56,7 @@ export function CourseList({
           value={sort}
           aria-label="排序"
           onChange={(e) => setSort(e.target.value as SortKey)}
-          className="bg-card rounded-lg border px-2 py-1.5 text-sm"
+          className="bg-card border-input rounded-lg border px-2 py-1.5 text-sm"
         >
           <option value="name">課名</option>
           <option value="credits">學分</option>

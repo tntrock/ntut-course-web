@@ -29,7 +29,7 @@ export function EmptyResults({
                 key={s.remove}
                 type="button"
                 onClick={() => onRelax(s.remove)}
-                className="hover:bg-accent focus-visible:ring-ring rounded-full border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none"
+                className="hover:bg-accent focus-visible:ring-ring border-input rounded-full border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none"
               >
                 移除「{RELAX_LABELS[s.remove]}」
                 <span className="text-muted-foreground ml-1 tabular-nums">

@@ -24,7 +24,7 @@ export function FavoriteToggle({
       aria-pressed={favorited}
       aria-label={favorited ? '取消收藏' : '收藏'}
       title={favorited ? '取消收藏' : '收藏'}
-      className={`focus-visible:ring-ring grid size-9 place-items-center rounded-lg border text-base focus-visible:ring-2 focus-visible:outline-none ${
+      className={`focus-visible:ring-ring border-input grid size-9 place-items-center rounded-lg border text-base focus-visible:ring-2 focus-visible:outline-none ${
         favorited
           ? 'bg-primary-muted text-primary border-transparent'
           : 'hover:bg-accent'

@@ -29,7 +29,7 @@ function Select<T extends string>({
         value={value}
         aria-label={label}
         onChange={(e) => onChange(e.target.value as T)}
-        className="bg-card text-foreground rounded-lg border px-2 py-1.5 text-xs"
+        className="bg-card text-foreground border-input rounded-lg border px-2 py-1.5 text-xs"
       >
         {options.map((o) => (
           <option key={o} value={o}>
@@ -95,7 +95,7 @@ export function Controls({
             value={min}
             aria-label="最少修課人次"
             onChange={(e) => onChange({ min: Number(e.target.value) })}
-            className="bg-card text-foreground rounded-lg border px-2 py-1.5 text-xs"
+            className="bg-card text-foreground border-input rounded-lg border px-2 py-1.5 text-xs"
           >
             {MIN_OPTIONS.map((n) => (
               <option key={n} value={n}>
@@ -112,7 +112,7 @@ export function Controls({
         onChange={(e) => onQuery(e.target.value)}
         placeholder={`搜尋${unit === '位教師' ? '教師或課程名稱' : '課程或教師名稱'}`}
         aria-label="搜尋"
-        className="bg-card focus-visible:ring-ring w-full rounded-lg border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
+        className="bg-card focus-visible:ring-ring border-input w-full rounded-lg border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
       />
     </div>
   )

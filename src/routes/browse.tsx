@@ -125,7 +125,7 @@ function BrowsePage() {
           value={semester}
           aria-label="學期"
           onChange={(e) => setSearch({ sem: e.target.value })}
-          className="bg-card rounded-lg border px-2 py-1 text-sm"
+          className="bg-card border-input rounded-lg border px-2 py-1 text-sm"
         >
           {meta.semesters.map((s) => (
             <option key={s.path} value={s.path}>
@@ -161,7 +161,7 @@ function BrowsePage() {
         onChange={(e) => setDraft(e.target.value)}
         placeholder={`搜尋${BROWSE_TAB_LABELS[tab]}`}
         aria-label={`搜尋${BROWSE_TAB_LABELS[tab]}`}
-        className="bg-background focus-visible:ring-ring mt-4 w-full rounded-lg border px-3 py-2 focus-visible:ring-2 focus-visible:outline-none"
+        className="bg-background focus-visible:ring-ring border-input mt-4 w-full rounded-lg border px-3 py-2 focus-visible:ring-2 focus-visible:outline-none"
       />
 
       <div className="mt-4">

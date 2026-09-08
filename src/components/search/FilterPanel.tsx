@@ -236,7 +236,7 @@ export function FilterPanel({
                 cmin: e.target.value === '' ? undefined : Number(e.target.value),
               })
             }
-            className="bg-card w-20 rounded-lg border px-2 py-1 tabular-nums"
+            className="bg-card border-input w-20 rounded-lg border px-2 py-1 tabular-nums"
           />
           <span className="text-muted-foreground">–</span>
           <input
@@ -253,7 +253,7 @@ export function FilterPanel({
                 cmax: e.target.value === '' ? undefined : Number(e.target.value),
               })
             }
-            className="bg-card w-20 rounded-lg border px-2 py-1 tabular-nums"
+            className="bg-card border-input w-20 rounded-lg border px-2 py-1 tabular-nums"
           />
         </div>
       </Section>

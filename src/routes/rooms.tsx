@@ -115,7 +115,7 @@ function RoomsPage() {
           value={semester}
           aria-label="學期"
           onChange={(e) => void navigate({ search: { sem: e.target.value } })}
-          className="bg-card rounded-lg border px-2 py-1 text-sm"
+          className="bg-card border-input rounded-lg border px-2 py-1 text-sm"
         >
           {meta.semesters.map((s) => (
             <option key={s.path} value={s.path}>
@@ -136,7 +136,7 @@ function RoomsPage() {
           <select
             value={minSeats}
             onChange={(e) => setSeats(Number(e.target.value))}
-            className="bg-background text-foreground rounded border px-1.5 py-1 text-xs"
+            className="bg-background text-foreground border-input rounded border px-1.5 py-1 text-xs"
           >
             {SEAT_OPTIONS.map((n) => (
               <option key={n} value={n}>

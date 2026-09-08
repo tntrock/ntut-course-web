@@ -65,7 +65,7 @@ export function ExportButton({
           type="button"
           onClick={() => void generate()}
           disabled={busy}
-          className="bg-card hover:bg-accent focus-visible:ring-ring rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60"
+          className="bg-card hover:bg-accent focus-visible:ring-ring border-input rounded-lg border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60"
         >
           {busy ? '產生中…' : '存成圖片'}
         </button>
@@ -132,14 +132,14 @@ function PreviewDialog({
           <button
             type="button"
             onClick={onClose}
-            className="hover:bg-accent rounded-lg border px-3 py-1.5 text-sm"
+            className="hover:bg-accent border-input rounded-lg border px-3 py-1.5 text-sm"
           >
             關閉
           </button>
           <button
             type="button"
             onClick={onDownload}
-            className="hover:bg-accent rounded-lg border px-3 py-1.5 text-sm"
+            className="hover:bg-accent border-input rounded-lg border px-3 py-1.5 text-sm"
           >
             下載檔案
           </button>
