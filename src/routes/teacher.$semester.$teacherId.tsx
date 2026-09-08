@@ -1,9 +1,9 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
 import { departmentsQueryOptions } from '@/hooks/useDepartments'
-import { teacherCoursesQueryOptions } from '@/hooks/useBrowse'
+import { teacherCoursesQueryOptions, teachersQueryOptions } from '@/hooks/useBrowse'
 import { CourseList } from '@/components/browse/CourseList'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 
@@ -27,7 +27,26 @@ export const Route = createFileRoute('/teacher/$semester/$teacherId')({
 
 function TeacherMissing() {
   const { semester, teacherId } = Route.useParams()
-  return <DetailNotFound kind="教師" id={teacherId} semester={semester} />
+  const { data: meta } = useMeta()
+
+  /*
+   * 查一下姓名再顯示。**代碼是給機器看的**,「沒有 24622 這位教師」對使用者
+   * 沒有任何意義,他要找的是「侯政伯」。
+   *
+   * 名單瀏覽頁也在用,通常已經在快取裡;查不到就退回代碼,不擋這一頁。
+   */
+  const teachers = useQuery(teachersQueryOptions(meta, semester)).data
+  const name = teachers?.teachers.find((t) => t.id === teacherId)?.name
+
+  return (
+    <DetailNotFound
+      kind="教師"
+      id={teacherId}
+      name={name}
+      semester={semester}
+      browseTab="teacher"
+    />
+  )
 }
 
 function TeacherPage() {

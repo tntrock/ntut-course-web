@@ -80,24 +80,44 @@ export function DetailShell({
 export function DetailNotFound({
   kind,
   id,
+  name,
   semester,
+  browseTab,
   hint,
 }: {
   kind: string
   id: string
+  /** 名稱。查得到就顯示名稱 —— 代碼是給機器看的。 */
+  name?: string | undefined
   semester: string
+  browseTab?: BrowseTab
   hint?: string
 }) {
   return (
     <div className="mx-auto max-w-md px-4 py-24 text-center">
       <h1 className="text-2xl font-semibold">查無此{kind}</h1>
+      {/*
+        **有名字就顯示名字。** 這一頁是給人看的,「沒有 24622 這個教師」
+        對使用者沒有任何意義,他要找的是「侯政伯」。
+      */}
       <p className="text-muted-foreground mt-2 text-sm">
-        {semester} 沒有「{id}」這個{kind}。
-        {hint ?? '代碼在不同學期並不通用，舊連結換到別的學期通常就查不到了。'}
+        {semester} 沒有{name === undefined ? `代碼 ${id} 的` : `「${name}」這個`}
+        {kind}。{hint ?? '代碼在不同學期並不通用，舊連結換到別的學期通常就查不到了。'}
       </p>
-      <Link to="/browse" className="mt-6 inline-block text-sm underline">
-        回瀏覽
-      </Link>
+      {/* 使用者是從某一頁點進來的,把他送回那一頁,不是丟到瀏覽頁 */}
+      <div className="mt-6">
+        <BackLink
+          fallback={
+            <Link
+              to="/browse"
+              search={{ sem: semester, ...(browseTab ? { tab: browseTab } : {}) }}
+              className="text-muted-foreground text-sm underline underline-offset-4"
+            >
+              ← 回瀏覽
+            </Link>
+          }
+        />
+      </div>
     </div>
   )
 }

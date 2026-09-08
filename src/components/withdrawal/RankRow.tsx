@@ -63,7 +63,9 @@ export function RankRow({
   return kind === 'teacher' ? (
     <Link
       to="/teacher/$semester/$teacherId"
-      params={{ semester, teacherId: row.key }}
+      // **不能用畫面上選的學期。** 這一頁彙總好幾個學期,實測前 100 名有 46 位
+      // 在最新學期根本沒開課,連過去只會看到「查無此教師」
+      params={{ semester: row.linkSemester ?? semester, teacherId: row.key }}
       className={className}
     >
       {body}

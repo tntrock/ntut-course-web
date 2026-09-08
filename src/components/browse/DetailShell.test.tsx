@@ -8,7 +8,7 @@ import {
   createRouter,
 } from '@tanstack/react-router'
 
-import { DetailShell } from './DetailShell'
+import { DetailNotFound, DetailShell } from './DetailShell'
 
 /**
  * 實測 115-1 有 14 位教師的姓名含造字（見 `lib/pua.ts`），資料層已經換成〇。
@@ -43,5 +43,47 @@ describe('DetailShell', () => {
     renderShell('胡石政')
     expect(await waitFor(() => screen.getByText('胡石政'))).toBeInTheDocument()
     expect(screen.queryByText(/造字/)).toBeNull()
+  })
+})
+
+/**
+ * 查不到的畫面是**給人看的**:「沒有 24622 這位教師」對使用者沒有意義,
+ * 他要找的是「侯政伯」。查得到姓名就顯示姓名,查不到才退回代碼 ——
+ * 而且要講明那是代碼,不然看起來像亂碼。
+ */
+function renderMissing(props: Parameters<typeof DetailNotFound>[0]) {
+  const root = createRootRoute()
+  const index = createRoute({
+    getParentRoute: () => root,
+    path: '/',
+    component: () => <DetailNotFound {...props} />,
+  })
+  const router = createRouter({
+    routeTree: root.addChildren([index]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  })
+  render(<RouterProvider router={router} />)
+}
+
+describe('DetailNotFound', () => {
+  it('查得到姓名就顯示姓名', async () => {
+    renderMissing({ kind: '教師', id: '24622', name: '侯政伯', semester: '115-1' })
+    expect(await waitFor(() => screen.getByText(/侯政伯/))).toBeInTheDocument()
+    expect(screen.queryByText(/24622/)).toBeNull()
+  })
+
+  it('查不到姓名時要講明那是代碼', async () => {
+    renderMissing({ kind: '教師', id: '24622', semester: '115-1' })
+    expect(await waitFor(() => screen.getByText(/代碼 24622/))).toBeInTheDocument()
+  })
+
+  it('沒有站內歷史時退回「回瀏覽」,不要按了沒反應', async () => {
+    renderMissing({
+      kind: '教師',
+      id: '24622',
+      semester: '115-1',
+      browseTab: 'teacher',
+    })
+    expect(await waitFor(() => screen.getByText(/回瀏覽/))).toBeInTheDocument()
   })
 })
