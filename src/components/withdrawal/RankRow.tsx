@@ -21,7 +21,7 @@ export function RankRow({
   kind: 'teacher' | 'course'
   showSemester: boolean
 }) {
-  const shown = row.detail.slice(0, MAX_DETAIL)
+  const detail = row.detail.slice(0, MAX_DETAIL).join('、')
   const more = row.detail.length - MAX_DETAIL
 
   const body = (
@@ -40,27 +40,8 @@ export function RankRow({
             </span>
           )}
         </span>
-        {/*
-          課名後面接它開過的學期。**這一頁彙總好幾個學期**,不標年度就看不出
-          這門課是哪一年的 —— 而其他頁面都只看單一學期,不需要這個標示。
-
-          學期用 `/` 分隔、課程之間用「、」,兩層才分得開:
-          「物件導向程式設計 114-2/113-2、視窗程式設計 114-1」
-        */}
         <span className="text-muted-foreground block truncate text-xs">
-          {shown.length === 0
-            ? '未定'
-            : shown.map((item, i) => (
-                <span key={item.text}>
-                  {i > 0 && '、'}
-                  {item.text}
-                  {item.semesters && item.semesters.length > 0 && (
-                    <span className="ml-1 tabular-nums opacity-70">
-                      {item.semesters.join('/')}
-                    </span>
-                  )}
-                </span>
-              ))}
+          {detail === '' ? '未定' : detail}
           {more > 0 && ` 等 ${row.detail.length} 門`}
         </span>
       </span>

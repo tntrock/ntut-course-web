@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   courseRows,
-  matchRow,
   mergeSummaries,
   rateGroups,
   sortRows,
@@ -150,9 +149,7 @@ describe('summarizeSemester', () => {
         withdrawn: 0,
       }),
     ])
-    expect(s.teachers[0]?.withdrawnCourses).toEqual([
-      { name: '工程力學', semester: '114-2' },
-    ])
+    expect(s.teachers[0]?.withdrawnCourses).toEqual(['工程力學'])
   })
 
   it('欄位整個不存在的舊學期也要標成沒有資料', () => {
@@ -324,67 +321,6 @@ describe('sortRows', () => {
   })
 })
 
-describe('教師列的課程年度', () => {
-  /**
-   * 這一頁彙總好幾個學期,不標年度就看不出「這門課是哪一年的」。
-   * 但**要按課名合併**:實測平均 4.1 筆卻只有 2.7 個不同課名,直接逐筆列出
-   * 會變成「土木施工法 114-2、土木施工法 113-2、土木施工法 112-2」,
-   * 三個名額全被同一門課吃掉。
-   */
-  const merged = mergeSummaries([
-    summarizeSemester('114-2', [
-      course({
-        id: '1',
-        name_zh: '土木施工法',
-        teacher_codes: ['A'],
-        teachers: ['甲'],
-        enrolled: 60,
-        withdrawn: 10,
-      }),
-    ]),
-    summarizeSemester('113-2', [
-      course({
-        id: '2',
-        name_zh: '土木施工法',
-        teacher_codes: ['A'],
-        teachers: ['甲'],
-        enrolled: 60,
-        withdrawn: 8,
-      }),
-      course({
-        id: '3',
-        name_zh: '測量學',
-        teacher_codes: ['A'],
-        teachers: ['甲'],
-        enrolled: 40,
-        withdrawn: 5,
-      }),
-    ]),
-  ])
-
-  it('同一門課合併成一筆,底下列出它開過的學期', () => {
-    const a = teacherRows(merged, 0).find((r) => r.key === 'A')
-    expect(a?.detail.map((d) => d.text)).toEqual(['土木施工法', '測量學'])
-    expect(a?.detail[0]?.semesters).toEqual(['114-2', '113-2'])
-  })
-
-  it('學期由新到舊', () => {
-    const a = teacherRows(merged, 0).find((r) => r.key === 'A')
-    expect(a?.detail[0]?.semesters?.[0]).toBe('114-2')
-  })
-
-  it('課程列的明細是授課教師,不帶學期 —— 學期已經標在課名旁邊了', () => {
-    const c = courseRows(merged, 0).find((r) => r.key === '3')
-    expect(c?.detail).toEqual([{ text: '甲' }])
-  })
-
-  it('搜尋比對的是課名,不受學期影響', () => {
-    const a = teacherRows(merged, 0).find((r) => r.key === 'A')
-    expect(matchRow(a!, '測量')).toBe(true)
-    expect(matchRow(a!, '不存在的課')).toBe(false)
-  })
-})
-
 describe('教師列的連結學期', () => {
   /**
    * 退選率頁彙總好幾個學期,但連結原本一律指向「畫面上選的那個學期」。
@@ -483,9 +419,7 @@ describe('teacherRows / courseRows', () => {
   })
 
   it('課程列帶得出老師，教師列帶得出課程', () => {
-    expect(byKey(courseRows(merged, 0), '1')?.detail).toEqual([{ text: '古碧源' }])
-    expect(byKey(teacherRows(merged, 0), 'A')?.detail).toEqual([
-      { text: '工程力學', semesters: ['114-2'] },
-    ])
+    expect(byKey(courseRows(merged, 0), '1')?.detail).toEqual(['古碧源'])
+    expect(byKey(teacherRows(merged, 0), 'A')?.detail).toEqual(['工程力學'])
   })
 })
