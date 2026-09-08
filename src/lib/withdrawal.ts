@@ -55,8 +55,12 @@ export interface TeacherTally {
   enrolled: number
   withdrawn: number
   courseCount: number
-  /** 有人撤選的那幾門。比率要有脈絡,才讀得出是哪門課造成的。 */
-  withdrawnCourses: string[]
+  /**
+   * 有人撤選的那幾門。比率要有脈絡,才讀得出是哪門課造成的。
+   *
+   * 帶著學期 —— 這一頁彙總好幾個學期,不標年度就看不出這門課是哪一年的。
+   */
+  withdrawnCourses: { name: string; semester: SemesterPath }[]
 }
 
 export interface CourseTally {
@@ -117,7 +121,7 @@ export function summarizeSemester(
       t.enrolled += e
       t.withdrawn += w
       t.courseCount += 1
-      if (w > 0) t.withdrawnCourses.push(c.name_zh)
+      if (w > 0) t.withdrawnCourses.push({ name: c.name_zh, semester })
     })
   }
 
@@ -219,6 +223,14 @@ export function withdrawalStats(rates: readonly number[]): WithdrawalStats {
   return { n, mean, sd, p25: at(0.25), p50: at(0.5), p75: at(0.75) }
 }
 
+export interface DetailItem {
+  text: string
+  /**
+   * 這門課開過的學期,由新到舊。只有教師列有 —— 課程列的學期已經標在課名旁邊。
+   */
+  semesters?: SemesterPath[]
+}
+
 export interface Row {
   /** 教師代碼或課號。 */
   key: string
@@ -228,8 +240,8 @@ export interface Row {
   withdrawn: number
   /** 原始修課人次(人 + 撤)。 */
   base: number
-  /** 教師列放造成撤選的課名,課程列放授課教師。 */
-  detail: string[]
+  /** 教師列放造成撤選的課名(帶學期),課程列放授課教師。 */
+  detail: DetailItem[]
   /** 只有課程列有 —— 跨學期時要知道是哪一次開課。教師列不標,那是跨學期的合計。 */
   semester?: SemesterPath
   /** 點進去要去哪個學期。教師列用它;課程列直接用 `semester`。 */
@@ -317,7 +329,7 @@ function toRow(
   name: string,
   enrolled: number,
   withdrawn: number,
-  detail: string[],
+  detail: DetailItem[],
   semester?: SemesterPath,
 ): Row {
   const row: Row = {
@@ -336,9 +348,25 @@ function toRow(
   return row
 }
 
-/** 課名重複時只留一次 —— 同一門課連開三個學期不必寫三遍。 */
-function unique(names: readonly string[]): string[] {
-  return [...new Set(names)]
+/**
+ * 按課名合併,並收齊它開過的學期。
+ *
+ * **不要逐筆列出。** 實測平均 4.1 筆卻只有 2.7 個不同課名,逐筆列會變成
+ * 「土木施工法 114-2、土木施工法 113-2、土木施工法 112-2」——
+ * 一列只放得下三筆,三個名額全被同一門課吃掉。
+ *
+ * `merged.teachers` 是由新到舊累積的,所以學期順序天生就是新的在前。
+ */
+function byCourse(
+  entries: readonly { name: string; semester: SemesterPath }[],
+): DetailItem[] {
+  const out = new Map<string, SemesterPath[]>()
+  for (const { name, semester } of entries) {
+    const sems = out.get(name)
+    if (!sems) out.set(name, [semester])
+    else if (!sems.includes(semester)) sems.push(semester)
+  }
+  return [...out].map(([text, semesters]) => ({ text, semesters }))
 }
 
 /** 比率由高到低;同比率時撤選人數多的在前,順序才穩定。 */
@@ -352,7 +380,7 @@ export function teacherRows(merged: MergedWithdrawal, minBase: number): Row[] {
       .map((t) => ({
         // 連結用最近有開課的學期,但**不標**在畫面上:這一列是跨學期的合計,
         // 標一個學期會被讀成「他只開過那學期」
-        ...toRow(t.code, t.name, t.enrolled, t.withdrawn, unique(t.withdrawnCourses)),
+        ...toRow(t.code, t.name, t.enrolled, t.withdrawn, byCourse(t.withdrawnCourses)),
         linkSemester: t.semester,
       }))
       // 沒有人撤選的老師列出來只是佔位子
@@ -363,7 +391,17 @@ export function teacherRows(merged: MergedWithdrawal, minBase: number): Row[] {
 export function courseRows(merged: MergedWithdrawal, minBase: number): Row[] {
   return ranked(
     merged.courses
-      .map((c) => toRow(c.id, c.name, c.enrolled, c.withdrawn, c.teachers, c.semester))
+      .map((c) =>
+        toRow(
+          c.id,
+          c.name,
+          c.enrolled,
+          c.withdrawn,
+          // 課程列的學期標在課名旁邊,明細不必再標一次
+          c.teachers.map((text) => ({ text })),
+          c.semester,
+        ),
+      )
       .filter((r) => r.base >= minBase),
   )
 }
@@ -373,5 +411,5 @@ export function matchRow(row: Row, query: string): boolean {
   const q = query.trim().toLowerCase()
   if (q === '') return true
   if (row.name.toLowerCase().includes(q)) return true
-  return row.detail.some((d) => d.toLowerCase().includes(q))
+  return row.detail.some((d) => d.text.toLowerCase().includes(q))
 }
