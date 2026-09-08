@@ -57,15 +57,26 @@ export function AppHeader() {
     void navigate({ to: '/search', search: draft === '' ? {} : { q: draft } })
   }
 
+  /*
+   * 手機版排兩列:第一列是站徽 + 搜尋框 + 外觀切換,第二列整條給導覽。
+   *
+   * 原本三個都擠在同一個 flex-wrap 裡,390px 下每個導覽項目都被壓縮 3~4px,
+   * 於是「空教室」斷成「空教／室」、「搜尋」斷成「搜／尋」—— 六個項目全部變成
+   * 兩行高,sticky 頁首吃掉 150px,接近螢幕的五分之一。
+   *
+   * 導覽獨立一列之後就有 358px 可用,六個項目 316px 放得下;真的更窄的機器
+   * (320px)則橫向捲動,不再壓縮文字。`shrink-0` + `whitespace-nowrap` 是
+   * 關鍵——沒有它們,flex 仍然會為了塞進去而把每個標籤折行。
+   */
   return (
     <header className="bg-background/85 sticky top-0 z-30 border-b backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
         <Link
           to="/"
           // 站名在手機版被藏起來(只剩 aria-hidden 的徽章),連結會變成沒有名字。
           // Lighthouse 的 link-name 就是抓到這個
           aria-label="北科課程 首頁"
-          className="focus-visible:ring-ring flex items-center gap-2 rounded-lg font-semibold tracking-tight focus-visible:ring-2 focus-visible:outline-none"
+          className="focus-visible:ring-ring flex shrink-0 items-center gap-2 rounded-lg font-semibold tracking-tight focus-visible:ring-2 focus-visible:outline-none"
         >
           <span
             aria-hidden
@@ -76,7 +87,7 @@ export function AppHeader() {
           <span className="hidden sm:inline">北科課程</span>
         </Link>
 
-        <form onSubmit={submit} className="order-3 w-full sm:order-none sm:flex-1">
+        <form onSubmit={submit} className="order-2 min-w-0 flex-1">
           <input
             type="search"
             name="q"
@@ -88,15 +99,26 @@ export function AppHeader() {
           />
         </form>
 
-        <nav className="ml-auto flex items-center gap-1 text-sm sm:ml-0">
+        {/*
+          `-mx-4 px-4`:捲動時內容要能貼到螢幕邊緣,不然最後一項會卡在內距裡
+          看起來像被切掉。捲軸本身藏起來——這是一條隨手滑的分頁列,不是內容區。
+        */}
+        <nav
+          className="order-4 -mx-4 flex w-full [scrollbar-width:none] items-center gap-1 overflow-x-auto px-4 text-sm sm:order-3 sm:mx-0 sm:w-auto sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+          aria-label="主要導覽"
+        >
           <NavLink to="/search">搜尋</NavLink>
           <NavLink to="/browse">瀏覽</NavLink>
           <NavLink to="/rooms">空教室</NavLink>
           <NavLink to="/withdrawal">退選率</NavLink>
           <NavLink to="/schedule">課表</NavLink>
           <NavLink to="/changes">異動</NavLink>
-          <ThemeToggle />
         </nav>
+
+        {/* 外觀切換不是導覽,本來就不該在 <nav> 裡 */}
+        <div className="order-3 shrink-0 sm:order-4">
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   )
@@ -112,7 +134,12 @@ function NavLink({
   return (
     <Link
       to={to}
-      className="focus-visible:ring-ring hover:bg-accent rounded-lg px-2.5 py-1.5 focus-visible:ring-2 focus-visible:outline-none"
+      // `shrink-0` + `whitespace-nowrap`:少了任何一個,flex 都會為了塞進去
+      // 而把「空教室」折成「空教／室」。
+      //
+      // 手機上內距收窄一點(px-2),六個項目才剛好放得進 358px 不用捲;
+      // 直向反而放寬(py-2),觸控目標從 32px 變成 36px
+      className="focus-visible:ring-ring hover:bg-accent shrink-0 rounded-lg px-2 py-2 whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none sm:px-2.5 sm:py-1.5"
       // 目前所在的分頁用強調色標出來,不必再看網址
       activeProps={{ className: 'bg-primary-muted text-primary font-medium' }}
     >
