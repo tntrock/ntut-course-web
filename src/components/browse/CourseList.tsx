@@ -46,6 +46,17 @@ export function CourseList({
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
         <p className="text-sm">
+          {/*
+            **學期要標在卡片上方。** 明細頁一次只看一個學期,但頁面上原本沒有
+            任何地方寫出那是哪一個 —— 從退選率頁點進來特別容易搞混:那一頁彙總
+            好幾個學期,連結會把人帶到這位老師最近有開課的學期(可能是 114-1
+            而不是本學期),落地之後卻看不出來。
+
+            標在這裡而不是每張卡片上:同一頁的課都是同一個學期,每張卡片各寫
+            一次是重複,而卡片本來就擠。
+          */}
+          <span className="text-muted-foreground tabular-nums">{semester}</span>
+          <span className="text-muted-foreground mx-1.5">·</span>
           <span className="font-medium tabular-nums">
             {courses.length.toLocaleString('zh-TW')}
           </span>
