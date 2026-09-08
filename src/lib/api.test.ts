@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createFakeFetch, installFakeCaches, removeCaches } from '@/test/fake-cache'
+import type { Meta } from '@/types/api'
 
 let restoreCaches: () => void
 
@@ -469,5 +470,68 @@ describe('fetchChanges', () => {
     expect(data.event_count).toBe(15)
     expect(fetchMock.calls[0]).toContain('changes.json')
     expect(fetchMock.calls[0]).toContain('v=2026-09-06T03%3A35%3A46Z')
+  })
+})
+
+describe('fetchTeacherCoursesInRange', () => {
+  /**
+   * 老師不一定每個學期都開課 —— 實測侯政伯在退選率頁的六個學期窗口裡
+   * 只有 114-1 查得到,其餘五個都是 404。少一個學期不能讓整頁失敗。
+   */
+  const meta = {
+    semesters: [
+      { path: '115-1', generated_at: 'a' },
+      { path: '114-2', generated_at: 'b' },
+      { path: '114-1', generated_at: 'c' },
+    ],
+  } as unknown as Meta
+
+  const teacherFile = (name: string) => ({
+    teacher: { id: '24622', name },
+    courses: [{ id: '1', name_zh: '工程力學' }],
+  })
+
+  it('跳過查不到的學期,不要整批失敗', async () => {
+    const { fetchTeacherCoursesInRange } = await import('./api')
+    vi.stubGlobal(
+      'fetch',
+      createFakeFetch({ '114-1/teachers/24622.json': teacherFile('侯政伯') }),
+    )
+
+    const got = await fetchTeacherCoursesInRange(
+      meta,
+      ['115-1', '114-2', '114-1'],
+      '24622',
+    )
+
+    expect(got.map((g: { semester: string }) => g.semester)).toEqual(['114-1'])
+  })
+
+  it('保持由新到舊的順序', async () => {
+    const { fetchTeacherCoursesInRange } = await import('./api')
+    vi.stubGlobal(
+      'fetch',
+      createFakeFetch({
+        '115-1/teachers/24622.json': teacherFile('侯政伯'),
+        '114-1/teachers/24622.json': teacherFile('侯政伯'),
+      }),
+    )
+
+    const got = await fetchTeacherCoursesInRange(
+      meta,
+      ['115-1', '114-2', '114-1'],
+      '24622',
+    )
+
+    expect(got.map((g: { semester: string }) => g.semester)).toEqual(['115-1', '114-1'])
+  })
+
+  it('全部都查不到就回傳空陣列,由呼叫端決定要不要當成查無此人', async () => {
+    const { fetchTeacherCoursesInRange } = await import('./api')
+    vi.stubGlobal('fetch', createFakeFetch({}))
+
+    expect(await fetchTeacherCoursesInRange(meta, ['115-1', '114-1'], '24622')).toEqual(
+      [],
+    )
   })
 })

@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 
+import type { Range } from '@/hooks/useWithdrawal'
 import type { Row } from '@/lib/withdrawal'
 import type { SemesterPath } from '@/types/api'
 
@@ -12,6 +13,7 @@ export function RankRow({
   semester,
   kind,
   showSemester,
+  range,
 }: {
   row: Row
   /** 只有依退選率排序時才有名次 —— 照姓名排的「第 3 名」沒有意義。 */
@@ -20,6 +22,8 @@ export function RankRow({
   semester: SemesterPath
   kind: 'teacher' | 'course'
   showSemester: boolean
+  /** 目前看的期間。帶到教師頁,點進去才看得到同一個窗口的課。 */
+  range: Range
 }) {
   const detail = row.detail.slice(0, MAX_DETAIL).join('、')
   const more = row.detail.length - MAX_DETAIL
@@ -63,9 +67,13 @@ export function RankRow({
   return kind === 'teacher' ? (
     <Link
       to="/teacher/$semester/$teacherId"
-      // **不能用畫面上選的學期。** 這一頁彙總好幾個學期,實測前 100 名有 46 位
-      // 在最新學期根本沒開課,連過去只會看到「查無此教師」
-      params={{ semester: row.linkSemester ?? semester, teacherId: row.key }}
+      /*
+       * **學期用畫面上選的、期間一起帶過去。** 教師頁收到 range 之後會把整個
+       * 窗口的課都撈出來,少掉的學期當作那學期沒開課 —— 所以老師在起始學期
+       * 沒開課也不會變成「查無此教師」(實測前 100 名有 46 位是這種)。
+       */
+      params={{ semester, teacherId: row.key }}
+      search={{ range }}
       className={className}
     >
       {body}

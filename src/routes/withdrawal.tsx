@@ -271,6 +271,7 @@ function WithdrawalPage() {
                       semester={semester}
                       kind={tab}
                       showSemester={merged.semesters.length > 1}
+                      range={range}
                     />
                   </li>
                 ))}

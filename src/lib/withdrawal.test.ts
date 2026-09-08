@@ -321,59 +321,6 @@ describe('sortRows', () => {
   })
 })
 
-describe('教師列的連結學期', () => {
-  /**
-   * 退選率頁彙總好幾個學期,但連結原本一律指向「畫面上選的那個學期」。
-   * 實測前 100 名有 **46 位**在 115-1 根本沒開課(連第 1 名侯政伯也是),
-   * 點進去就是「查無此教師」。要連到這位老師最近真的有開課的那個學期。
-   */
-  const merged = mergeSummaries([
-    summarizeSemester('115-1', [
-      course({
-        id: '9',
-        teachers: ['乙'],
-        teacher_codes: ['B'],
-        enrolled: 40,
-        withdrawn: 10,
-      }),
-    ]),
-    summarizeSemester('114-1', [
-      course({
-        id: '1',
-        teachers: ['甲'],
-        teacher_codes: ['A'],
-        enrolled: 30,
-        withdrawn: 10,
-      }),
-    ]),
-    summarizeSemester('113-1', [
-      course({
-        id: '2',
-        teachers: ['甲'],
-        teacher_codes: ['A'],
-        enrolled: 30,
-        withdrawn: 5,
-      }),
-    ]),
-  ])
-
-  it('連到最近有開課的學期,不是最舊的', () => {
-    expect(teacherRows(merged, 0).find((r) => r.key === 'A')?.linkSemester).toBe(
-      '114-1',
-    )
-  })
-
-  it('只出現在一個學期的老師就連那個學期', () => {
-    expect(teacherRows(merged, 0).find((r) => r.key === 'B')?.linkSemester).toBe(
-      '115-1',
-    )
-  })
-
-  it('教師列不標學期 —— 那是跨學期的合計,標一個學期會被讀成「只開過那學期」', () => {
-    expect(teacherRows(merged, 0).find((r) => r.key === 'A')?.semester).toBeUndefined()
-  })
-})
-
 describe('teacherRows / courseRows', () => {
   const merged = mergeSummaries([
     summarizeSemester('114-2', [

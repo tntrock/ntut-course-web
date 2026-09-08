@@ -234,6 +234,36 @@ export function fetchTeacherCourses(
   )
 }
 
+export interface TeacherSemesterCourses {
+  semester: SemesterPath
+  data: TeacherCourses
+}
+
+/**
+ * 一位老師在**一段學期範圍**內的課,由新到舊。
+ *
+ * **少一個學期不能讓整批失敗。** 老師不一定每學期都開課 —— 實測侯政伯在
+ * 退選率頁的六個學期窗口裡只有 114-1 查得到,其餘五個都是 404。所以用
+ * `allSettled`,查得到的留下來,查不到的當作「那學期沒開課」。
+ *
+ * 逐學期打:每位老師的檔案只有 1~3 KB(實測跨六個學期合計 0.9~12.9 KB),
+ * 沒有合併端點可用,也不值得為它多開一個。
+ */
+export async function fetchTeacherCoursesInRange(
+  meta: Meta,
+  semesters: readonly SemesterPath[],
+  teacherId: string,
+): Promise<TeacherSemesterCourses[]> {
+  const settled = await Promise.allSettled(
+    semesters.map((semester) => fetchTeacherCourses(meta, semester, teacherId)),
+  )
+  return settled.flatMap((result, i) => {
+    const semester = semesters[i]
+    if (result.status !== 'fulfilled' || semester === undefined) return []
+    return [{ semester, data: result.value }]
+  })
+}
+
 /** 班級清單(293 個)。 */
 export function fetchClasses(
   meta: Meta,

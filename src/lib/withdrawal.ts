@@ -44,14 +44,6 @@ export interface SemesterSummary {
 export interface TeacherTally {
   code: string
   name: string
-  /**
-   * 這位老師在這個學期有開課。
-   *
-   * `mergeSummaries` 由新到舊處理,先寫進去的那個留著 —— 也就是**最近**
-   * 有開課的學期。教師頁的連結要用它,不能用畫面上選的那個學期:
-   * 實測前 100 名有 46 位在最新學期根本沒開課,連過去就是「查無此教師」。
-   */
-  semester: SemesterPath
   enrolled: number
   withdrawn: number
   courseCount: number
@@ -106,7 +98,6 @@ export function summarizeSemester(
         t = {
           code,
           name: c.teachers[i] ?? code,
-          semester,
           enrolled: 0,
           withdrawn: 0,
           courseCount: 0,
@@ -232,8 +223,6 @@ export interface Row {
   detail: string[]
   /** 只有課程列有 —— 跨學期時要知道是哪一次開課。教師列不標,那是跨學期的合計。 */
   semester?: SemesterPath
-  /** 點進去要去哪個學期。教師列用它;課程列直接用 `semester`。 */
-  linkSemester?: SemesterPath
 }
 
 export interface RateGroup {
@@ -329,10 +318,7 @@ function toRow(
     rate: withdrawalRate(enrolled, withdrawn),
     detail,
   }
-  if (semester !== undefined) {
-    row.semester = semester
-    row.linkSemester = semester
-  }
+  if (semester !== undefined) row.semester = semester
   return row
 }
 
@@ -349,12 +335,9 @@ function ranked(rows: Row[]): Row[] {
 export function teacherRows(merged: MergedWithdrawal, minBase: number): Row[] {
   return ranked(
     merged.teachers
-      .map((t) => ({
-        // 連結用最近有開課的學期,但**不標**在畫面上:這一列是跨學期的合計,
-        // 標一個學期會被讀成「他只開過那學期」
-        ...toRow(t.code, t.name, t.enrolled, t.withdrawn, unique(t.withdrawnCourses)),
-        linkSemester: t.semester,
-      }))
+      .map((t) =>
+        toRow(t.code, t.name, t.enrolled, t.withdrawn, unique(t.withdrawnCourses)),
+      )
       // 沒有人撤選的老師列出來只是佔位子
       .filter((r) => r.withdrawn > 0 && r.base >= minBase),
   )

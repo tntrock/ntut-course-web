@@ -9,6 +9,7 @@ import {
   fetchPrograms,
   fetchSchedule,
   fetchTeacherCourses,
+  fetchTeacherCoursesInRange,
   fetchTeachers,
 } from '@/lib/api'
 import type { Meta, SemesterPath } from '@/types/api'
@@ -49,6 +50,30 @@ export function classroomsQueryOptions(meta: Meta, semester: SemesterPath) {
   return queryOptions({
     queryKey: ['classrooms', semester, version(meta, semester)],
     queryFn: () => fetchClassrooms(meta, semester),
+    staleTime: Infinity,
+  })
+}
+
+/**
+ * 一位老師跨多個學期的課。
+ *
+ * 包成**一支** query 而不是每學期一支:`fetchTeacherCoursesInRange` 內部會
+ * 容忍缺漏的學期,包成一支之後呼叫端不必自己處理「有些成功、有些 404」。
+ * 每個檔案仍然各自走版本化的 Cache Storage,所以逐學期的磁碟快取還在。
+ */
+export function teacherRangeQueryOptions(
+  meta: Meta,
+  semesters: readonly SemesterPath[],
+  teacherId: string,
+) {
+  return queryOptions({
+    queryKey: [
+      'teacher-range',
+      teacherId,
+      semesters.join(','),
+      version(meta, semesters[0] ?? ''),
+    ],
+    queryFn: () => fetchTeacherCoursesInRange(meta, semesters, teacherId),
     staleTime: Infinity,
   })
 }

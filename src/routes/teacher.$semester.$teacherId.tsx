@@ -3,22 +3,41 @@ import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
 import { departmentsQueryOptions } from '@/hooks/useDepartments'
-import { teacherCoursesQueryOptions, teachersQueryOptions } from '@/hooks/useBrowse'
-import { CourseList } from '@/components/browse/CourseList'
+import { teacherRangeQueryOptions, teachersQueryOptions } from '@/hooks/useBrowse'
+import { RANGES, rangeSemesters, type Range } from '@/hooks/useWithdrawal'
+import { TeacherCourseGroups } from '@/components/browse/TeacherCourseGroups'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 
+interface TeacherSearch {
+  /**
+   * 要看幾個學期。**預設只看網址上的那一個**——從瀏覽頁、課程頁進來的人
+   * 本來就在看某一個學期,冒出前幾年的課只會莫名其妙。
+   *
+   * 退選率頁彙總好幾個學期,連結會帶上它當時的期間,點進來才看得到同一個窗口。
+   */
+  range?: Range
+}
+
 export const Route = createFileRoute('/teacher/$semester/$teacherId')({
-  loader: async ({ context, params }) => {
+  validateSearch: (search: Record<string, unknown>): TeacherSearch =>
+    RANGES.includes(search.range as Range) ? { range: search.range as Range } : {},
+
+  loaderDeps: ({ search }) => ({ range: search.range }),
+
+  loader: async ({ context, params, deps }) => {
     const { semester, teacherId } = params
     const { data: meta } = await context.queryClient.ensureQueryData(metaQueryOptions())
     if (!meta.semesters.some((s) => s.path === semester)) throw notFound()
 
-    await Promise.all([
+    const semesters = rangeSemesters(meta, semester, deps.range ?? 'sem')
+    const [groups] = await Promise.all([
       context.queryClient.ensureQueryData(
-        teacherCoursesQueryOptions(meta, semester, teacherId),
+        teacherRangeQueryOptions(meta, semesters, teacherId),
       ),
       context.queryClient.ensureQueryData(departmentsQueryOptions(meta, semester)),
     ])
+    // 整個範圍都查不到才算查無此人 —— 少一個學期是「那學期沒開課」
+    if (groups.length === 0) throw notFound()
   },
   component: TeacherPage,
   errorComponent: TeacherMissing,
@@ -51,13 +70,26 @@ function TeacherMissing() {
 
 function TeacherPage() {
   const { semester, teacherId } = Route.useParams()
+  const { range } = Route.useSearch()
   const { data: meta } = useMeta()
 
-  const response = useSuspenseQuery(
-    teacherCoursesQueryOptions(meta, semester, teacherId),
+  const semesters = rangeSemesters(meta, semester, range ?? 'sem')
+  const groups = useSuspenseQuery(
+    teacherRangeQueryOptions(meta, semesters, teacherId),
   ).data
   const departments = useSuspenseQuery(departmentsQueryOptions(meta, semester)).data
   const deptName = new Map(departments.departments.map((d) => [d.id, d.name]))
+
+  /*
+   * 姓名、系所、學校連結取**最新有開課的那個學期**。老師可能換系,
+   * 而 `groups` 已經是由新到舊,第一筆就是最近的。
+   *
+   * loader 已經保證不會是空的(整個範圍都查不到會 throw notFound),
+   * 這裡再判一次是為了讓型別收斂 —— 全專案沒有用過 non-null assertion。
+   */
+  const newest = groups[0]
+  if (!newest) return <TeacherMissing />
+  const response = newest.data
 
   return (
     <DetailShell
@@ -86,9 +118,8 @@ function TeacherPage() {
         </div>
       }
     >
-      <CourseList
-        courses={response.courses}
-        semester={semester}
+      <TeacherCourseGroups
+        groups={groups.map((g) => ({ semester: g.semester, courses: g.data.courses }))}
         periods={meta.periods}
       />
     </DetailShell>
