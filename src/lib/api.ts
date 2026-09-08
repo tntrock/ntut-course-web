@@ -9,6 +9,8 @@ import type {
   CourseIndex,
   CourseIndexEntry,
   CoursesResponse,
+  DailyEnrollment,
+  EnrollmentIndex,
   DepartmentsResponse,
   Meta,
   ProgramsResponse,
@@ -345,6 +347,29 @@ export function fetchSchedule(
  */
 export function fetchChanges(meta: Meta): Promise<Changes> {
   return fetchVersioned<Changes>('changes.json', meta.generated_at)
+}
+
+/**
+ * 逐日人數快照的索引。跨學期,所以版本號用 `meta.generated_at`。
+ */
+export function fetchEnrollmentIndex(meta: Meta): Promise<EnrollmentIndex> {
+  return fetchVersioned<EnrollmentIndex>('enrollment.json', meta.generated_at)
+}
+
+/**
+ * 某一天的逐課人數。
+ *
+ * 版本號用**那一份快照自己的 `at`**,不是 `meta.generated_at` ——
+ * 過去的日子寫下去就不會再改,拿 meta 當版本號會讓每次 crawler 更新
+ * 都把已經下載過的歷史快照全部沖掉。只有「今天」那一份會被覆蓋,
+ * 而它的 `at` 也會跟著變,所以照樣抓得到新的。
+ */
+export function fetchDailyEnrollment(
+  semester: SemesterPath,
+  date: string,
+  at: string,
+): Promise<DailyEnrollment> {
+  return fetchVersioned<DailyEnrollment>(`${semester}/enrollment/${date}.json`, at)
 }
 
 /**

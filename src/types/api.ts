@@ -508,6 +508,44 @@ export interface BaselineEvent extends ChangeEventBase {
 }
 
 /**
+ * `enrollment.json`:逐日人數快照的索引。
+ *
+ * 快照**跨所有學期**放在同一個陣列裡,用之前一定要先篩 `semester`。
+ */
+export interface EnrollmentIndex {
+  schema_version: number
+  generated_at: string
+  snapshot_count: number
+  snapshots: EnrollmentSnapshot[]
+}
+
+export interface EnrollmentSnapshot {
+  semester: SemesterPath
+  year: number
+  sem: number
+  /** 台北時區的 `YYYY-MM-DD`。 */
+  date: string
+  at: string
+  course_count: number
+  enrolled_total: number
+  withdrawn_total: number
+  path: string
+}
+
+/** `{semester}/enrollment/{date}.json`:某一天的逐課人數。gzip 約 11 KB。 */
+export interface DailyEnrollment {
+  schema_version: number
+  year: number
+  sem: number
+  date: string
+  at: string
+  course_count: number
+  enrolled_total: number
+  withdrawn_total: number
+  courses: { id: string; enrolled: number; withdrawn: number }[]
+}
+
+/**
  * 事件是 **append-only** 的,寫下去就不會再改 —— 舊事件可能缺少後來才加的欄位
  * (crawler README 明講:「`type` 以外的欄位一律當成選填」)。所以除了 `type`
  * 之外全部宣告成選填,顯示時缺了就降級。

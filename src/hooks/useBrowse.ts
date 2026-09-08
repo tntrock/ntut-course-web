@@ -2,6 +2,8 @@ import { queryOptions } from '@tanstack/react-query'
 import {
   fetchCapacity,
   fetchChanges,
+  fetchDailyEnrollment,
+  fetchEnrollmentIndex,
   fetchClassCourses,
   fetchClasses,
   fetchClassrooms,
@@ -12,7 +14,7 @@ import {
   fetchTeacherCoursesInRange,
   fetchTeachers,
 } from '@/lib/api'
-import type { Meta, SemesterPath } from '@/types/api'
+import type { EnrollmentSnapshot, Meta, SemesterPath } from '@/types/api'
 
 /**
  * 學期的資料版本。舊學期的 `generated_at` 永遠不變,所以歷史資料只下載一次,
@@ -116,6 +118,32 @@ export function departmentCoursesQueryOptions(
 }
 
 /** 異動事件流。跨學期,版本號用 `meta.generated_at`。 */
+export function enrollmentIndexQueryOptions(meta: Meta) {
+  return queryOptions({
+    queryKey: ['enrollment-index', meta.generated_at],
+    queryFn: () => fetchEnrollmentIndex(meta),
+    staleTime: Infinity,
+  })
+}
+
+/**
+ * 某一門課最近幾天的人數。
+ *
+ * 一次把需要的那幾天包成**一支** query:每天 gzip 約 11 KB,七天 78 KB,
+ * 而且過去的日子永遠不變,下載一次就不會再動。
+ */
+export function courseEnrollmentQueryOptions(
+  semester: SemesterPath,
+  snapshots: readonly EnrollmentSnapshot[],
+) {
+  return queryOptions({
+    queryKey: ['enrollment-days', semester, snapshots.map((s) => s.at).join(',')],
+    queryFn: () =>
+      Promise.all(snapshots.map((s) => fetchDailyEnrollment(semester, s.date, s.at))),
+    staleTime: Infinity,
+  })
+}
+
 export function changesQueryOptions(meta: Meta) {
   return queryOptions({
     queryKey: ['changes', meta.generated_at],

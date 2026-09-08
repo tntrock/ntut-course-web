@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router'
 
+import { EnrollmentHistory } from '@/components/course/EnrollmentHistory'
+import { useCourseEnrollment } from '@/hooks/useCourseEnrollment'
 import { hasEnrolment } from '@/lib/course'
 import { formatSlotClock, formatTimeSlots } from '@/lib/formatTime'
 import type { Course, Meta, SemesterPath } from '@/types/api'
@@ -74,6 +76,7 @@ export function CourseInfo({
   capacity: ReadonlyMap<string, number | null> | undefined
 }) {
   const withdrawn = course.withdrawn ?? 0
+  const enrollment = useCourseEnrollment(meta, semester, course.id)
 
   return (
     /* 寬螢幕排兩欄:六個短欄位擠成三列,少捲一半 */
@@ -210,6 +213,20 @@ export function CourseInfo({
           </span>
         )}
       </Row>
+
+      {/*
+        近日人數放在「修課人數」後面 —— 那一欄只有當下的數字,看不出是正在加人
+        還是正在掉人。逐日快照就是給這個問題用的。
+
+        **空的時候整欄收掉。** 舊學期(113-1 之類)完全沒有快照,留一個只有
+        標題的空欄位看起來像壞掉。判斷放在這裡而不是元件裡面 —— `Row` 只看得到
+        「有一個 React 元素」,元件自己回傳 null 擋不掉標題。
+      */}
+      {enrollment.length > 0 && (
+        <Row label="近日人數" wide>
+          <EnrollmentHistory series={enrollment} />
+        </Row>
+      )}
 
       {course.programs.length > 0 && (
         <Row label="學程" wide>
