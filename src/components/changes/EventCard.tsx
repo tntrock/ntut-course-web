@@ -135,6 +135,7 @@ function CourseLine({
   const name = ('name' in event ? event.name : undefined) ?? id ?? '(無名稱)'
   const teachers = 'teachers' in event ? event.teachers : undefined
   const depts = 'department_ids' in event ? event.department_ids : undefined
+  const classes = 'class_ids' in event ? event.class_ids : undefined
 
   return (
     <>
@@ -157,10 +158,23 @@ function CourseLine({
             {teachers.length > 0 ? teachers.join('、') : '未定'}
           </>
         )}
+        {/*
+          **系所與班級都要列,而且要標籤。** 實測這次停開的「技職所」課程其實是
+          「職技職所」班 —— 兩個名字只差一個字:只列系所會被讀成整個技職所停開,
+          兩個都列但不標籤,又會像把同一個東西寫了兩遍。
+        */}
         {depts && depts.length > 0 && (
           <>
             <span className="mx-1.5">·</span>
+            <span className="opacity-70">系所 </span>
             {formatFieldValue('department_ids', depts, names)}
+          </>
+        )}
+        {classes && classes.length > 0 && (
+          <>
+            <span className="mx-1.5">·</span>
+            <span className="opacity-70">班級 </span>
+            {formatFieldValue('class_ids', classes, names)}
           </>
         )}
       </p>
