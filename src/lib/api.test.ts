@@ -13,6 +13,43 @@ afterEach(() => {
 })
 
 describe('fetchVersioned', () => {
+  /**
+   * 學校把罕用字存成私用區碼位（見 `lib/pua.ts`）。在資料進來的這一層就換掉，
+   * 而不是在每個顯示姓名的元件各做一次 —— 全站有十幾個地方會印教師姓名,
+   * 漏掉任何一個就是一個空方塊。
+   */
+  it('把學校的造字換成〇', async () => {
+    const { fetchVersioned } = await import('./api')
+    const fetchMock = createFakeFetch({
+      '115-1/teachers.json': { teachers: [{ id: '23533', name: '林' }] },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const data = await fetchVersioned<{ teachers: { name: string }[] }>(
+      '115-1/teachers.json',
+      'v1',
+    )
+
+    expect(data.teachers[0]?.name).toBe('林〇')
+  })
+
+  it('快取命中時也要換 —— 不然重新整理之後又變回空方塊', async () => {
+    const { fetchVersioned } = await import('./api')
+    const fetchMock = createFakeFetch({
+      '115-1/teachers.json': { teachers: [{ id: '23533', name: '林' }] },
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await fetchVersioned('115-1/teachers.json', 'v1')
+    const again = await fetchVersioned<{ teachers: { name: string }[] }>(
+      '115-1/teachers.json',
+      'v1',
+    )
+
+    expect(fetchMock.calls).toHaveLength(1)
+    expect(again.teachers[0]?.name).toBe('林〇')
+  })
+
   it('把版本號附加在網址上並回傳解析後的 JSON', async () => {
     const { fetchVersioned } = await import('./api')
     const fetchMock = createFakeFetch({ '115-1/index.json': { course_count: 2717 } })

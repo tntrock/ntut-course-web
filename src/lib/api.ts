@@ -1,3 +1,4 @@
+import { replacePrivateUse } from './pua'
 import type {
   CapacityResponse,
   Changes,
@@ -76,12 +77,26 @@ async function openCache(): Promise<Cache | null> {
   }
 }
 
+/**
+ * 解析 JSON，順手把學校的造字換掉。
+ *
+ * **在這一層做，不是在每個顯示姓名的元件各做一次。** 全站有十幾個地方會印
+ * 教師姓名（卡片、課表、匯出的圖片、aria-label……），漏掉任何一個就是一個
+ * 空方塊，而且以後新增的地方也會漏。理由與實測範圍見 `lib/pua.ts`。
+ *
+ * 存進 Cache Storage 的仍然是**原始回應**，換字只發生在解析出來的物件上 ——
+ * 快取層不該竄改來源資料。
+ */
+async function parse<T>(response: Response): Promise<T> {
+  return JSON.parse(replacePrivateUse(await response.text())) as T
+}
+
 export async function fetchVersioned<T>(path: string, version: string): Promise<T> {
   const url = `${BASE}/${path}?v=${encodeURIComponent(version)}`
   const cache = await openCache()
 
   const hit = await cache?.match(url)
-  if (hit) return (await hit.json()) as T
+  if (hit) return parse<T>(hit)
 
   const res = await fetch(url)
   if (!res.ok) throw new ApiError(res.status, path)
@@ -89,7 +104,7 @@ export async function fetchVersioned<T>(path: string, version: string): Promise<
     await cache.put(url, res.clone())
     await evictOtherVersions(cache, url)
   }
-  return (await res.json()) as T
+  return parse<T>(res)
 }
 
 export interface MetaResult {

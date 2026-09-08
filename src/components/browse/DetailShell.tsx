@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { BackLink } from '@/components/BackLink'
+import { UNKNOWN_CHAR } from '@/lib/pua'
 import type { BrowseTab } from '@/lib/browseTabs'
 
 /**
@@ -47,6 +48,16 @@ export function DetailShell({
         <p className="text-muted-foreground text-xs">{kind}</p>
         <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">{title}</h1>
         {meta && <div className="text-muted-foreground mt-1 text-sm">{meta}</div>}
+        {/*
+          「林〇」單獨擺著仍然像資料壞了,要講一句這個〇是什麼。
+          實測 805 位教師沒有任何一位姓名裡本來就有〇,所以直接比對就夠。
+        */}
+        {title.includes(UNKNOWN_CHAR) && (
+          <p className="text-muted-foreground mt-1 text-xs">
+            {UNKNOWN_CHAR}{' '}
+            是學校原始資料裡的造字，沒有標準編碼，任何字型都顯示不出來。正確的字請看學校原始頁面。
+          </p>
+        )}
         {sourceUrl && (
           <a
             href={sourceUrl}
