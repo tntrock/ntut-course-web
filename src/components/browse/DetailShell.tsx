@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { BackLink } from '@/components/BackLink'
+import { SourceLink } from '@/components/SourceLink'
 import { UNKNOWN_CHAR } from '@/lib/pua'
 import type { BrowseTab } from '@/lib/browseTabs'
 
@@ -58,16 +59,9 @@ export function DetailShell({
             是學校原始資料裡的造字，沒有標準編碼，任何字型都顯示不出來。正確的字請看學校原始頁面。
           </p>
         )}
-        {sourceUrl && (
-          <a
-            href={sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-block text-xs underline underline-offset-4"
-          >
-            學校原始頁面
-          </a>
-        )}
+        <div className="mt-2">
+          <SourceLink url={sourceUrl} />
+        </div>
       </header>
 
       {/* 課程列表本身就是一格一格的卡片，外面再包一層卡片會變成卡片裡的卡片 */}

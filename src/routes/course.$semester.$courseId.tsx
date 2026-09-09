@@ -16,6 +16,7 @@ import { capacityQueryOptions } from '@/hooks/useBrowse'
 import { confirmedSyllabusVersion, syllabusState } from '@/lib/syllabus'
 import { LANGUAGE_ZH } from '@/lib/filters'
 import { BackLink } from '@/components/BackLink'
+import { SourceLink } from '@/components/SourceLink'
 import { Badge } from '@/components/ui/Badge'
 import { ScheduleToggle } from '@/components/ScheduleToggle'
 import { FavoriteToggle } from '@/components/FavoriteToggle'
@@ -218,6 +219,17 @@ function CourseDetail() {
           <ScheduleToggle course={course} semester={semester} variant="button" />
           <FavoriteToggle semester={semester} courseId={course.id} />
           <ShareButton />
+        </div>
+
+        {/*
+          **課程頁本來沒有回學校的路。** 系所 / 教師 / 班級那幾頁都有這條連結,
+          只有課程頁沒有 —— 而課程頁才是最常被分享、最需要對照原始資料的一頁。
+
+          用的是 `syllabus_url`(學校的大綱頁),那就是學校對「這一門課」開的頁面。
+          約 34% 的課沒有這個欄位,那時整條連結不顯示。
+        */}
+        <div className="mt-3">
+          <SourceLink url={course.syllabus_url} />
         </div>
       </header>
 
