@@ -21,6 +21,7 @@ const PAGE_TTL = 3600
 
 interface Env {
   ASSETS: Fetcher
+  CF_VERSION_METADATA: WorkerVersionMetadata
 }
 
 /**
@@ -45,15 +46,16 @@ export default {
     const url = new URL(request.url)
 
     /*
-     * 快取鍵包含資產的 ETag。
+     * 快取鍵 = 資產的 ETag + Worker 的版本號 + 路徑。
      *
-     * 少了它,新部署要等 s-maxage 過期才看得到 —— 使用者會拿到舊的 app shell,
-     * 那比少一個 meta 標籤嚴重得多。ETag 跟著 `index.html` 的內容走,
-     * 一部署就換,舊的項目自己過期。
+     * **兩個版本號都要。** ETag 跟著 `index.html` 走,前端一改就換;但只有它
+     * 的話,「改了 Worker、沒動前端」的那種部署會繼續送一小時的舊改寫結果 ——
+     * 實測踩過:修好造字的那次部署完,已經被快取的教師頁還是舊的。
      */
     const etag = asset.headers.get('etag') ?? 'none'
+    const version = env.CF_VERSION_METADATA.id
     const cacheKey = new Request(
-      `https://head.invalid/${encodeURIComponent(etag)}${url.pathname}`,
+      `https://head.invalid/${version}/${encodeURIComponent(etag)}${url.pathname}`,
     )
     const cached = await caches.default.match(cacheKey)
     if (cached) return cached

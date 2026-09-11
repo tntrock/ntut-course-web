@@ -7,6 +7,10 @@
   // 在資產前面補上逐頁的 <head>,給不跑 JS 的爬蟲看。見 worker/index.ts
   "main": "worker/index.ts",
 
+  // 部署版本號。Worker 拿它當改寫結果的快取鍵的一部分 —— 只用資產的 ETag
+  // 的話,改了 Worker 但沒動 index.html 的那種部署要等一小時才生效。
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
+
   "assets": {
     "directory": "dist",
     "binding": "ASSETS",
