@@ -15,6 +15,7 @@ import { CourseInfo } from '@/components/course/CourseInfo'
 import { capacityQueryOptions } from '@/hooks/useBrowse'
 import { confirmedSyllabusVersion, syllabusState } from '@/lib/syllabus'
 import { LANGUAGE_ZH } from '@/lib/filters'
+import { describeCourse, pageHead } from '@/lib/seo'
 import { BackLink } from '@/components/BackLink'
 import { SourceLink } from '@/components/SourceLink'
 import { Badge } from '@/components/ui/Badge'
@@ -73,11 +74,27 @@ export const Route = createFileRoute('/course/$semester/$courseId')({
         )
       })
 
-    await Promise.all([
+    const [course] = await Promise.all([
       coursePromise,
       queryClient.ensureQueryData(departmentsQueryOptions(meta, semester)),
     ])
+
+    // 只給 `head()` 用。畫面那邊照舊各自從 query 快取讀,這裡不改它們的資料流
+    return { course }
   },
+
+  /**
+   * **這是全站最值得被收錄的一種頁面** —— 也是分享連結時貼出去的那一種。
+   *
+   * `loaderData` 在載入中與出錯時會是 `undefined`,那就整組留白,讓根路由的
+   * 站台預設值接手;寧可少一個標題,也不要「undefined｜北科課程」。
+   */
+  head: ({ params, loaderData }) =>
+    pageHead({
+      subject: loaderData && `${loaderData.course.name_zh} ${params.semester}`,
+      description: loaderData && describeCourse(loaderData.course, params.semester),
+      path: `/course/${params.semester}/${params.courseId}`,
+    }),
 
   component: CourseDetail,
   notFoundComponent: CourseNotFound,

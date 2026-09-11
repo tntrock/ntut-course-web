@@ -19,6 +19,7 @@ import {
   isBrowseTab,
   type BrowseTab,
 } from '@/lib/browseTabs'
+import { pageHead } from '@/lib/seo'
 
 interface BrowseSearch {
   sem?: string
@@ -27,6 +28,12 @@ interface BrowseSearch {
 }
 
 export const Route = createFileRoute('/browse')({
+  head: () =>
+    pageHead({
+      subject: '瀏覽',
+      description: '依系所、班級、教師、教室、學程瀏覽臺北科技大學的開課清單。',
+      path: '/browse',
+    }),
   validateSearch: (search: Record<string, unknown>): BrowseSearch => {
     const out: BrowseSearch = {}
     if (typeof search.sem === 'string' && search.sem !== '') out.sem = search.sem

@@ -2,5 +2,19 @@
 User-agent: *
 Allow: /
 
-# 個人課表只存在瀏覽器,沒有伺服器端內容;這幾頁對搜尋引擎沒有意義
-Disallow: /schedule
+# **篩選條件的網址空間是無限的。** 搜尋頁把系所、時段、學分、關鍵字全部寫進
+# 網址,而 Googlebot 會執行 JS,所以那些組合它找得到 —— 這就是典型的
+# faceted navigation 爬取陷阱,對這種東西正確的工具是「不要爬」。
+#
+# 只擋帶參數的:`?` 在 robots.txt 裡是普通字元(只有 `*` 和 `$` 是特殊字元),
+# 所以這條配不到乾淨的 `/search`。那一頁本身留著讓爬蟲進得去,由頁面上的
+# `noindex, follow` 告訴它「別收錄,但這裡連出去的課程頁請繼續看」。
+Disallow: /search?
+
+# **`/schedule` 刻意不擋。** 它的內容只存在使用者自己的瀏覽器裡,沒有東西好收錄
+# —— 但它掛在每一頁的導覽列上,擋掉反而會變成「被連到、卻讀不到內容」,Google
+# 會只憑網址把它列進搜尋結果。放行讓爬蟲讀到那一頁的 `noindex`,它才會真的消失。
+
+# sitemap 在 build 時產生(見 `scripts/sitemap.ts`),收本學期與上一學期,
+# 約 8,500 個網址。
+Sitemap: https://ntut-course.allenyen.net/sitemap.xml

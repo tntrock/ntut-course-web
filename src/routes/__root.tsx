@@ -1,4 +1,9 @@
-import { Link, Outlet, createRootRouteWithContext } from '@tanstack/react-router'
+import {
+  HeadContent,
+  Link,
+  Outlet,
+  createRootRouteWithContext,
+} from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
 
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
@@ -8,6 +13,7 @@ import { RecoveryNotice } from '@/components/RecoveryNotice'
 import { SchemaWarning } from '@/components/SchemaWarning'
 import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { ApiError } from '@/lib/api'
+import { siteHead } from '@/lib/seo'
 
 export interface RouterContext {
   queryClient: QueryClient
@@ -16,6 +22,16 @@ export interface RouterContext {
 export const Route = createRootRouteWithContext<RouterContext>()({
   // meta 是所有頁面的前置,在路由層先備妥,元件裡就不必處理載入狀態
   loader: ({ context }) => context.queryClient.ensureQueryData(metaQueryOptions()),
+  /**
+   * 站台層級的 head 預設值。
+   *
+   * router 以 `name ?? property` 去重,而且**深層路由優先**,所以子路由只要
+   * 覆蓋自己要改的那幾個(標題、敘述、og:url)就好,其餘沿用這裡的。
+   *
+   * **這裡不給 canonical。** link 標籤只做「整個標籤完全相同」的去重,不看 `rel`;
+   * 根路由每一頁都會被比對到,它的 canonical 會跟子路由的並存變成兩個。
+   */
+  head: siteHead,
   component: RootLayout,
   pendingComponent: Loading,
   errorComponent: LoadFailed,
@@ -27,6 +43,9 @@ function RootLayout() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {/* React 19 會把 title / meta / link 提升到 <head>,所以擺在哪裡都行 */}
+      <HeadContent />
+
       <SchemaWarning version={meta.schema_version} />
       {fromCache && <OfflineNotice generatedAt={meta.generated_at} />}
       {/* 個人資料損毀過就要講，不能讓課表默默變空 */}

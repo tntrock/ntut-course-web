@@ -26,11 +26,38 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+TC:wght@100..900&display=swap"
     />
-    <title>北科課程</title>
+    <!--
+      **這一段是給不跑 JS 的爬蟲看的底線。**
+
+      這個站是純前端渲染,每個網址回傳的 HTML 都一樣 —— Bing、LINE、Discord、
+      Facebook 的預覽爬蟲不執行 JavaScript,只看得到這裡寫的東西。
+
+      瀏覽器跑起 JS 之後,`lib/headFallback.ts` 會把 `data-head-fallback`
+      標記的標籤全部移除,之後由路由層的 `<HeadContent />` 提供逐頁的版本。
+      **移除是必要的**,不是在清乾淨:`document.title` 讀的是第一個 `<title>`,
+      React 只會在後面再加一個,留著就等於每頁標題都被這一行吃掉。
+    -->
+    <title data-head-fallback>北科課程</title>
     <meta
+      data-head-fallback
       name="description"
       content="臺北科技大學課程查詢:關鍵字搜尋、多維篩選、教學大綱、我的課表。非官方網站。"
     />
+    <meta data-head-fallback property="og:title" content="北科課程" />
+    <meta
+      data-head-fallback
+      property="og:description"
+      content="臺北科技大學課程查詢:關鍵字搜尋、多維篩選、教學大綱、我的課表。非官方網站。"
+    />
+    <meta data-head-fallback property="og:type" content="website" />
+    <meta data-head-fallback property="og:site_name" content="北科課程" />
+    <meta data-head-fallback property="og:locale" content="zh_TW" />
+    <meta
+      data-head-fallback
+      property="og:image"
+      content="https://ntut-course.allenyen.net/icon-512.png"
+    />
+    <meta data-head-fallback name="twitter:card" content="summary" />
     <script>
       // 在第一次繪製前決定主題,避免深色模式閃白
       ;(function () {

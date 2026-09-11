@@ -7,6 +7,7 @@ import { teacherRangeQueryOptions, teachersQueryOptions } from '@/hooks/useBrows
 import { RANGES, rangeSemesters, type Range } from '@/hooks/useWithdrawal'
 import { TeacherCourseGroups } from '@/components/browse/TeacherCourseGroups'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
+import { pageHead } from '@/lib/seo'
 
 interface TeacherSearch {
   /**
@@ -38,7 +39,20 @@ export const Route = createFileRoute('/teacher/$semester/$teacherId')({
     ])
     // 整個範圍都查不到才算查無此人 —— 少一個學期是「那學期沒開課」
     if (groups.length === 0) throw notFound()
+
+    // 標題要的是名字,不是代碼。每一組都是同一位老師,取第一組就好
+    return { name: groups[0]?.data.teacher.name }
   },
+
+  head: ({ params, loaderData }) =>
+    pageHead({
+      subject: loaderData?.name && `${loaderData.name} 老師`,
+      description:
+        loaderData?.name &&
+        `臺北科技大學 ${loaderData.name} 老師開授的課程一覽，含學分、上課時段、修課人數與退選率。`,
+      path: `/teacher/${params.semester}/${params.teacherId}`,
+    }),
+
   component: TeacherPage,
   errorComponent: TeacherMissing,
   notFoundComponent: TeacherMissing,

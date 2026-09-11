@@ -6,6 +6,9 @@ import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// 副檔名要寫出來 —— Vite 之後會預設用 Node 原生載入設定檔,那條路徑不做推斷
+import { sitemap } from './scripts/sitemap.ts'
+
 export default defineConfig({
   plugins: [
     // 必須排在 react 之前,產生的路由樹才會被 react plugin 處理到
@@ -76,6 +79,8 @@ export default defineConfig({
       },
       devOptions: { enabled: false },
     }),
+    // 排在 PWA 之後:sitemap.xml 不該進 service worker 的預先快取清單
+    sitemap(),
   ],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },

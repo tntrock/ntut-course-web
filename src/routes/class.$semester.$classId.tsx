@@ -7,16 +7,30 @@ import { SCHOOL_WIDE } from '@/lib/browse'
 import { CourseList } from '@/components/browse/CourseList'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 
+import { pageHead } from '@/lib/seo'
+
 export const Route = createFileRoute('/class/$semester/$classId')({
   loader: async ({ context, params }) => {
     const { semester, classId } = params
     const { data: meta } = await context.queryClient.ensureQueryData(metaQueryOptions())
     if (!meta.semesters.some((s) => s.path === semester)) throw notFound()
 
-    await context.queryClient.ensureQueryData(
+    const data = await context.queryClient.ensureQueryData(
       classCoursesQueryOptions(meta, semester, classId),
     )
+
+    return { name: data.class_group.name, count: data.courses.length }
   },
+
+  head: ({ params, loaderData }) =>
+    pageHead({
+      subject: loaderData?.name && `${loaderData.name} ${params.semester}`,
+      description:
+        loaderData &&
+        `臺北科技大學${loaderData.name}在 ${params.semester} 學期的 ${loaderData.count} 門課，含必選修、學分與上課時段。`,
+      path: `/class/${params.semester}/${params.classId}`,
+    }),
+
   component: ClassPage,
   errorComponent: ClassMissing,
   notFoundComponent: ClassMissing,

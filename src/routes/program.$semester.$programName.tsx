@@ -8,6 +8,8 @@ import { coursesByIds } from '@/lib/crossref'
 import { CourseList } from '@/components/browse/CourseList'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 
+import { pageHead } from '@/lib/seo'
+
 export const Route = createFileRoute('/program/$semester/$programName')({
   /**
    * 學程**沒有代碼,只有中文名**,所以路由參數就是名字本身。
@@ -26,8 +28,22 @@ export const Route = createFileRoute('/program/$semester/$programName')({
       context.queryClient.ensureQueryData(semesterIndexQueryOptions(meta, semester)),
     ])
 
-    if (!programs.programs.some((p) => p.name === programName)) throw notFound()
+    const program = programs.programs.find((p) => p.name === programName)
+    if (!program) throw notFound()
+
+    return { count: program.course_ids.length }
   },
+
+  // 學程名字就是路由參數本身,不必等 loader —— 但課程數要等
+  head: ({ params, loaderData }) =>
+    pageHead({
+      subject: `${params.programName} ${params.semester}`,
+      description: loaderData
+        ? `臺北科技大學「${params.programName}」在 ${params.semester} 學期的 ${loaderData.count} 門課程。`
+        : `臺北科技大學「${params.programName}」的課程一覽。`,
+      path: `/program/${params.semester}/${encodeURIComponent(params.programName)}`,
+    }),
+
   component: ProgramPage,
   errorComponent: ProgramMissing,
   notFoundComponent: ProgramMissing,

@@ -25,6 +25,7 @@ import {
   type Sort,
 } from '@/lib/withdrawal'
 import type { SemesterPath } from '@/types/api'
+import { pageHead } from '@/lib/seo'
 
 const TABS = ['teacher', 'course'] as const
 type Tab = (typeof TABS)[number]
@@ -48,6 +49,13 @@ interface WithdrawalSearch {
 }
 
 export const Route = createFileRoute('/withdrawal')({
+  head: () =>
+    pageHead({
+      subject: '退選率',
+      description:
+        '臺北科技大學各課程的退選率排行，可依教師或課程彙總，區間從單一學期到近五年。',
+      path: '/withdrawal',
+    }),
   validateSearch: (search: Record<string, unknown>): WithdrawalSearch => {
     const out: WithdrawalSearch = {}
     if (typeof search.sem === 'string' && search.sem !== '') out.sem = search.sem

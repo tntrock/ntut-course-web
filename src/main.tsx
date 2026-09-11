@@ -4,6 +4,7 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { createPageViewTracker } from './lib/analytics'
+import { dropHeadFallback } from './lib/headFallback'
 import { parseSearch, stringifySearch } from './lib/searchParams'
 import { routeTree } from './routeTree.gen'
 import './index.css'
@@ -46,6 +47,13 @@ declare module '@tanstack/react-router' {
  */
 const trackPageView = createPageViewTracker((...args) => window.gtag?.(...args))
 router.subscribe('onResolved', () => trackPageView(window.location.href))
+
+/*
+ * 交棒:把 `index.html` 裡給爬蟲看的後備 head 標籤拿掉,之後由路由的
+ * `head()` 加上 `<HeadContent />` 接手。理由見 `lib/headFallback.ts` ——
+ * 簡單說是 React 不會取代既有的 `<title>`,只會再加一個,而瀏覽器只認第一個。
+ */
+dropHeadFallback()
 
 const rootElement = document.getElementById('root')
 if (!rootElement) throw new Error('找不到 #root 掛載點')

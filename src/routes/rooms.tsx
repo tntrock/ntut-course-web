@@ -16,6 +16,7 @@ import {
   type RoomSeats,
 } from '@/lib/rooms'
 import type { SemesterPath } from '@/types/api'
+import { pageHead } from '@/lib/seo'
 
 /** 常見的教室規模。實測容量分布 10 ~ 420,中位數 50。 */
 const SEAT_OPTIONS = [0, 30, 50, 80, 120] as const
@@ -29,6 +30,12 @@ interface RoomsSearch {
 }
 
 export const Route = createFileRoute('/rooms')({
+  head: () =>
+    pageHead({
+      subject: '空教室',
+      description: '查臺北科技大學指定時段的空教室，可依座位數篩選。',
+      path: '/rooms',
+    }),
   validateSearch: (search: Record<string, unknown>): RoomsSearch => {
     const out: RoomsSearch = {}
     if (typeof search.sem === 'string' && search.sem !== '') out.sem = search.sem

@@ -8,6 +8,8 @@ import { coursesByIds } from '@/lib/crossref'
 import { CourseList } from '@/components/browse/CourseList'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 
+import { pageHead } from '@/lib/seo'
+
 export const Route = createFileRoute('/classroom/$semester/$classroomId')({
   loader: async ({ context, params }) => {
     const { semester, classroomId } = params
@@ -20,8 +22,21 @@ export const Route = createFileRoute('/classroom/$semester/$classroomId')({
       context.queryClient.ensureQueryData(semesterIndexQueryOptions(meta, semester)),
     ])
 
-    if (!classrooms.classrooms.some((c) => c.id === classroomId)) throw notFound()
+    const classroom = classrooms.classrooms.find((c) => c.id === classroomId)
+    if (!classroom) throw notFound()
+
+    return { name: classroom.name }
   },
+
+  head: ({ params, loaderData }) =>
+    pageHead({
+      subject: loaderData?.name && `${loaderData.name} ${params.semester}`,
+      description:
+        loaderData?.name &&
+        `臺北科技大學 ${loaderData.name} 在 ${params.semester} 學期的課表，哪些時段有課、哪些時段是空的。`,
+      path: `/classroom/${params.semester}/${params.classroomId}`,
+    }),
+
   component: ClassroomPage,
   errorComponent: ClassroomMissing,
   notFoundComponent: ClassroomMissing,

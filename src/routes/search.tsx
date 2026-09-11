@@ -13,8 +13,19 @@ import { ResultList } from '@/components/search/ResultList'
 import { EmptyResults } from '@/components/search/EmptyResults'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { departmentsQueryOptions } from '@/hooks/useDepartments'
+import { pageHead } from '@/lib/seo'
 
 export const Route = createFileRoute('/search')({
+  // 搜尋結果是無限的網址空間(`q` 可以是任何字),整片收錄只會吃掉爬取預算 ——
+  // 但 `follow` 要留著,它連出去的課程頁是有價值的
+  head: () =>
+    pageHead({
+      subject: '搜尋課程',
+      description:
+        '以關鍵字、系所、時段、學分、必選修交叉篩選臺北科技大學的課程，條件都留在網址上。',
+      noindex: true,
+      path: '/search',
+    }),
   validateSearch: (search: Record<string, unknown>): SearchParams =>
     validateSearchParams(search),
   // 只有學期會改變要載入的資料,其餘條件都在前端算

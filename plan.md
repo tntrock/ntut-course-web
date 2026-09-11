@@ -568,6 +568,71 @@ flex 也有一個:**預設會壓縮子項目**。頁首的導覽原本跟站徽�
 鄰居可以對齊,固定高度只是讓每張卡片白白多佔 40px——實測手機上卡片從 168px
 降到 121px,同樣的捲動距離多看三成的課。
 
+### 2.12 SEO：純前端渲染的天花板在哪裡
+
+**現況（第一階段做完之後）：每個網址回傳的 HTML 仍然完全一樣。** 實測
+`/` 與 `/course/115-1/364540` 是同一份 3,548 bytes。這是純靜態 SPA 的固有
+結果，不是疏忽 —— 它把 SEO 切成兩半，兩半的價值不同：
+
+- **Google 那半**：Googlebot 會執行 JS，所以逐頁的標題與敘述它看得到，
+  只是要等第二輪的 render queue。
+- **社群預覽那半**：LINE、Discord、Facebook、Bing 的預覽爬蟲**完全不跑 JS**。
+  對這個站來說這半邊的實際效益更高 —— 學生是用貼連結在傳它的。
+  這半邊要等第二階段（Cloudflare Worker + HTMLRewriter 改寫 `<head>`）。
+
+#### 靜態後備標籤與 `<HeadContent />` 的交棒
+
+`index.html` 裡有一組 `data-head-fallback` 標籤（title、description、og:\*），
+是給不跑 JS 的爬蟲看的底線。JS 一跑起來，`lib/headFallback.ts` 把它們**移除**，
+之後由路由的 `head()` 搭配根路由的 `<HeadContent />` 提供逐頁版本。
+
+**移除是必要的，不是在清乾淨。** HTML 規範規定 `document.title` 讀的是 head 裡
+**第一個** `<title>`，而 React 對 `<title>` 沒有去重（react-dom 原始碼裡它的
+hoistable resource 直接回傳 `null`），只會往後面再 append 一個。靜態那份留著，
+每一頁的標題就都被它吃掉 —— 而且是**靜默**失敗，畫面與 console 都不會有異狀。
+`<meta name="description">` 同理。
+
+#### canonical 只能由子路由產
+
+router 的 meta 以 `name ?? property` 去重、深層優先，所以站台層級的預設值
+（`siteHead()`）放在根路由，子路由覆蓋自己要改的就好。**但 link 標籤只做
+「整個標籤完全相同」的去重，不看 `rel`。** 根路由每一頁都會被比對到，它若也給
+一個 canonical，就會跟子路由的並存變成兩個 —— 那比沒有還糟。所以
+`siteHead()` 不碰 canonical，一律由 `pageHead()` 產。
+
+#### `/search` 擋爬、`/schedule` 放行
+
+兩頁都掛 `noindex, follow`，但 robots.txt 的處置**刻意相反**：
+
+- `/search?` **擋爬**。篩選條件全部寫進網址，而 Googlebot 會執行 JS，
+  那些組合它找得到 —— 典型的 faceted navigation 爬取陷阱，對這種東西正確的
+  工具是「不要爬」。只擋帶參數的：`?` 在 robots.txt 裡是普通字元
+  （只有 `*` 和 `$` 特殊），所以配不到乾淨的 `/search`。
+- `/schedule` **放行**。它沒有伺服器端內容，但它掛在每一頁的導覽列上。
+  擋掉會變成「被連到、卻讀不到內容」，Google 會只憑網址把它列進結果；
+  放行讓爬蟲讀到 `noindex`，它才會真的消失。
+
+**擋爬與 `noindex` 不要同時用在同一個網址上** —— 爬不到就讀不到那個 noindex。
+
+#### sitemap 只收兩個學期
+
+全站網址空間約 **15 萬個**（51 學期 × 約 2,600 門課，加上系所、班級、教師、
+教室、學程），對一個新網域的爬取預算差了好幾個量級。`scripts/sitemap.ts`
+在 build 時抓資料，只收最新與上一個學期，實測 **8,504 個網址、1.1 MB
+（gzip 32 KB）**，單檔上限 50,000 筆還有很多餘裕。
+
+放在 build 而不是 `public/`：課程每天變動，手寫的清單第一天就過期。
+抓不到資料時**只警告不擋 build** —— 為了一份 sitemap 讓整個網站部署不出去
+不成比例。
+
+#### Cloudflare 會在 robots.txt 前面插一段自己的
+
+實測線上的 `/robots.txt` 前面有一整段 Cloudflare managed content，包含
+`Content-Signal: search=yes,ai-train=no,use=reference` 與一串
+`User-agent: GPTBot` / `ClaudeBot` / `CCBot` 的 `Disallow: /`。
+我們自己的規則在後面，同名 user-agent 群組會被合併，功能沒壞 ——
+但那個「禁止 AI 爬蟲」是 Cloudflare 的預設政策，不是這個 repo 設的。
+
 ## 3. 已知陷阱
 
 | 陷阱                                          | 症狀                                 | 對策                                        |

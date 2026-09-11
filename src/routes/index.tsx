@@ -5,6 +5,7 @@ import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
 import { departmentsQueryOptions } from '@/hooks/useDepartments'
 import { collegeGroups } from '@/lib/browse'
 import { formatTaipei } from '@/lib/datetime'
+import { pageHead } from '@/lib/seo'
 import type { Meta } from '@/types/api'
 
 export const Route = createFileRoute('/')({
@@ -20,6 +21,12 @@ export const Route = createFileRoute('/')({
       departmentsQueryOptions(meta, meta.latest),
     )
   },
+  head: () =>
+    pageHead({
+      description:
+        '臺北科技大學課程查詢：關鍵字搜尋、系所與時段交叉篩選、教學大綱、空教室、退選率、我的課表。資料每日更新，非官方網站。',
+      path: '/',
+    }),
   component: Home,
 })
 

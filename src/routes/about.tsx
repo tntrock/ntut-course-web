@@ -7,11 +7,18 @@ import { useMeta } from '@/hooks/useMeta'
 import { API_BASE } from '@/lib/api'
 import { formatTaipei } from '@/lib/datetime'
 import { syllabusCoverage } from '@/lib/syllabus'
+import { pageHead } from '@/lib/seo'
 
 const SITE_REPO = 'https://github.com/tntrock/ntut-course-web'
 const CRAWLER_REPO = 'https://github.com/tntrock/ntut-course-crawler'
 
 export const Route = createFileRoute('/about')({
+  head: () =>
+    pageHead({
+      subject: '關於',
+      description: '關於北科課程：資料來源、更新頻率、免責聲明與問題回報方式。',
+      path: '/about',
+    }),
   component: AboutPage,
 })
 

@@ -8,6 +8,8 @@ import { isCollegeWideUnit, SCHOOL_WIDE } from '@/lib/browse'
 import { CourseList } from '@/components/browse/CourseList'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 
+import { pageHead } from '@/lib/seo'
+
 export const Route = createFileRoute('/dept/$semester/$deptId')({
   loader: async ({ context, params }) => {
     const { semester, deptId } = params
@@ -15,13 +17,25 @@ export const Route = createFileRoute('/dept/$semester/$deptId')({
     if (!meta.semesters.some((s) => s.path === semester)) throw notFound()
 
     // 系所檔本身就帶 `department`,但它沒有 `class_groups`,所以對照表還是要
-    await Promise.all([
+    const [courses] = await Promise.all([
       context.queryClient.ensureQueryData(
         departmentCoursesQueryOptions(meta, semester, deptId),
       ),
       context.queryClient.ensureQueryData(departmentsQueryOptions(meta, semester)),
     ])
+
+    return { name: courses.department.name, count: courses.courses.length }
   },
+
+  head: ({ params, loaderData }) =>
+    pageHead({
+      subject: loaderData?.name && `${loaderData.name} ${params.semester}`,
+      description:
+        loaderData &&
+        `臺北科技大學${loaderData.name} ${params.semester} 學期的 ${loaderData.count} 門開課，含學分、上課時段與授課教師。`,
+      path: `/dept/${params.semester}/${params.deptId}`,
+    }),
+
   component: DeptPage,
   errorComponent: DeptMissing,
   notFoundComponent: DeptMissing,

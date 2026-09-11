@@ -13,8 +13,16 @@ import {
 import { formatTaipei, hoursSince } from '@/lib/datetime'
 import { EventCard } from '@/components/changes/EventCard'
 import type { Meta } from '@/types/api'
+import { pageHead } from '@/lib/seo'
 
 export const Route = createFileRoute('/changes')({
+  head: () =>
+    pageHead({
+      subject: '課程異動',
+      description:
+        '臺北科技大學課程的新增、停開、時間與授課教師異動紀錄，每日比對更新。',
+      path: '/changes',
+    }),
   loader: async ({ context }) => {
     const { data: meta } = await context.queryClient.ensureQueryData(metaQueryOptions())
     await context.queryClient.ensureQueryData(changesQueryOptions(meta))
