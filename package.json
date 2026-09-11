@@ -28,6 +28,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260911.1",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query-devtools": "^5.102.8",
     "@tanstack/react-router-devtools": "^1.167.1",

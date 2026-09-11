@@ -20,7 +20,7 @@ import { ScheduleStats } from '@/components/schedule/ScheduleStats'
 import { Timetable } from '@/components/schedule/Timetable'
 import { ExportImage } from '@/components/schedule/ExportImage'
 import { DataTransfer, Favorites } from '@/components/schedule/PersonalData'
-import { pageHead } from '@/lib/seo'
+import { STATIC_PAGES, pageHead } from '@/lib/seo'
 
 interface ScheduleSearch {
   sem?: string
@@ -28,13 +28,7 @@ interface ScheduleSearch {
 
 export const Route = createFileRoute('/schedule')({
   // 課表只存在使用者自己的瀏覽器,伺服器沒有這一頁的內容可以給爬蟲
-  head: () =>
-    pageHead({
-      subject: '我的課表',
-      description: '把課加進課表、檢查衝堂、匯出圖片。課表只存在這台裝置的瀏覽器裡。',
-      noindex: true,
-      path: '/schedule',
-    }),
+  head: () => pageHead({ ...STATIC_PAGES['/schedule'], path: '/schedule' }),
   validateSearch: (search: Record<string, unknown>): ScheduleSearch =>
     typeof search.sem === 'string' && search.sem !== '' ? { sem: search.sem } : {},
 

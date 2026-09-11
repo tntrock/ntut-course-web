@@ -1,11 +1,4 @@
-/**
- * `index.html` 裡給「不跑 JS 的爬蟲」看的 head 標籤帶的屬性。
- *
- * Bing、LINE、Discord、Facebook 的預覽爬蟲都不執行 JavaScript,只看原始 HTML。
- * 這個站是純前端渲染,所以每個網址拿到的 HTML 一模一樣 —— 那份靜態標題與敘述
- * 是它們唯一看得到的東西,不能拿掉。
- */
-export const FALLBACK_ATTR = 'data-head-fallback'
+import { FALLBACK_ATTR } from './seo'
 
 /**
  * 瀏覽器跑起 JS 之後,把那些後備標籤拿掉,交給路由層的 `<HeadContent />`。

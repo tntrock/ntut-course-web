@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { FALLBACK_ATTR, dropHeadFallback } from './headFallback'
+import { dropHeadFallback } from './headFallback'
+import { FALLBACK_ATTR } from './seo'
 
 function makeHead(html: string): Document {
   return new DOMParser().parseFromString(

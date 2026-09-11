@@ -1,5 +1,16 @@
 import type { Course, SemesterPath } from '@/types/api'
 
+/**
+ * 標記「這是給不跑 JS 的讀者看的後備標籤」。
+ *
+ * `index.html` 的靜態標籤與 Worker 注入的標籤都帶著它,瀏覽器一跑起 JS 就
+ * 由 `dropHeadFallback()` 清掉,換成路由層那一份。
+ *
+ * **放在這裡而不是 `headFallback.ts`**,因為那個檔案會碰 `document`,
+ * 而 Cloudflare Worker 沒有 DOM —— 它只需要這個字串。
+ */
+export const FALLBACK_ATTR = 'data-head-fallback'
+
 /** 網站名稱。標題結尾一律掛這個。 */
 export const SITE_NAME = '北科課程'
 
@@ -130,6 +141,76 @@ export function siteHead(): HeadTags {
     links: [],
   }
 }
+
+/**
+ * 疊合多組 head 標籤,**前面的贏**。
+ *
+ * 前端不需要這個 —— router 自己會照「深層路由優先」去重。但 Cloudflare Worker
+ * 是自己把標籤畫成字串的,得自己把 `pageHead()` 與 `siteHead()` 疊起來:
+ * 少了這一步,伺服器端輸出就沒有 og:image 與 og:site_name,分享卡片會缺圖。
+ */
+export function mergeHead(...groups: readonly HeadTags[]): HeadTags {
+  const meta: MetaTag[] = []
+  const seen = new Set<string>()
+
+  for (const group of groups) {
+    for (const tag of group.meta) {
+      // router 也是用 `name ?? property` 當鍵,這裡跟它一致
+      const key = 'title' in tag ? 'title' : 'name' in tag ? tag.name : tag.property
+      if (seen.has(key)) continue
+      seen.add(key)
+      meta.push(tag)
+    }
+  }
+
+  return { meta, links: groups.flatMap((g) => g.links) }
+}
+
+/**
+ * 沒有動態資料的頁面,各自的標題與敘述。
+ *
+ * **放在這裡而不是各自的路由檔**,因為 Cloudflare Worker 也要用同一份 ——
+ * 它在伺服器端先把 head 寫好給不跑 JS 的爬蟲看,而它 import 不了路由檔
+ * (那裡面有 React)。兩份文案遲早會分岔,分岔的那一天不會有人發現。
+ */
+export const STATIC_PAGES = {
+  '/': {
+    description:
+      '臺北科技大學課程查詢：關鍵字搜尋、系所與時段交叉篩選、教學大綱、空教室、退選率、我的課表。資料每日更新，非官方網站。',
+  },
+  '/search': {
+    subject: '搜尋課程',
+    description:
+      '以關鍵字、系所、時段、學分、必選修交叉篩選臺北科技大學的課程，條件都留在網址上。',
+    noindex: true,
+  },
+  '/browse': {
+    subject: '瀏覽',
+    description: '依系所、班級、教師、教室、學程瀏覽臺北科技大學的開課清單。',
+  },
+  '/withdrawal': {
+    subject: '退選率',
+    description:
+      '臺北科技大學各課程的退選率排行，可依教師或課程彙總，區間從單一學期到近五年。',
+  },
+  '/changes': {
+    subject: '課程異動',
+    description: '臺北科技大學課程的新增、停開、時間與授課教師異動紀錄，每日比對更新。',
+  },
+  '/rooms': {
+    subject: '空教室',
+    description: '查臺北科技大學指定時段的空教室，可依座位數篩選。',
+  },
+  '/schedule': {
+    subject: '我的課表',
+    description: '把課加進課表、檢查衝堂、匯出圖片。課表只存在這台裝置的瀏覽器裡。',
+    noindex: true,
+  },
+  '/about': {
+    subject: '關於',
+    description: '關於北科課程：資料來源、更新頻率、免責聲明與問題回報方式。',
+  },
+} as const satisfies Record<string, Omit<PageHeadOptions, 'path'>>
 
 /** 敘述裡最多列幾個班級。 */
 const MAX_CLASSES = 3

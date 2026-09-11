@@ -3,6 +3,7 @@ import {
   SITE_NAME,
   canonicalUrl,
   describeCourse,
+  mergeHead,
   pageHead,
   pageTitle,
   siteHead,
@@ -176,5 +177,38 @@ describe('describeCourse', () => {
     const text = describeCourse({ ...base, classes: many }, '115-1')
     expect(text).toContain('開給班0、班1、班2 等 30 個班級')
     expect(text).not.toContain('班3')
+  })
+})
+
+describe('mergeHead', () => {
+  const site = siteHead()
+  const page = pageHead({ subject: '關於', description: '說明。', path: '/about' })
+  const merged = mergeHead(page, site)
+
+  const prop = (key: string) => {
+    const hit = merged.meta.find((m) => 'property' in m && m.property === key)
+    return hit && 'content' in hit ? hit.content : undefined
+  }
+
+  it('前面的贏 —— 跟 router 的「深層路由優先」同一個規則', () => {
+    expect(merged.meta.find((m) => 'title' in m)?.title).toBe('關於｜北科課程')
+    expect(prop('og:title')).toBe('關於')
+  })
+
+  it('補上只有站台層級才有的那些', () => {
+    expect(prop('og:site_name')).toBe('北科課程')
+    expect(prop('og:image')).toBe('https://ntut-course.allenyen.net/icon-512.png')
+  })
+
+  it('同一個 name/property 只留一個 —— 出現兩次時爬蟲取哪一個是未定義的', () => {
+    const keys = merged.meta.map((m) =>
+      'title' in m ? 'title' : 'name' in m ? m.name : m.property,
+    )
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('link 直接接起來', () => {
+    expect(merged.links).toHaveLength(1)
+    expect(merged.links[0]?.rel).toBe('canonical')
   })
 })
