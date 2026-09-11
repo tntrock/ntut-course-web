@@ -1,5 +1,6 @@
 import { FALLBACK_ATTR } from '../src/lib/seo.ts'
 import { headForPath } from './head.ts'
+import { parseUpstream } from './upstream.ts'
 import { renderHead } from './render.ts'
 
 /**
@@ -102,5 +103,5 @@ async function getJson<T>(base: string, path: string): Promise<T> {
     cf: { cacheTtl: UPSTREAM_TTL, cacheEverything: true },
   })
   if (!response.ok) throw new Error(`${path} → HTTP ${response.status}`)
-  return (await response.json()) as T
+  return parseUpstream<T>(await response.text())
 }
