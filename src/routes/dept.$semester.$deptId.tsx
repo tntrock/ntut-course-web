@@ -8,7 +8,7 @@ import { isCollegeWideUnit, SCHOOL_WIDE } from '@/lib/browse'
 import { CourseList } from '@/components/browse/CourseList'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 
-import { pageHead } from '@/lib/seo'
+import { DYNAMIC_PAGES, pageHead } from '@/lib/seo'
 
 export const Route = createFileRoute('/dept/$semester/$deptId')({
   loader: async ({ context, params }) => {
@@ -29,10 +29,13 @@ export const Route = createFileRoute('/dept/$semester/$deptId')({
 
   head: ({ params, loaderData }) =>
     pageHead({
-      subject: loaderData?.name && `${loaderData.name} ${params.semester}`,
-      description:
-        loaderData &&
-        `臺北科技大學${loaderData.name} ${params.semester} 學期的 ${loaderData.count} 門開課，含學分、上課時段與授課教師。`,
+      ...(loaderData
+        ? DYNAMIC_PAGES.dept({
+            name: loaderData.name,
+            semester: params.semester,
+            count: loaderData.count,
+          })
+        : {}),
       path: `/dept/${params.semester}/${params.deptId}`,
     }),
 

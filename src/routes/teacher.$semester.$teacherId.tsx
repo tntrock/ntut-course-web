@@ -7,7 +7,7 @@ import { teacherRangeQueryOptions, teachersQueryOptions } from '@/hooks/useBrows
 import { RANGES, rangeSemesters, type Range } from '@/hooks/useWithdrawal'
 import { TeacherCourseGroups } from '@/components/browse/TeacherCourseGroups'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
-import { pageHead } from '@/lib/seo'
+import { DYNAMIC_PAGES, pageHead } from '@/lib/seo'
 
 interface TeacherSearch {
   /**
@@ -46,10 +46,9 @@ export const Route = createFileRoute('/teacher/$semester/$teacherId')({
 
   head: ({ params, loaderData }) =>
     pageHead({
-      subject: loaderData?.name && `${loaderData.name} 老師`,
-      description:
-        loaderData?.name &&
-        `臺北科技大學 ${loaderData.name} 老師開授的課程一覽，含學分、上課時段、修課人數與退選率。`,
+      ...(loaderData?.name
+        ? DYNAMIC_PAGES.teacher({ name: loaderData.name, semester: params.semester })
+        : {}),
       path: `/teacher/${params.semester}/${params.teacherId}`,
     }),
 

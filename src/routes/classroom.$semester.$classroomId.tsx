@@ -8,7 +8,7 @@ import { coursesByIds } from '@/lib/crossref'
 import { CourseList } from '@/components/browse/CourseList'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 
-import { pageHead } from '@/lib/seo'
+import { DYNAMIC_PAGES, pageHead } from '@/lib/seo'
 
 export const Route = createFileRoute('/classroom/$semester/$classroomId')({
   loader: async ({ context, params }) => {
@@ -30,10 +30,9 @@ export const Route = createFileRoute('/classroom/$semester/$classroomId')({
 
   head: ({ params, loaderData }) =>
     pageHead({
-      subject: loaderData?.name && `${loaderData.name} ${params.semester}`,
-      description:
-        loaderData?.name &&
-        `臺北科技大學 ${loaderData.name} 在 ${params.semester} 學期的課表，哪些時段有課、哪些時段是空的。`,
+      ...(loaderData?.name
+        ? DYNAMIC_PAGES.classroom({ name: loaderData.name, semester: params.semester })
+        : {}),
       path: `/classroom/${params.semester}/${params.classroomId}`,
     }),
 

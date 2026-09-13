@@ -1,4 +1,5 @@
 import {
+  DYNAMIC_PAGES,
   STATIC_PAGES,
   describeCourse,
   mergeHead,
@@ -6,13 +7,7 @@ import {
   siteHead,
   type HeadTags,
 } from '../src/lib/seo.ts'
-import type {
-  ClassesResponse,
-  ClassroomsResponse,
-  CourseIndex,
-  DepartmentsResponse,
-  TeachersResponse,
-} from '../src/types/api.ts'
+import type { CourseIndex } from '../src/types/api.ts'
 
 /**
  * 一頁的完整 head。
@@ -68,75 +63,48 @@ export async function headForPath(
   if (id === null) return null
   if (kind !== 'program' && !ID.test(id)) return null
 
-  switch (kind) {
-    case 'course':
-      return courseHead(semester, id, getJson)
-    case 'teacher':
-      return simpleHead(
-        await lookup<TeachersResponse>(
-          getJson,
-          `${semester}/teachers.json`,
-          (d) => d.teachers,
-          id,
-        ),
-        (name) => ({
-          subject: `${name} 老師`,
-          description: `臺北科技大學 ${name} 老師開授的課程一覽，含學分、上課時段、修課人數與退選率。`,
-          path,
-        }),
-      )
-    case 'dept':
-      return simpleHead(
-        await lookup<DepartmentsResponse>(
-          getJson,
-          `${semester}/departments.json`,
-          (d) => d.departments,
-          id,
-        ),
-        (name) => ({
-          subject: `${name} ${semester}`,
-          description: `臺北科技大學${name} ${semester} 學期的開課清單，含學分、上課時段與授課教師。`,
-          path,
-        }),
-      )
-    case 'class':
-      return simpleHead(
-        await lookup<ClassesResponse>(
-          getJson,
-          `${semester}/classes.json`,
-          (d) => d.classes,
-          id,
-        ),
-        (name) => ({
-          subject: `${name} ${semester}`,
-          description: `臺北科技大學${name}在 ${semester} 學期的課程，含必選修、學分與上課時段。`,
-          path,
-        }),
-      )
-    case 'classroom':
-      return simpleHead(
-        await lookup<ClassroomsResponse>(
-          getJson,
-          `${semester}/classrooms.json`,
-          (d) => d.classrooms,
-          id,
-        ),
-        (name) => ({
-          subject: `${name} ${semester}`,
-          description: `臺北科技大學 ${name} 在 ${semester} 學期的課表，哪些時段有課、哪些時段是空的。`,
-          path,
-        }),
-      )
-    case 'program':
-      // 學程沒有代碼,網址參數就是名字本身 —— 不必抓任何東西
-      return pageHead({
-        subject: `${id} ${semester}`,
-        description: `臺北科技大學「${id}」在 ${semester} 學期的課程一覽。`,
-        path,
-      })
-    default:
-      return null
+  // 名字、課程數都在各自的清單檔裡;學程沒有清單,名字就是路由參數本身
+  const LISTS = {
+    teacher: [`${semester}/teachers.json`, 'teachers'],
+    dept: [`${semester}/departments.json`, 'departments'],
+    class: [`${semester}/classes.json`, 'classes'],
+    classroom: [`${semester}/classrooms.json`, 'classrooms'],
+  } as const
+
+  if (kind === 'course') return courseHead(semester, id, getJson)
+
+  if (kind === 'program') {
+    // 學程沒有代碼,網址參數就是名字本身 —— 但課程數還是要抓,不然爬蟲看到的
+    // 敘述跟渲染後的不一樣。`programs.json` gzip 只有 4 KB
+    const programs = await getJson<{
+      programs: { name: string; course_ids: string[] }[]
+    }>(`${semester}/programs.json`)
+    const program = programs.programs.find((p) => p.name === id)
+    if (!program) return null
+
+    return pageHead({
+      ...DYNAMIC_PAGES.program({
+        name: id,
+        semester,
+        count: program.course_ids.length,
+      }),
+      path,
+    })
   }
+
+  if (!(kind in LISTS)) return null
+  const [source, key] = LISTS[kind as keyof typeof LISTS]
+  const found = await lookup(getJson, source, key, id)
+  if (!found) return null
+
+  return pageHead({
+    ...DYNAMIC_PAGES[kind as keyof typeof LISTS]({
+      name: found.name,
+      semester,
+      count: found.course_count,
+    }),
+    path,
+  })
 }
 
 /** `decodeURIComponent` 對壞掉的百分比編碼會丟例外,那種輸入直接當作不認得。 */
@@ -148,22 +116,22 @@ function safeDecode(value: string): string | null {
   }
 }
 
-/** 從一份清單裡找出某個代碼的名字。 */
-async function lookup<T>(
-  getJson: GetJson,
-  path: string,
-  pick: (data: T) => readonly { id: string; name: string }[],
-  id: string,
-): Promise<string | null> {
-  const data = await getJson<T>(path)
-  return pick(data).find((item) => item.id === id)?.name ?? null
+/** 清單檔裡的一筆。四份清單的形狀在這三個欄位上是一致的。 */
+interface ListItem {
+  id: string
+  name: string
+  course_count?: number
 }
 
-function simpleHead(
-  name: string | null,
-  build: (name: string) => Parameters<typeof page>[0],
-): HeadTags | null {
-  return name === null ? null : pageHead(build(name))
+/** 從一份清單裡找出某個代碼那一筆。 */
+async function lookup(
+  getJson: GetJson,
+  path: string,
+  key: string,
+  id: string,
+): Promise<ListItem | null> {
+  const data = await getJson<Record<string, ListItem[]>>(path)
+  return data[key]?.find((item) => item.id === id) ?? null
 }
 
 async function courseHead(

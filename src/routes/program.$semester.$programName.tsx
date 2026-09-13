@@ -8,7 +8,7 @@ import { coursesByIds } from '@/lib/crossref'
 import { CourseList } from '@/components/browse/CourseList'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 
-import { pageHead } from '@/lib/seo'
+import { DYNAMIC_PAGES, pageHead } from '@/lib/seo'
 
 export const Route = createFileRoute('/program/$semester/$programName')({
   /**
@@ -37,10 +37,11 @@ export const Route = createFileRoute('/program/$semester/$programName')({
   // 學程名字就是路由參數本身,不必等 loader —— 但課程數要等
   head: ({ params, loaderData }) =>
     pageHead({
-      subject: `${params.programName} ${params.semester}`,
-      description: loaderData
-        ? `臺北科技大學「${params.programName}」在 ${params.semester} 學期的 ${loaderData.count} 門課程。`
-        : `臺北科技大學「${params.programName}」的課程一覽。`,
+      ...DYNAMIC_PAGES.program({
+        name: params.programName,
+        semester: params.semester,
+        count: loaderData?.count,
+      }),
       path: `/program/${params.semester}/${encodeURIComponent(params.programName)}`,
     }),
 

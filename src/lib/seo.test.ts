@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   SITE_NAME,
+  DYNAMIC_PAGES,
   canonicalUrl,
   describeCourse,
   mergeHead,
@@ -234,6 +235,56 @@ describe('canonicalUrl 的惡意輸入', () => {
       expect(canonicalUrl(path).startsWith('https://ntut-course.allenyen.net/')).toBe(
         true,
       )
+    }
+  })
+})
+
+describe('DYNAMIC_PAGES', () => {
+  /**
+   * 前端與 Worker 各寫一份的時候,系所頁的敘述已經分岔了:路由那份有課程數,
+   * Worker 那份沒有。爬蟲看到一種、瀏覽器渲染後變成另一種。
+   */
+  it('同一組輸入,兩邊拿到的是同一個字串', () => {
+    const input = { name: '資工系', semester: '115-1', count: 53 }
+    expect(DYNAMIC_PAGES.dept(input)).toEqual(DYNAMIC_PAGES.dept({ ...input }))
+    expect(DYNAMIC_PAGES.dept(input).description).toContain('53 門')
+  })
+
+  it.each([
+    ['teacher', { name: '王小明', semester: '115-1' }, '王小明 老師'],
+    ['dept', { name: '資工系', semester: '115-1', count: 53 }, '資工系 115-1'],
+    ['class', { name: '資工四', semester: '115-1', count: 12 }, '資工四 115-1'],
+    ['classroom', { name: '一教301', semester: '115-1' }, '一教301 115-1'],
+    [
+      'program',
+      { name: '半導體學程', semester: '115-1', count: 8 },
+      '半導體學程 115-1',
+    ],
+  ] as const)('%s 的標題是 %s 的形狀', (kind, input, subject) => {
+    expect(DYNAMIC_PAGES[kind](input).subject).toBe(subject)
+  })
+
+  it('數字前面要有空白 —— 中文夾阿拉伯數字不留空會黏在一起', () => {
+    expect(
+      DYNAMIC_PAGES.dept({ name: '資工系', semester: '115-1', count: 53 }).description,
+    ).toContain('學期的 53 門開課')
+    expect(
+      DYNAMIC_PAGES.program({ name: '甲', semester: '115-1', count: 8 }).description,
+    ).toContain('學期的 8 門課程')
+  })
+
+  it('沒有課程數時整段跳過,不要留下「undefined 門」或多出來的空白', () => {
+    const text = DYNAMIC_PAGES.dept({ name: '資工系', semester: '115-1' }).description
+    expect(text).not.toContain('undefined')
+    expect(text).not.toMatch(/門/)
+    expect(text).toContain('學期的開課')
+  })
+
+  it('每一種都吐得出非空的標題與敘述', () => {
+    for (const kind of Object.keys(DYNAMIC_PAGES) as (keyof typeof DYNAMIC_PAGES)[]) {
+      const out = DYNAMIC_PAGES[kind]({ name: '甲', semester: '115-1', count: 1 })
+      expect(out.subject.length, kind).toBeGreaterThan(0)
+      expect(out.description.length, kind).toBeGreaterThan(10)
     }
   })
 })

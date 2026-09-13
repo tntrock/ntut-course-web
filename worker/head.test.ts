@@ -129,15 +129,18 @@ describe('headForPath — 其餘動態頁', () => {
     expect(titleOf(tags)).toBe('綜科館 123 115-1｜北科課程')
   })
 
-  it('學程名字就在網址裡,不必抓資料', async () => {
-    const get = fakeApi({})
-    const tags = await headForPath('/program/115-1/%E5%8D%8A%E5%B0%8E%E9%AB%94', get)
+  it('學程名字來自網址,canonical 保持編碼', async () => {
+    const tags = await headForPath(
+      '/program/115-1/%E5%8D%8A%E5%B0%8E%E9%AB%94',
+      fakeApi({
+        '115-1/programs.json': { programs: [{ name: '半導體', course_ids: ['1'] }] },
+      }),
+    )
 
     expect(titleOf(tags)).toBe('半導體 115-1｜北科課程')
     expect(canonicalOf(tags)).toBe(
       'https://ntut-course.allenyen.net/program/115-1/%E5%8D%8A%E5%B0%8E%E9%AB%94',
     )
-    expect(get).not.toHaveBeenCalled()
   })
 })
 
@@ -199,4 +202,34 @@ describe('headForPath — 物件原型上的鍵不算路徑', () => {
       expect(await headForPath(path, fakeApi({}))).toBeNull()
     },
   )
+})
+
+describe('headForPath — 學程頁的課程數', () => {
+  const PROGRAMS = {
+    '115-1/programs.json': {
+      programs: [{ name: '半導體', course_ids: ['1', '2', '3'] }],
+    },
+  }
+
+  /**
+   * 課程數如果只有前端有,爬蟲看到的敘述就跟渲染後的不一樣 —— 這正是把文案
+   * 抽成 `DYNAMIC_PAGES` 要解決的事。`programs.json` gzip 只有 4 KB。
+   */
+  it('敘述帶課程數,跟前端同一句', async () => {
+    const tags = await headForPath(
+      '/program/115-1/%E5%8D%8A%E5%B0%8E%E9%AB%94',
+      fakeApi(PROGRAMS),
+    )
+    const hit = tags?.meta.find((m) => 'name' in m && m.name === 'description')
+    expect(hit && 'content' in hit ? hit.content : '').toContain('學期的 3 門課程')
+  })
+
+  it('查不到這個學程就回 null', async () => {
+    expect(
+      await headForPath(
+        '/program/115-1/%E4%B8%8D%E5%AD%98%E5%9C%A8',
+        fakeApi(PROGRAMS),
+      ),
+    ).toBeNull()
+  })
 })

@@ -218,6 +218,65 @@ export const STATIC_PAGES = {
   },
 } as const satisfies Record<string, Omit<PageHeadOptions, 'path'>>
 
+/** 有資料才組得出標題的頁面,它們共同的輸入。 */
+export interface DynamicPageInput {
+  /** 顯示用的名字:教師姓名、系所名、班級名、教室名、學程名。 */
+  name: string
+  semester: SemesterPath
+  /** 課程數。拿不到就整段省略 —— 「undefined 門」會直接出現在搜尋結果裡。 */
+  count?: number | undefined
+}
+
+/**
+ * 課程數那一段。沒有數字就回空字串。
+ *
+ * **前導空白在這裡面,不在樣板裡。** 中文夾阿拉伯數字不留空會黏成
+ * 「學期的53 門開課」;但空白寫在樣板裡的話,沒有數字時又會多一個。
+ */
+function courses(count: number | undefined): string {
+  return count === undefined ? '' : ` ${count} 門`
+}
+
+/**
+ * 動態頁的標題與敘述,**前端與 Worker 共用同一份**。
+ *
+ * 這些本來兩邊各寫一份,而且已經分岔了:系所頁的路由版本有課程數、Worker 版本
+ * 沒有 —— 爬蟲看到一種,瀏覽器渲染完變成另一種。同一段文案有兩個來源,
+ * 分岔的那一天不會有人發現(見 §2.6「文案只有一份來源」)。
+ *
+ * 以路由的種類當鍵,`worker/head.ts` 可以直接用路徑上的那一段去查。
+ */
+export const DYNAMIC_PAGES = {
+  teacher: ({ name }: DynamicPageInput) => ({
+    subject: `${name} 老師`,
+    // 教師頁可以看好幾個學期(3 年 / 5 年),所以這裡不放單一學期的課程數
+    description: `臺北科技大學 ${name} 老師開授的課程一覽，含學分、上課時段、修課人數與退選率。`,
+  }),
+
+  dept: ({ name, semester, count }: DynamicPageInput) => ({
+    subject: `${name} ${semester}`,
+    description: `臺北科技大學${name} ${semester} 學期的${courses(count)}開課，含學分、上課時段與授課教師。`,
+  }),
+
+  class: ({ name, semester, count }: DynamicPageInput) => ({
+    subject: `${name} ${semester}`,
+    description: `臺北科技大學${name}在 ${semester} 學期的${courses(count)}課程，含必選修、學分與上課時段。`,
+  }),
+
+  classroom: ({ name, semester }: DynamicPageInput) => ({
+    subject: `${name} ${semester}`,
+    description: `臺北科技大學 ${name} 在 ${semester} 學期的課表，哪些時段有課、哪些時段是空的。`,
+  }),
+
+  program: ({ name, semester, count }: DynamicPageInput) => ({
+    subject: `${name} ${semester}`,
+    description: `臺北科技大學「${name}」在 ${semester} 學期的${courses(count)}課程。`,
+  }),
+} as const satisfies Record<
+  string,
+  (input: DynamicPageInput) => { subject: string; description: string }
+>
+
 /** 敘述裡最多列幾個班級。 */
 const MAX_CLASSES = 3
 

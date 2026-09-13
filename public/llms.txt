@@ -1,0 +1,41 @@
+# 北科課程
+
+> 國立臺北科技大學課程的非官方查詢網站。資料由爬蟲每日自動蒐集自學校的課程查詢系統，涵蓋 90-1 至今共 51 個學期。網站本身是純前端的靜態站，沒有帳號也沒有伺服器端資料庫。
+
+本資料由非官方爬蟲自動蒐集，僅供參考，一切以學校公告與課程系統當下顯示的內容為準。
+
+## 直接取用資料（建議走這裡，不要爬網頁）
+
+網站畫面完全由 JavaScript 渲染，抓 HTML 得不到內容。所有資料都來自同一份公開的靜態 JSON API：
+
+- [API 根目錄](https://tntrock.github.io/ntut-course-crawler/)：以下路徑都相對於它
+- [meta.json](https://tntrock.github.io/ntut-course-crawler/meta.json)：學期清單、資料產生時間、schema 版本、端點說明。**任何取用都從這裡開始**
+- `{學期}/index.json`：該學期所有課程的輕量索引（課號、課名、教師、時段、學分）
+- `{學期}/courses/{系所代碼}.json`：單一系所的完整課程資料
+- `{學期}/teachers.json`、`{學期}/departments.json`、`{學期}/classes.json`、`{學期}/classrooms.json`、`{學期}/programs.json`：各種清單
+- `{學期}/syllabus/{課號}.json`：教學大綱
+- [changes.json](https://tntrock.github.io/ntut-course-crawler/changes.json)：課程異動事件
+- [enrollment.json](https://tntrock.github.io/ntut-course-crawler/enrollment.json)：逐日修課/退選人數快照的索引
+
+學期字串的格式是 `{民國學年}-{學期}`，例如 `115-1`。
+
+## 網站頁面
+
+- [首頁](https://ntut-course.allenyen.net/)
+- [搜尋課程](https://ntut-course.allenyen.net/search)：關鍵字、系所、時段、學分、必選修交叉篩選
+- [瀏覽](https://ntut-course.allenyen.net/browse)：依系所、班級、教師、教室、學程
+- [退選率](https://ntut-course.allenyen.net/withdrawal)：各課程退選率排行
+- [空教室](https://ntut-course.allenyen.net/rooms)：指定時段沒有課的教室
+- [課程異動](https://ntut-course.allenyen.net/changes)：新增、停開、時間與教師異動
+- [關於](https://ntut-course.allenyen.net/about)：資料來源、更新頻率、免責聲明
+- [sitemap.xml](https://ntut-course.allenyen.net/sitemap.xml)：本學期與上一學期的所有網址
+
+## 原始碼
+
+- [ntut-course-web](https://github.com/tntrock/ntut-course-web)：這個網站
+- [ntut-course-crawler](https://github.com/tntrock/ntut-course-crawler)：爬蟲與 API
+
+## Optional
+
+- [學校原始課程查詢系統](https://aps.ntut.edu.tw/course/tw/)：資料的上游，有爭議時以它為準
+- [我的課表](https://ntut-course.allenyen.net/schedule)：只存在使用者自己的瀏覽器裡，沒有伺服器端內容

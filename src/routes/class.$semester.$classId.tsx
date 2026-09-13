@@ -7,7 +7,7 @@ import { SCHOOL_WIDE } from '@/lib/browse'
 import { CourseList } from '@/components/browse/CourseList'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 
-import { pageHead } from '@/lib/seo'
+import { DYNAMIC_PAGES, pageHead } from '@/lib/seo'
 
 export const Route = createFileRoute('/class/$semester/$classId')({
   loader: async ({ context, params }) => {
@@ -24,10 +24,13 @@ export const Route = createFileRoute('/class/$semester/$classId')({
 
   head: ({ params, loaderData }) =>
     pageHead({
-      subject: loaderData?.name && `${loaderData.name} ${params.semester}`,
-      description:
-        loaderData &&
-        `臺北科技大學${loaderData.name}在 ${params.semester} 學期的 ${loaderData.count} 門課，含必選修、學分與上課時段。`,
+      ...(loaderData
+        ? DYNAMIC_PAGES.class({
+            name: loaderData.name,
+            semester: params.semester,
+            count: loaderData.count,
+          })
+        : {}),
       path: `/class/${params.semester}/${params.classId}`,
     }),
 
