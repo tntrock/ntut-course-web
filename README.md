@@ -36,7 +36,9 @@ _衝堂的課並排標紅，不阻擋加課 —— 使用者可能正在比較�
 
 資料由 [`ntut-course-crawler`](https://github.com/tntrock/ntut-course-crawler)
 自動蒐集自學校的課程查詢系統，發布成一組**公開的靜態 JSON**。
-本站只是讀那些檔案，沒有後端、沒有資料庫、沒有帳號。
+本站只是讀那些檔案，沒有資料庫、沒有帳號。唯一的伺服器端程式是一層只改
+`<head>` 的邊緣 Worker（[見下](#邊緣只改-head)），它掛掉的話整個站
+退回純靜態，功能不受影響。
 
 ```
 https://tntrock.github.io/ntut-course-crawler/meta.json
@@ -52,8 +54,8 @@ https://tntrock.github.io/ntut-course-crawler/meta.json
 
 ## 為什麼這樣做
 
-這一節記的是看程式碼看不出來的決定。完整的規格與 42 條實作偏離紀錄在
-[`plan.md`](./plan.md)（附錄 D）。
+這一節記的是看程式碼看不出來的決定。完整的規格與踩坑紀錄在
+[`plan.md`](./plan.md)。
 
 ### 資料的形狀決定了程式的形狀
 
@@ -67,7 +69,7 @@ https://tntrock.github.io/ntut-course-crawler/meta.json
   `meta.periods` 的陣列順序，不能自己排。
 - **`required` 是三態**，`null` 代表原始欄位空白而不是「不是必修」。學分統計因此
   分成必修 / 選修 / 未標示三欄，把 `null` 併進選修會讓試算悄悄算錯。
-- **教師要用代碼識別**：803 個教師代碼只對應 801 個姓名，確實有同名老師。
+- **教師要用代碼識別**：806 個教師代碼只對應 804 個姓名，確實有同名老師。
   所有連結、收藏、比對一律用 `teacher_codes`，姓名只拿來顯示。
 
 ### 版本化快取（`src/lib/api.ts`）
@@ -113,11 +115,36 @@ Service worker 用 `registerType: 'prompt'` 而不是 `autoUpdate`：自動更�
 
 ### 搜尋不用索引庫
 
-2,717 筆 × 幾個查詢詞的 `indexOf` 在手機上是毫秒等級；索引庫解決的是十萬筆以上的
+2,725 筆 × 幾個查詢詞的 `indexOf` 在手機上是毫秒等級；索引庫解決的是十萬筆以上的
 問題，差兩個數量級。而且中文沒有空白分詞，模糊比對按字元算編輯距離會給出大量
 無關結果 —— 打「白敦文」就該是找含這三個字的，不要有驚喜。
 
 搜尋跑在 Web Worker 裡，最差情況（空查詢、全部課程）實測 4.7ms。
+
+### 邊緣只改 head
+
+純前端渲染有一個天花板：**每個網址回傳的 HTML 都一樣**。Googlebot 會執行 JS
+所以看得到逐頁的標題，但 LINE、Discord、Facebook、Bing 的預覽爬蟲**完全不跑
+JS** —— 對它們來說每一頁都叫「北科課程」。學生是用貼連結在傳這個站的，
+所以這半邊的實際效益比 Google 那半邊高。
+
+解法是一層 Cloudflare Worker，用 `HTMLRewriter` 在資產前面把這一頁的
+`<title>`、敘述與 og 標籤塞進 `</head>` 前面。**`<body>` 完全不碰** ——
+內容還是前端渲染，這層只負責讓「不會渲染的讀者」拿到對的東西。
+
+三件從實作裡長出來的事：
+
+- **React 不會取代既有的 `<title>`，只會在後面再加一個，而瀏覽器只認第一個。**
+  所以 `index.html` 那份靜態標題不能留著，得在 JS 跑起來時真的移除。這是靜默
+  失敗 —— 畫面、console 都正常，只有每一頁的標題永遠是站名。
+- **Worker 注入的標籤也帶 `data-head-fallback`**，瀏覽器一跑起 JS 就跟靜態那份
+  一起被清掉，換成路由層的版本。少了這個標記，同一個 `<head>` 裡會有兩個
+  `<title>`，而前端那份永遠不會生效。
+- **CSP 用 sha256 而不是 nonce。** 改寫後的 HTML 會被快取在邊緣，每個人拿到
+  同一份 —— nonce 一旦被快取就等於沒有 nonce。
+
+sitemap 只收本學期與上一學期（約 8,500 個網址），不是全部 51 個學期的 15 萬個：
+新網域的爬取預算差了好幾個量級，送一份爬不完的清單只會讓本學期的課排在後面。
 
 ### 相容性
 
@@ -162,6 +189,8 @@ src/
 ├── routes/       檔案式路由（TanStack Router）
 ├── components/   依頁面分組
 └── types/api.ts  crawler API 的型別，逐欄位對過線上資料
+
+worker/           邊緣 Worker：只改 <head>，body 交給前端
 ```
 
 商業邏輯集中在 `lib/`，全部是純函式，測試不需要碰 DOM 或網路。
@@ -176,7 +205,7 @@ src/
 
 ## 測試
 
-285 個測試，全部是 Vitest。涵蓋的是**會悄悄出錯的地方**，不是為了衝覆蓋率：
+521 個測試，全部是 Vitest。涵蓋的是**會悄悄出錯的地方**，不是為了衝覆蓋率：
 
 - 搜尋的正規化與評分、篩選器的每個邊界
 - 節次的連續判斷（`2、4` 不能寫成 `2-4`，那等於謊稱包含第 3 節）
@@ -184,6 +213,8 @@ src/
 - 儲存層的損毀復原、版本不符、配額用盡、無痕視窗
 - 課表的衝堂、並排分欄、學分三態統計
 - 異動事件的台北日期分組、代碼翻譯
+- 整條路由：loader 的請求排程、`notFound()`、`head()` 產生的標題
+- Worker 出事時的退路（例外不該讓整站 500）、CSP 雜湊漂移
 
 ```bash
 npm test
@@ -195,11 +226,12 @@ CI 在每次 push 跑 lint、格式檢查、測試、build 四關。
 
 ## 部署
 
-推到 `main` 就會自動部署到 Cloudflare Workers（Static Assets）。
+推到 `main` 就會自動部署到 Cloudflare Workers：靜態資產加上前面那層只改
+`<head>` 的 Worker。
 
 深層網址（例如 `/course/115-1/364893`）的 SPA fallback 由 `wrangler.jsonc` 的
 `not_found_handling` 處理 —— **不是** `_redirects`，那在 Workers Assets 上是
-不合法的（`plan.md` 附錄 D.6 有完整的踩坑紀錄）。
+不合法的（`plan.md` 的「已知陷阱」有完整的踩坑紀錄）。
 
 ---
 
