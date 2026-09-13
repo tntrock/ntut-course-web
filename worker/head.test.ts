@@ -184,3 +184,19 @@ describe('headForPath — 站台層級的標籤', () => {
     expect(titleOf(tags)).toBe('網路與系統安全 115-1｜北科課程')
   })
 })
+
+describe('headForPath — 物件原型上的鍵不算路徑', () => {
+  /**
+   * `STATIC_PAGES` 是物件字面值,所以 `STATIC_PAGES['constructor']` 會拿到
+   * `Object.prototype.constructor` —— truthy,於是被當成「認得的固定頁面」。
+   *
+   * 實際的 `pathname` 一定以 `/` 開頭,而原型上沒有這種鍵,所以現在踩不到。
+   * 但這個函式的契約是「認不得就回 null」,就讓它真的成立。
+   */
+  it.each(['constructor', 'toString', '__proto__', 'valueOf'])(
+    '%s 回傳 null',
+    async (path) => {
+      expect(await headForPath(path, fakeApi({}))).toBeNull()
+    },
+  )
+})

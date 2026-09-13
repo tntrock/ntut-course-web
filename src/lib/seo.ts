@@ -64,7 +64,13 @@ export function pageTitle(subject?: string | null): string {
  * 留著會讓同一份內容產生無限多個網址。
  */
 export function canonicalUrl(path: string): string {
-  const url = new URL(path, SITE_URL)
+  /*
+   * **先把開頭的斜線收成一條。** `new URL('//evil.com', base)` 會把 `//` 當成
+   * 協定相對網址,解出 `https://evil.com/` —— 那等於讓我們的頁面宣告自己的
+   * 正規網址在別人的網域上。目前的呼叫端都傳自己組的路徑踩不到,但這個函式是
+   * 匯出的,而「直接把 `match.pathname` 丟進來」是很自然的下一步改法。
+   */
+  const url = new URL(`/${path.replace(/^\/+/, '')}`, SITE_URL)
   url.search = ''
   url.hash = ''
   // 尾端斜線去掉,但根目錄的那一條要留

@@ -50,7 +50,11 @@ export async function headForPath(
   // 尾端斜線是同一頁,但根目錄的那一條要留
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
 
-  const staticPage = STATIC_PAGES[path as keyof typeof STATIC_PAGES]
+  // `Object.hasOwn` 不能省 —— 物件字面值繼承 `Object.prototype`,少了它
+  // `'constructor'` 之類的鍵會拿到原型上的函式(truthy),被當成認得的頁面
+  const staticPage = Object.hasOwn(STATIC_PAGES, path)
+    ? STATIC_PAGES[path as keyof typeof STATIC_PAGES]
+    : undefined
   if (staticPage) return pageHead({ ...staticPage, path })
 
   const parts = path.split('/')

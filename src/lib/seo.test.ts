@@ -212,3 +212,28 @@ describe('mergeHead', () => {
     expect(merged.links[0]?.rel).toBe('canonical')
   })
 })
+
+describe('canonicalUrl 的惡意輸入', () => {
+  /**
+   * `new URL('//evil.com', base)` 會把 `//` 當成協定相對網址,解出
+   * `https://evil.com/` —— 也就是**我們的頁面宣告自己的正規網址在別人的網域上**。
+   *
+   * 目前呼叫端都傳自己組的路徑,踩不到;但這個函式是匯出的,而「把
+   * `match.pathname` 直接丟進來」是很自然的下一步改法。與其留著等人踩,
+   * 不如讓它不可能發生。
+   */
+  it('協定相對路徑不會逃出本站', () => {
+    expect(canonicalUrl('//evil.com')).toBe('https://ntut-course.allenyen.net/evil.com')
+    expect(canonicalUrl('//evil.com/x')).toBe(
+      'https://ntut-course.allenyen.net/evil.com/x',
+    )
+  })
+
+  it('不管傳什麼進來,結果一定在本站底下', () => {
+    for (const path of ['//evil.com', 'https://evil.com/x', '////a', 'evil.com']) {
+      expect(canonicalUrl(path).startsWith('https://ntut-course.allenyen.net/')).toBe(
+        true,
+      )
+    }
+  })
+})
