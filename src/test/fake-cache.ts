@@ -76,8 +76,20 @@ export interface FakeFetch {
  *
  * @param routes 路徑(不含 base、不含 `?v=`)→ 回應內容或狀態碼
  */
+export interface FakeFetchOptions {
+  /**
+   * 沒對上任何一條路徑時怎麼辦。
+   *
+   * `'404'`(預設)拿來測「資料來源缺這個檔」的畫面;`'throw'` 是給整條路由的
+   * 測試用的 —— 那種測試會抓十幾個檔案,少準備一個時畫面只會顯示
+   * 「取不到課程資料」,得自己猜是哪一個。
+   */
+  onMissing?: '404' | 'throw'
+}
+
 export function createFakeFetch(
   routes: Record<string, unknown | { status: number }>,
+  { onMissing = '404' }: FakeFetchOptions = {},
 ): FakeFetch {
   const calls: string[] = []
   const fn = async (input: RequestInfo | URL): Promise<Response> => {
@@ -86,6 +98,12 @@ export function createFakeFetch(
     const pathname = new URL(url).pathname.replace(/^\/+/, '')
     const key = Object.keys(routes).find((r) => pathname.endsWith(r))
     if (key === undefined) {
+      if (onMissing === 'throw') {
+        throw new Error(
+          `測試沒有準備這個 API 回應：${pathname}
+` + `已備妥的有：${Object.keys(routes).join('、') || '(無)'}`,
+        )
+      }
       return new Response('not found', { status: 404 })
     }
     const value = routes[key]

@@ -90,5 +90,12 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
     include: ['{src,worker,scripts}/**/*.{test,spec}.{ts,tsx}'],
+    alias: {
+      // vite-plugin-pwa 的虛擬模組只有 build 時才存在,vitest 解析不到它。
+      // 根路由用了 UpdatePrompt,不換掉的話整棵路由樹都載不起來
+      'virtual:pwa-register/react': fileURLToPath(
+        new URL('./src/test/pwa-register-stub.ts', import.meta.url),
+      ),
+    },
   },
 })

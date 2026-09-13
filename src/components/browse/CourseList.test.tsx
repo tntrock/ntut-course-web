@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import {
-  RouterProvider,
-  createMemoryHistory,
-  createRootRoute,
-  createRoute,
-  createRouter,
-} from '@tanstack/react-router'
+import { screen, waitFor } from '@testing-library/react'
+import { renderInRouter } from '@/test/renderRoute'
+import { QueryClient } from '@tanstack/react-query'
 
 import { CourseList } from './CourseList'
 import { course } from '@/test/factories'
@@ -31,27 +25,12 @@ function renderList(semester: string) {
   })
   client.setQueryData(['meta'], { data: meta, fromCache: false })
 
-  const root = createRootRoute()
-  const index = createRoute({
-    getParentRoute: () => root,
-    path: '/',
-    component: () => (
-      <CourseList
-        courses={[course({ id: '1', name_zh: '工程力學' })]}
-        semester={semester}
-        periods={meta.periods}
-      />
-    ),
-  })
-  const router = createRouter({
-    routeTree: root.addChildren([index]),
-    history: createMemoryHistory({ initialEntries: ['/'] }),
-  })
-
-  render(
-    <QueryClientProvider client={client}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
+  renderInRouter(
+    <CourseList
+      courses={[course({ id: '1', name_zh: '工程力學' })]}
+      semester={semester}
+      periods={meta.periods}
+    />,
   )
 }
 

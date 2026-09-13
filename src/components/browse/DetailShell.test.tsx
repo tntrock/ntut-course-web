@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { renderInRouter } from '@/test/renderRoute'
 import {
   RouterProvider,
   createMemoryHistory,
@@ -15,21 +16,11 @@ import { DetailNotFound, DetailShell } from './DetailShell'
  * 但「林〇」單獨出現時看起來仍然像資料壞了 —— 要說一句這個〇是什麼。
  */
 function renderShell(title: string) {
-  const root = createRootRoute()
-  const index = createRoute({
-    getParentRoute: () => root,
-    path: '/',
-    component: () => (
-      <DetailShell kind="教師" title={title} browseTab="teacher" semester="115-1">
-        <p>課程列表</p>
-      </DetailShell>
-    ),
-  })
-  const router = createRouter({
-    routeTree: root.addChildren([index]),
-    history: createMemoryHistory({ initialEntries: ['/'] }),
-  })
-  render(<RouterProvider router={router} />)
+  renderInRouter(
+    <DetailShell kind="教師" title={title} browseTab="teacher" semester="115-1">
+      <p>課程列表</p>
+    </DetailShell>,
+  )
 }
 
 describe('DetailShell', () => {

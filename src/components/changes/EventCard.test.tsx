@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import {
-  RouterProvider,
-  createMemoryHistory,
-  createRootRoute,
-  createRoute,
-  createRouter,
-} from '@tanstack/react-router'
+import { screen, waitFor } from '@testing-library/react'
+import { renderInRouter } from '@/test/renderRoute'
 
 import { EventCard } from './EventCard'
 import type { ChangeEvent } from '@/types/api'
@@ -20,23 +14,13 @@ import type { ChangeEvent } from '@/types/api'
  * 顯示,不要假設一定存在。」
  */
 function renderCard(event: ChangeEvent) {
-  const root = createRootRoute()
-  const index = createRoute({
-    getParentRoute: () => root,
-    path: '/',
-    component: () => (
-      <EventCard
-        event={event}
-        names={{ department: () => '資工系', classGroup: () => '資工四' }}
-        periods={[{ code: '1', start: '08:10', end: '09:00' }]}
-      />
-    ),
-  })
-  const router = createRouter({
-    routeTree: root.addChildren([index]),
-    history: createMemoryHistory({ initialEntries: ['/'] }),
-  })
-  render(<RouterProvider router={router} />)
+  renderInRouter(
+    <EventCard
+      event={event}
+      names={{ department: () => '資工系', classGroup: () => '資工四' }}
+      periods={[{ code: '1', start: '08:10', end: '09:00' }]}
+    />,
+  )
 }
 
 async function findText(text: string) {
