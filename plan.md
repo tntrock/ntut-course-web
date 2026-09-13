@@ -697,6 +697,34 @@ router 的 meta 以 `name ?? property` 去重、深層優先，所以站台層�
 我們自己的規則在後面，同名 user-agent 群組會被合併，功能沒壞 ——
 但那個「禁止 AI 爬蟲」是 Cloudflare 的預設政策，不是這個 repo 設的。
 
+### 2.13 CSP 用雜湊不用 nonce，而且一定要先跑 report-only
+
+原本線上只有 `X-Content-Type-Options`、`Referrer-Policy`、`Permissions-Policy`，
+沒有 CSP 也沒有 `frame-ancestors`。
+
+**為什麼是 sha256 而不是 nonce：** 改寫後的 HTML 會被快取在邊緣（§2.12），
+每個人拿到同一份——nonce 一旦被快取就等於沒有 nonce。雜湊是靜態的、可快取的。
+
+代價是**改了 `index.html` 那兩段 inline script（主題偵測、GA 設定）就會對不上**，
+而且後果是靜默的：主題被擋 → 深色模式閃白；GA 被擋 → 統計停掉。兩個都不會讓
+畫面壞掉，所以沒有人會發現。`scripts/csp.test.ts` 就是在盯這件事，
+失敗時會直接印出該填進去的新雜湊。（實測改一個變數名就會紅。）
+
+**一定要先 report-only。** 直接上強制模式會漏掉這一條：
+
+```
+connect-src <- https://fonts.googleapis.com/css2?family=Inter…
+```
+
+「存成圖片」會用 `fetch` 把 Google Fonts 抓下來內嵌進 PNG，所以 `connect-src`
+也要放行字型網域——跟 `style-src`／`font-src` 是兩回事。而且它**只在按下匯出時
+才會出現**，平常把每一頁都點過一遍也看不到。
+
+順帶查到一個**既有**的問題（不是 CSP 造成的）：`html-to-image` 讀
+`cssRules` 會被跨來源擋下（Google Fonts 的 stylesheet 沒帶 `crossorigin`），
+線上的 fetch 後備也是 `Failed to fetch`——也就是**匯出的 PNG 目前很可能沒有內嵌字型**。
+實測線上與本機都印出同一組錯誤，本機的後備成功、線上的沒有。待查。
+
 ## 3. 已知陷阱
 
 | 陷阱                                          | 症狀                                 | 對策                                        |

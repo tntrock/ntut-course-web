@@ -1,7 +1,20 @@
+# 這個檔案的規則會套在所有回應上,包括經過 Worker 的 HTML —— Worker 是用
+# `new Response(body, asset)` 建新回應,原本的標頭都帶著走(實測驗過)。
+#
+# CSP 的兩個 sha256 是 `index.html` 裡那兩段 inline script(主題偵測與 GA 設定)
+# 的雜湊。**改動那兩段就要重算**,否則主題會閃白、GA 會停掉 ——
+# `scripts/csp.test.ts` 會擋下這種漂移。
+#
+# `connect-src` 放行 fonts.googleapis.com / fonts.gstatic.com 不是為了載字型
+# (那是 style-src 與 font-src 的事),是因為**「存成圖片」會用 fetch 把字型抓下來
+# 內嵌進 PNG**。實測 report-only 時就是這一條被擋,而且只在按下匯出時才會出現。
+
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-DAlwKpD+jvcmxNhduON4Nuo+dU09rwhrX1H8preWFoU=' 'sha256-y/cw1RUmwmtKilwzJoIhQ3C65/RUahftz8GocbjNuSY=' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://tntrock.github.io https://fonts.googleapis.com https://fonts.gstatic.com https://www.google-analytics.com https://region1.google-analytics.com https://cloudflareinsights.com https://static.cloudflareinsights.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 # Vite 產出的檔名含 hash,可以永久快取
 /assets/*
