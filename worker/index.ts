@@ -37,68 +37,91 @@ interface Env {
  */
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const asset = await env.ASSETS.fetch(request)
-
-    // 只碰 HTML。JS、CSS、圖、sitemap 原封不動送回去
-    if (!(asset.headers.get('content-type') ?? '').includes('text/html')) return asset
-    if (request.method !== 'GET') return asset
-
-    const url = new URL(request.url)
-
-    /*
-     * 快取鍵 = 資產的 ETag + Worker 的版本號 + 路徑。
-     *
-     * **兩個版本號都要。** ETag 跟著 `index.html` 走,前端一改就換;但只有它
-     * 的話,「改了 Worker、沒動前端」的那種部署會繼續送一小時的舊改寫結果 ——
-     * 實測踩過:修好造字的那次部署完,已經被快取的教師頁還是舊的。
-     */
-    const etag = asset.headers.get('etag') ?? 'none'
-    const version = env.CF_VERSION_METADATA.id
-    const cacheKey = new Request(
-      `https://head.invalid/${version}/${encodeURIComponent(etag)}${url.pathname}`,
-    )
-    const cached = await caches.default.match(cacheKey)
-    if (cached) return cached
-
-    let html: string
     try {
-      const tags = await headForPath(url.pathname, (path) => getJson(API_BASE, path))
-      if (!tags) return asset
-      html = renderHead(tags)
+      return await rewrite(request, env, ctx)
     } catch {
-      // 上游掛掉、格式變了,就當作沒有這一層。`index.html` 自己帶著站台層級的
-      // 後備標籤,退回去仍然是可以用的一頁
-      return asset
+      /*
+       * **最後一道防線。**
+       *
+       * `run_worker_first` 之下沒有「Worker 掛了就退回靜態資產」這回事 ——
+       * 丟出去的例外就是使用者看到的 500,而且是**每一頁**,不是只有 meta 標籤
+       * 不見。實測過:在這裡故意丟一個例外,`/` 與所有課程頁全部變成
+       * `HTTP 500 text/plain`。
+       *
+       * 這一層做的事只是「加幾個 meta 標籤」,不值得讓整個站陪葬。
+       */
+      return env.ASSETS.fetch(request)
     }
-
-    const response = new Response(
-      new HTMLRewriter()
-        // 先清掉 `index.html` 自己那份站台層級的後備標籤,不然會變成兩個 title
-        .on(`[${FALLBACK_ATTR}]`, {
-          element: (el) => {
-            el.remove()
-          },
-        })
-        .on('head', {
-          element: (head) => {
-            head.onEndTag((end) => {
-              end.before(html, { html: true })
-            })
-          },
-        })
-        .transform(asset).body,
-      asset,
-    )
-
-    // 內容改過了,原本那個 ETag 不再成立
-    response.headers.delete('etag')
-    // 瀏覽器每次都回來問(部署要能立刻生效),邊緣自己擋住重複的改寫
-    response.headers.set('cache-control', `public, max-age=0, s-maxage=${PAGE_TTL}`)
-
-    ctx.waitUntil(caches.default.put(cacheKey, response.clone()))
-    return response
   },
 } satisfies ExportedHandler<Env>
+
+/** 真正的改寫流程。任何一步出錯都由上面那層接住。 */
+async function rewrite(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
+  const asset = await env.ASSETS.fetch(request)
+
+  // 只碰 HTML。JS、CSS、圖、sitemap 原封不動送回去
+  if (!(asset.headers.get('content-type') ?? '').includes('text/html')) return asset
+  if (request.method !== 'GET') return asset
+
+  const url = new URL(request.url)
+
+  /*
+   * 快取鍵 = 資產的 ETag + Worker 的版本號 + 路徑。
+   *
+   * **兩個版本號都要。** ETag 跟著 `index.html` 走,前端一改就換;但只有它
+   * 的話,「改了 Worker、沒動前端」的那種部署會繼續送一小時的舊改寫結果 ——
+   * 實測踩過:修好造字的那次部署完,已經被快取的教師頁還是舊的。
+   */
+  const etag = asset.headers.get('etag') ?? 'none'
+  const version = env.CF_VERSION_METADATA.id
+  const cacheKey = new Request(
+    `https://head.invalid/${version}/${encodeURIComponent(etag)}${url.pathname}`,
+  )
+  const cached = await caches.default.match(cacheKey)
+  if (cached) return cached
+
+  let html: string
+  try {
+    const tags = await headForPath(url.pathname, (path) => getJson(API_BASE, path))
+    if (!tags) return asset
+    html = renderHead(tags)
+  } catch {
+    // 上游掛掉、格式變了,就當作沒有這一層。`index.html` 自己帶著站台層級的
+    // 後備標籤,退回去仍然是可以用的一頁
+    return asset
+  }
+
+  const response = new Response(
+    new HTMLRewriter()
+      // 先清掉 `index.html` 自己那份站台層級的後備標籤,不然會變成兩個 title
+      .on(`[${FALLBACK_ATTR}]`, {
+        element: (el) => {
+          el.remove()
+        },
+      })
+      .on('head', {
+        element: (head) => {
+          head.onEndTag((end) => {
+            end.before(html, { html: true })
+          })
+        },
+      })
+      .transform(asset).body,
+    asset,
+  )
+
+  // 內容改過了,原本那個 ETag 不再成立
+  response.headers.delete('etag')
+  // 瀏覽器每次都回來問(部署要能立刻生效),邊緣自己擋住重複的改寫
+  response.headers.set('cache-control', `public, max-age=0, s-maxage=${PAGE_TTL}`)
+
+  ctx.waitUntil(caches.default.put(cacheKey, response.clone()))
+  return response
+}
 
 async function getJson<T>(base: string, path: string): Promise<T> {
   const response = await fetch(`${base}/${path}`, {

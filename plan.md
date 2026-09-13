@@ -639,6 +639,16 @@ app shell，那比少一個 meta 標籤嚴重得多。ETag 跟著 `index.html` �
 那些直接由資產伺服器回，不算 Worker 請求 —— 免費方案的額度是照 Worker 請求
 算的，而且超額時 `run_worker_first` 命中的請求會拿到 429，不會退回去送靜態檔。
 
+#### Worker 丟例外 = 整站 500，所以要有最後一道防線
+
+`run_worker_first` 之下**沒有「Worker 掛了就退回靜態資產」這回事**。實測在
+handler 裡故意丟一個例外，`/`、`/about`、所有課程頁全部變成
+`HTTP 500 text/plain` —— 不是「meta 標籤不見」，是整個站不見。
+
+所以 `fetch()` 只做一件事：`try { rewrite() } catch { env.ASSETS.fetch(request) }`。
+同一個例外實測就變成 `HTTP 200`、送出原本的 `index.html`（標題退回站台預設的
+「北科課程」），CSP 等標頭也都還在。**這一層只是加幾個 meta 標籤，不值得讓整個站陪葬。**
+
 #### 課程頁的伺服器端敘述比前端短一截
 
 索引只有 `class_ids`（代碼），要拿到「資工四」這種名字得再抓一次系所課程檔。
