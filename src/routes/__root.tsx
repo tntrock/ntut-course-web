@@ -85,7 +85,16 @@ function Loading() {
   )
 }
 
-function LoadFailed({ error }: { error: Error }) {
+/**
+ * `error` 是 `unknown` 而不是 `Error`。
+ *
+ * router 1.170.33 起,錯誤邊界收到的值型別就是 `unknown` —— 丟出來的東西不保證
+ * 是 `Error`(`throw 'oops'` 也是合法的 JavaScript)。**寫成 `unknown` 兩個版本
+ * 都過**:函式參數是逆變的,`(e: unknown) => X` 可以當成 `(e: Error) => X` 用。
+ *
+ * 下面本來就用 `instanceof` 縮型別,所以內容一個字都不用改。
+ */
+function LoadFailed({ error }: { error: unknown }) {
   const isApiError = error instanceof ApiError
 
   return (
