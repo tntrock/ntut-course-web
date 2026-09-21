@@ -6,10 +6,13 @@ import { useClassroomBackfill } from '@/hooks/useClassroomBackfill'
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
 import { semesterIndexQueryOptions } from '@/hooks/useSemesterIndex'
 import { updateStore, useStore } from '@/hooks/useStore'
+import { useEvents } from '@/hooks/useEvents'
 import {
   buildGrid,
-  conflictingCourseIds,
+  conflictingKeys,
+  courseItem,
   diffSnapshot,
+  eventItem,
   scheduleStats,
   visibleDays,
 } from '@/lib/schedule'
@@ -20,6 +23,7 @@ import { ScheduleStats } from '@/components/schedule/ScheduleStats'
 import { Timetable } from '@/components/schedule/Timetable'
 import { ExportImage } from '@/components/schedule/ExportImage'
 import { DataTransfer, Favorites } from '@/components/schedule/PersonalData'
+import { EventEditor } from '@/components/schedule/EventEditor'
 import { STATIC_PAGES, pageHead } from '@/lib/seo'
 
 interface ScheduleSearch {
@@ -47,9 +51,11 @@ function SchedulePage() {
   const navigate = useNavigate({ from: Route.fullPath })
   const { data: meta } = useMeta()
   const store = useStore()
+  const allEvents = useEvents()
 
   const semester = params.sem ?? meta.latest
   const courses = store.schedules[semester]?.courses ?? []
+  const events = allEvents[semester] ?? []
 
   // 搜尋結果加入的課沒有教室(輕量索引沒有這個欄位),回頭補起來
   useClassroomBackfill(meta, semester)
@@ -60,10 +66,15 @@ function SchedulePage() {
     ? new Map(index.data.courses.map((c) => [c.id, c]))
     : null
 
-  const grid = buildGrid(courses)
+  /*
+   * 課程與事務走同一條排版路徑,但**學分統計只吃課程** ——
+   * `scheduleStats` 的簽名就是 `SavedCourse[]`,型別上拿不到事務。
+   */
+  const items = [...courses.map(courseItem), ...events.map(eventItem)]
+  const grid = buildGrid(items)
   const stats = scheduleStats(courses, meta.periods)
-  const conflictIds = conflictingCourseIds(grid)
-  const days = visibleDays(courses, store.settings.showWeekend)
+  const conflictKeys = conflictingKeys(grid)
+  const days = visibleDays(items, store.settings.showWeekend)
 
   const exportRef = useRef<HTMLDivElement>(null)
 
@@ -95,7 +106,7 @@ function SchedulePage() {
             />
             週末
           </label>
-          {courses.length > 0 && (
+          {items.length > 0 && (
             <ExportButton targetRef={exportRef} semester={semester} />
           )}
           <select
@@ -114,13 +125,13 @@ function SchedulePage() {
         </div>
       </div>
 
-      {courses.length === 0 ? (
+      {items.length === 0 ? (
         <Empty semester={semester} />
       ) : (
         <>
-          {conflictIds.size > 0 && (
+          {conflictKeys.size > 0 && (
             <p className="bg-destructive/10 text-destructive mt-4 rounded-lg px-3 py-2 text-sm">
-              {grid.conflicts.size} 處衝堂，涉及 {conflictIds.size} 門課。
+              {grid.conflicts.size} 處衝堂，涉及 {conflictKeys.size} 項。
               {/* 加課時不阻擋，只在這裡警告 —— 使用者可能正在比較兩個方案 */}
               這裡只提醒，不會擋你加課 —— 請自己確認實際上課時間。
             </p>
@@ -138,11 +149,11 @@ function SchedulePage() {
 
           <div className="mt-5">
             <Timetable
-              courses={courses}
+              items={items}
               periods={meta.periods}
               semester={semester}
               days={days}
-              conflictIds={conflictIds}
+              conflictKeys={conflictKeys}
             />
           </div>
 
@@ -151,15 +162,24 @@ function SchedulePage() {
               <h2 className="text-muted-foreground text-xs font-medium">未排入時段</h2>
               {/* 體育、班週會這類沒有固定時段。不列出來使用者會以為課掉了 */}
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {grid.unscheduled.map((course) => (
-                  <SavedCourseRow
-                    key={course.id}
-                    course={course}
-                    semester={semester}
-                    periods={meta.periods}
-                    conflicted={false}
-                  />
-                ))}
+                {grid.unscheduled.map((item) =>
+                  item.kind === 'course' ? (
+                    <SavedCourseRow
+                      key={item.key}
+                      course={item.course}
+                      semester={semester}
+                      periods={meta.periods}
+                      conflicted={false}
+                    />
+                  ) : (
+                    <p
+                      key={item.key}
+                      className="bg-card shadow-card rounded-lg px-3 py-2 text-sm"
+                    >
+                      {item.event.title}
+                    </p>
+                  ),
+                )}
               </div>
             </section>
           )}
@@ -177,13 +197,15 @@ function SchedulePage() {
                   course={course}
                   semester={semester}
                   periods={meta.periods}
-                  conflicted={conflictIds.has(course.id)}
+                  conflicted={conflictKeys.has(`course:${course.id}`)}
                 />
               ))}
             </div>
           </section>
         </>
       )}
+
+      <EventEditor semester={semester} events={events} periods={meta.periods} />
 
       <Favorites meta={meta} semester={semester} courses={latestById} />
       <DataTransfer />
@@ -192,7 +214,7 @@ function SchedulePage() {
         匯出用的離屏版面。**不能用 `display: none`** —— 截圖需要真實的版面尺寸，
         沒有佈局就量不到東西。移到畫面外並對輔助技術隱藏。
       */}
-      {courses.length > 0 && (
+      {items.length > 0 && (
         <div
           aria-hidden
           style={{ position: 'fixed', left: -20000, top: 0, pointerEvents: 'none' }}
@@ -200,10 +222,11 @@ function SchedulePage() {
           <div ref={exportRef}>
             <ExportImage
               courses={courses}
+              items={items}
               periods={meta.periods}
               semester={semester}
               showWeekend={store.settings.showWeekend}
-              conflictIds={conflictIds}
+              conflictKeys={conflictKeys}
             />
           </div>
         </div>

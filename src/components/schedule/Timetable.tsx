@@ -1,24 +1,23 @@
 import { Link } from '@tanstack/react-router'
 import type { Day, PeriodDef } from '@/types/api'
-import type { SavedCourse } from '@/lib/storage'
 import { dayName } from '@/lib/formatTime'
-import { layoutRuns } from '@/lib/schedule'
+import { layoutRuns, type GridItem } from '@/lib/schedule'
 
 export function Timetable({
-  courses,
+  items,
   periods,
   semester,
   days,
-  conflictIds,
+  conflictKeys,
 }: {
-  courses: readonly SavedCourse[]
+  items: readonly GridItem[]
   periods: readonly PeriodDef[]
   semester: string
   days: readonly Day[]
-  /** 有衝堂的課號,用來把整塊標紅。 */
-  conflictIds: ReadonlySet<string>
+  /** 有衝堂的項目(`course:` / `event:`),用來把整塊標紅。 */
+  conflictKeys: ReadonlySet<string>
 }) {
-  const runs = layoutRuns(courses, periods)
+  const runs = layoutRuns(items, periods)
   const dayIndex = new Map(days.map((d, i) => [d, i]))
 
   return (
@@ -69,30 +68,61 @@ export function Timetable({
           // 這裡只是不讓它落到錯的欄位
           if (column === undefined) return null
 
-          const conflicted = conflictIds.has(run.course.id)
-          const classroom = run.course.snapshot.classrooms[0]
+          const conflicted = conflictKeys.has(run.item.key)
+          const position = {
+            gridColumn: column + 2,
+            gridRow: `${run.start + 2} / span ${run.span}`,
+            // 同一時段有多個時並排。網格本身不能再細分,所以用
+            // 寬度與左邊距把一欄切成幾份
+            width: `${(100 / run.lanes).toFixed(3)}%`,
+            marginLeft: `${((run.lane * 100) / run.lanes).toFixed(3)}%`,
+          }
+          const shape = 'overflow-hidden rounded p-1.5 text-xs leading-tight'
+
+          /*
+           * 個人事務**不是連結** —— 它沒有課程頁可以去。做成可點的樣子
+           * 卻點不動比不可點更糟。
+           *
+           * 虛線邊框是刻意的:衝堂標紅之後,事務與課程的底色會一樣,
+           * 只剩形狀能區分「這是我自己加的」與「這是學校的課」。
+           */
+          if (run.item.kind === 'event') {
+            const { event } = run.item
+            return (
+              <div
+                key={`${run.item.key}-${run.day}-${run.start}`}
+                style={position}
+                className={`${shape} border border-dashed ${
+                  conflicted
+                    ? 'bg-destructive/15 text-destructive border-destructive/50'
+                    : 'bg-secondary text-muted-foreground border-border'
+                }`}
+              >
+                <span className="line-clamp-3 font-medium">{event.title}</span>
+                {event.note && (
+                  <span className="mt-0.5 block opacity-75">{event.note}</span>
+                )}
+              </div>
+            )
+          }
+
+          const { course } = run.item
+          const classroom = course.snapshot.classrooms[0]
 
           return (
             <Link
-              key={`${run.course.id}-${run.day}-${run.start}`}
+              key={`${run.item.key}-${run.day}-${run.start}`}
               to="/course/$semester/$courseId"
-              params={{ semester, courseId: run.course.id }}
-              style={{
-                gridColumn: column + 2,
-                gridRow: `${run.start + 2} / span ${run.span}`,
-                // 同一時段有多門課時並排。網格本身不能再細分,所以用
-                // 寬度與左邊距把一欄切成幾份
-                width: `${(100 / run.lanes).toFixed(3)}%`,
-                marginLeft: `${((run.lane * 100) / run.lanes).toFixed(3)}%`,
-              }}
-              className={`focus-visible:ring-ring overflow-hidden rounded p-1.5 text-xs leading-tight focus-visible:ring-2 focus-visible:outline-none ${
+              params={{ semester, courseId: course.id }}
+              style={position}
+              className={`${shape} focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none ${
                 conflicted
                   ? 'bg-destructive/15 text-destructive ring-destructive/40 ring-1'
                   : 'bg-primary-muted text-primary'
               }`}
             >
               <span className="line-clamp-3 font-medium">
-                {run.course.snapshot.name_zh}
+                {course.snapshot.name_zh}
               </span>
               {classroom && (
                 <span className="mt-0.5 block opacity-75">{classroom}</span>

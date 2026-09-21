@@ -3,7 +3,8 @@ import type { PeriodDef } from '@/types/api'
 import type { SavedCourse } from './storage'
 import {
   buildGrid,
-  conflictingCourseIds,
+  conflictingKeys,
+  courseItem,
   diffSnapshot,
   layoutRuns,
   scheduleStats,
@@ -162,18 +163,22 @@ describe('diffSnapshot', () => {
 
 describe('buildGrid', () => {
   it('把課放進對應的格子', () => {
-    const grid = buildGrid([saved('a', { time_slots: [slot(5, '2', '3')] })])
+    const grid = buildGrid(
+      [saved('a', { time_slots: [slot(5, '2', '3')] })].map(courseItem),
+    )
 
-    expect(grid.cells.get('5-2')?.map((c) => c.id)).toEqual(['a'])
-    expect(grid.cells.get('5-3')?.map((c) => c.id)).toEqual(['a'])
+    expect(grid.cells.get('5-2')?.map((c) => c.key)).toEqual(['course:a'])
+    expect(grid.cells.get('5-3')?.map((c) => c.key)).toEqual(['course:a'])
     expect(grid.cells.get('5-4')).toBeUndefined()
   })
 
   it('同一格有兩門課就是衝堂', () => {
-    const grid = buildGrid([
-      saved('a', { time_slots: [slot(1, '2', '3')] }),
-      saved('b', { time_slots: [slot(1, '3', '4')] }),
-    ])
+    const grid = buildGrid(
+      [
+        saved('a', { time_slots: [slot(1, '2', '3')] }),
+        saved('b', { time_slots: [slot(1, '3', '4')] }),
+      ].map(courseItem),
+    )
 
     expect([...grid.conflicts]).toEqual(['1-3'])
     expect(grid.cells.get('1-3')).toHaveLength(2)
@@ -181,17 +186,20 @@ describe('buildGrid', () => {
 
   it('沒有時段的課單獨列出,不能讓它從畫面上消失', () => {
     // 體育、班週會這類實測有 249 門。掉在格子外等於使用者以為課不見了
-    const grid = buildGrid([
-      saved('a', { time_slots: [slot(1, '2')] }),
-      saved('b', { time_slots: [] }),
-    ])
+    const grid = buildGrid(
+      [saved('a', { time_slots: [slot(1, '2')] }), saved('b', { time_slots: [] })].map(
+        courseItem,
+      ),
+    )
 
-    expect(grid.unscheduled.map((c) => c.id)).toEqual(['b'])
+    expect(grid.unscheduled.map((c) => c.key)).toEqual(['course:b'])
     expect(grid.cells.size).toBe(1)
   })
 
   it('同一門課在同一格出現兩次時只算一次,不會自己跟自己衝堂', () => {
-    const grid = buildGrid([saved('a', { time_slots: [slot(1, '2'), slot(1, '2')] })])
+    const grid = buildGrid(
+      [saved('a', { time_slots: [slot(1, '2'), slot(1, '2')] })].map(courseItem),
+    )
 
     expect(grid.cells.get('1-2')).toHaveLength(1)
     expect(grid.conflicts.size).toBe(0)
@@ -277,7 +285,7 @@ describe('scheduleStats', () => {
 describe('layoutRuns', () => {
   it('連續節次合併成一段,課名才不會每一格重印一次', () => {
     const runs = layoutRuns(
-      [saved('a', { time_slots: [slot(5, '2', '3', '4')] })],
+      [saved('a', { time_slots: [slot(5, '2', '3', '4')] })].map(courseItem),
       periods,
     )
 
@@ -287,7 +295,10 @@ describe('layoutRuns', () => {
 
   it('不連續的節次分成兩段,不能連成一塊', () => {
     // 連成一塊等於在課表上宣稱第 3 節也要上課
-    const runs = layoutRuns([saved('a', { time_slots: [slot(5, '2', '4')] })], periods)
+    const runs = layoutRuns(
+      [saved('a', { time_slots: [slot(5, '2', '4')] })].map(courseItem),
+      periods,
+    )
 
     expect(runs.map((r) => [r.start, r.span])).toEqual([
       [1, 1],
@@ -297,7 +308,7 @@ describe('layoutRuns', () => {
 
   it('連續與否照 meta.periods 的順序 —— 4 的下一節是午休 N', () => {
     const runs = layoutRuns(
-      [saved('a', { time_slots: [slot(1, '4', 'N', '5')] })],
+      [saved('a', { time_slots: [slot(1, '4', 'N', '5')] })].map(courseItem),
       periods,
     )
 
@@ -307,14 +318,17 @@ describe('layoutRuns', () => {
 
   it('meta 沒收錄的節次代碼跳過,不會被放到錯的位置', () => {
     // 憑空塞進格子裡比不顯示更糟 —— 使用者會照著錯的時間去上課
-    const runs = layoutRuns([saved('a', { time_slots: [slot(1, 'Z')] })], periods)
+    const runs = layoutRuns(
+      [saved('a', { time_slots: [slot(1, 'Z')] })].map(courseItem),
+      periods,
+    )
 
     expect(runs).toEqual([])
   })
 
   it('不同天各自成段', () => {
     const runs = layoutRuns(
-      [saved('a', { time_slots: [slot(1, '2'), slot(3, '2')] })],
+      [saved('a', { time_slots: [slot(1, '2'), slot(3, '2')] })].map(courseItem),
       periods,
     )
 
@@ -324,45 +338,50 @@ describe('layoutRuns', () => {
 
 describe('visibleDays', () => {
   it('預設只顯示週一到週五', () => {
-    expect(visibleDays([saved('a', { time_slots: [slot(1, '2')] })], false)).toEqual([
-      1, 2, 3, 4, 5,
-    ])
+    expect(
+      visibleDays([saved('a', { time_slots: [slot(1, '2')] })].map(courseItem), false),
+    ).toEqual([1, 2, 3, 4, 5])
   })
 
   it('設定打開時顯示週末', () => {
-    expect(visibleDays([], true)).toEqual([1, 2, 3, 4, 5, 6, 0])
+    expect(visibleDays([].map(courseItem), true)).toEqual([1, 2, 3, 4, 5, 6, 0])
   })
 
   it('週末有課時**一定顯示**,即使設定關著', () => {
     // 設定關著就把週六的課藏起來,等於課表在說謊
-    expect(visibleDays([saved('a', { time_slots: [slot(6, '2')] })], false)).toEqual([
-      1, 2, 3, 4, 5, 6,
-    ])
+    expect(
+      visibleDays([saved('a', { time_slots: [slot(6, '2')] })].map(courseItem), false),
+    ).toEqual([1, 2, 3, 4, 5, 6])
   })
 
   it('週日有課時也一樣', () => {
-    expect(visibleDays([saved('a', { time_slots: [slot(0, '2')] })], false)).toEqual([
-      1, 2, 3, 4, 5, 0,
-    ])
+    expect(
+      visibleDays([saved('a', { time_slots: [slot(0, '2')] })].map(courseItem), false),
+    ).toEqual([1, 2, 3, 4, 5, 0])
   })
 })
 
-describe('conflictingCourseIds', () => {
-  it('列出所有涉及衝堂的課號,不只是格子', () => {
+describe('conflictingKeys', () => {
+  it('列出所有涉及衝堂的項目,不只是格子', () => {
     // 只標那一格的話,使用者知道有衝堂卻不知道是哪兩門在撞
-    const grid = buildGrid([
-      saved('a', { time_slots: [slot(1, '2')] }),
-      saved('b', { time_slots: [slot(1, '2')] }),
-      saved('c', { time_slots: [slot(3, '2')] }),
-    ])
+    const grid = buildGrid(
+      [
+        saved('a', { time_slots: [slot(1, '2')] }),
+        saved('b', { time_slots: [slot(1, '2')] }),
+        saved('c', { time_slots: [slot(3, '2')] }),
+      ].map(courseItem),
+    )
 
-    expect([...conflictingCourseIds(grid)].sort()).toEqual(['a', 'b'])
+    expect([...conflictingKeys(grid)].sort()).toEqual(['course:a', 'course:b'])
   })
 })
 
 describe('layoutRuns 的並排欄位', () => {
   it('沒有重疊時每門課佔滿整欄', () => {
-    const runs = layoutRuns([saved('a', { time_slots: [slot(1, '2')] })], periods)
+    const runs = layoutRuns(
+      [saved('a', { time_slots: [slot(1, '2')] })].map(courseItem),
+      periods,
+    )
 
     expect(runs[0]).toMatchObject({ lane: 0, lanes: 1 })
   })
@@ -373,7 +392,7 @@ describe('layoutRuns 的並排欄位', () => {
       [
         saved('a', { time_slots: [slot(1, '2', '3')] }),
         saved('b', { time_slots: [slot(1, '2', '3')] }),
-      ],
+      ].map(courseItem),
       periods,
     )
 
@@ -388,7 +407,7 @@ describe('layoutRuns 的並排欄位', () => {
       [
         saved('a', { time_slots: [slot(1, '2', '3')] }),
         saved('b', { time_slots: [slot(1, '3', '4')] }),
-      ],
+      ].map(courseItem),
       periods,
     )
 
@@ -402,11 +421,11 @@ describe('layoutRuns 的並排欄位', () => {
         saved('a', { time_slots: [slot(1, '1')] }),
         saved('b', { time_slots: [slot(1, '1')] }),
         saved('c', { time_slots: [slot(1, '8')] }),
-      ],
+      ].map(courseItem),
       periods,
     )
 
-    const afternoon = runs.find((r) => r.course.id === 'c')
+    const afternoon = runs.find((r) => r.item.key === 'course:c')
     expect(afternoon?.lanes).toBe(1)
   })
 
@@ -415,7 +434,7 @@ describe('layoutRuns 的並排欄位', () => {
       [
         saved('a', { time_slots: [slot(1, '2')] }),
         saved('b', { time_slots: [slot(2, '2')] }),
-      ],
+      ].map(courseItem),
       periods,
     )
 

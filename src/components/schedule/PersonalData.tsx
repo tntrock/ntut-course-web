@@ -3,8 +3,11 @@ import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 
 import { useStore } from '@/hooks/useStore'
+import { useEvents } from '@/hooks/useEvents'
 import { teachersQueryOptions } from '@/hooks/useBrowse'
-import { parseImport, saveStore, serializeStore } from '@/lib/storage'
+import { saveStore } from '@/lib/storage'
+import { saveEvents } from '@/lib/events'
+import { parseBackup, serializeBackup } from '@/lib/backup'
 import type { CourseIndexEntry, Meta } from '@/types/api'
 
 /**
@@ -90,11 +93,14 @@ export function Favorites({
  */
 export function DataTransfer() {
   const store = useStore()
+  const events = useEvents()
   const fileRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState<string | null>(null)
 
   const download = () => {
-    const blob = new Blob([serializeStore(store)], { type: 'application/json' })
+    const blob = new Blob([serializeBackup(store, events)], {
+      type: 'application/json',
+    })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -104,7 +110,7 @@ export function DataTransfer() {
   }
 
   const upload = async (file: File) => {
-    const result = parseImport(await file.text())
+    const result = parseBackup(await file.text())
 
     if (!result.ok) {
       setMessage(
@@ -120,9 +126,15 @@ export function DataTransfer() {
       (sum, s) => sum + s.courses.length,
       0,
     )
-    if (
-      !confirm(`匯入後會覆蓋目前的課表與收藏。檔案裡有 ${courseCount} 門課，確定嗎？`)
-    ) {
+    const eventCount = Object.values(result.events).reduce(
+      (sum, list) => sum + list.length,
+      0,
+    )
+    const summary =
+      eventCount > 0
+        ? `${courseCount} 門課與 ${eventCount} 筆個人事務`
+        : `${courseCount} 門課`
+    if (!confirm(`匯入後會覆蓋目前的課表與收藏。檔案裡有 ${summary}，確定嗎？`)) {
       return
     }
 
@@ -133,6 +145,12 @@ export function DataTransfer() {
           ? '瀏覽器空間不足，匯入失敗。'
           : '這個瀏覽器不允許儲存資料。',
       )
+      return
+    }
+    // 課程存進去了才輪到事務。反過來的話課程失敗時事務已經被蓋掉,
+    // 使用者會落在一個「一半舊一半新」的狀態
+    if (!saveEvents(result.events)) {
+      setMessage('課表已匯入，但個人事務存不下來。')
       return
     }
     // 直接重新載入最單純 —— 匯入影響整個 store,重畫一次比逐處同步可靠

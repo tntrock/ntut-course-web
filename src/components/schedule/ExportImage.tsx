@@ -1,6 +1,12 @@
 import type { Day, PeriodDef } from '@/types/api'
 import type { SavedCourse } from '@/lib/storage'
-import { layoutRuns, scheduleStats, visibleDays } from '@/lib/schedule'
+import {
+  itemTitle,
+  layoutRuns,
+  scheduleStats,
+  visibleDays,
+  type GridItem,
+} from '@/lib/schedule'
 import { formatTaipei } from '@/lib/datetime'
 import { dayName } from '@/lib/formatTime'
 
@@ -27,22 +33,28 @@ const CARD = '#eaf1fd'
 const CARD_INK = '#0b66d6'
 const CLASH = '#fdeceb'
 const CLASH_INK = '#c0332a'
+const EVENT = '#f1f2f4'
+const EVENT_INK = '#4b5563'
 
 export function ExportImage({
   courses,
+  items,
   periods,
   semester,
   showWeekend,
-  conflictIds,
+  conflictKeys,
 }: {
+  /** 學分統計只看課程 —— 個人事務沒有學分。 */
   courses: readonly SavedCourse[]
+  /** 畫進格子的東西:課程加個人事務。 */
+  items: readonly GridItem[]
   periods: readonly PeriodDef[]
   semester: string
   showWeekend: boolean
-  conflictIds: ReadonlySet<string>
+  conflictKeys: ReadonlySet<string>
 }) {
-  const days: Day[] = visibleDays(courses, showWeekend)
-  const runs = layoutRuns(courses, periods)
+  const days: Day[] = visibleDays(items, showWeekend)
+  const runs = layoutRuns(items, periods)
   const stats = scheduleStats(courses, periods)
   const dayIndex = new Map(days.map((d, i) => [d, i]))
 
@@ -123,19 +135,29 @@ export function ExportImage({
         {runs.map((run) => {
           const column = dayIndex.get(run.day)
           if (column === undefined) return null
-          const clash = conflictIds.has(run.course.id)
+          const clash = conflictKeys.has(run.item.key)
+          const isEvent = run.item.kind === 'event'
+
+          // 事務用灰底加虛線,跟課程的藍底分開 —— 分享出去的圖別人要看得出
+          // 哪些是學校的課、哪些是這個人自己的安排
+          const background = clash ? CLASH : isEvent ? EVENT : CARD
+          const ink = clash ? CLASH_INK : isEvent ? EVENT_INK : CARD_INK
+          const sub =
+            run.item.kind === 'event'
+              ? run.item.event.note
+              : run.item.course.snapshot.classrooms[0]
 
           return (
             <div
-              key={`${run.course.id}-${run.day}-${run.start}`}
+              key={`${run.item.key}-${run.day}-${run.start}`}
               style={{
                 gridColumn: column + 2,
                 gridRow: `${run.start + 2} / span ${run.span}`,
                 width: `${(100 / run.lanes).toFixed(3)}%`,
                 marginLeft: `${((run.lane * 100) / run.lanes).toFixed(3)}%`,
-                background: clash ? CLASH : CARD,
-                color: clash ? CLASH_INK : CARD_INK,
-                border: `1px solid ${clash ? CLASH_INK : CARD_INK}33`,
+                background,
+                color: ink,
+                border: `1px ${isEvent ? 'dashed' : 'solid'} ${ink}${isEvent ? '66' : '33'}`,
                 borderRadius: 4,
                 padding: 6,
                 fontSize: 12,
@@ -143,12 +165,8 @@ export function ExportImage({
                 overflow: 'hidden',
               }}
             >
-              <div style={{ fontWeight: 600 }}>{run.course.snapshot.name_zh}</div>
-              {run.course.snapshot.classrooms[0] && (
-                <div style={{ fontSize: 11, opacity: 0.75 }}>
-                  {run.course.snapshot.classrooms[0]}
-                </div>
-              )}
+              <div style={{ fontWeight: 600 }}>{itemTitle(run.item)}</div>
+              {sub && <div style={{ fontSize: 11, opacity: 0.75 }}>{sub}</div>}
             </div>
           )
         })}

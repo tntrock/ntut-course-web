@@ -6,6 +6,7 @@ import type {
   TimeSlot,
 } from '@/types/api'
 import type { CourseSnapshot, SavedCourse } from './storage'
+import type { PersonalEvent } from './events'
 import { slotKey } from './filters'
 
 /**
@@ -80,13 +81,53 @@ export function diffSnapshot(
   return changes
 }
 
+/**
+ * 格線裡的一個東西:一門課,或一筆個人事務。
+ *
+ * **不把事務偽裝成 `SavedCourse`。** 塞一個假課號、`credits: null` 確實能
+ * 讓 `buildGrid` 免改,但 `scheduleStats()` 哪天多一個欄位就會悄悄把事務
+ * 算進學分 —— 而且畫面看起來完全正常,沒有人會發現。
+ *
+ * 分成聯集之後,`scheduleStats()` 與 `diffSnapshot()` 的簽名維持
+ * `SavedCourse`,型別上就拿不到事務,一個 if 都不用寫。
+ */
+export type GridItem =
+  | { kind: 'course'; key: string; course: SavedCourse }
+  | { kind: 'event'; key: string; event: PersonalEvent }
+
+/**
+ * 識別碼帶上 kind。
+ *
+ * 課號是六位數字、事務一律 `evt_` 前綴,現實中撞不到 —— 但「現實中撞不到」
+ * 正是這個專案一路踩過的那種話。帶上 kind 就變成型別上不可能。
+ */
+export function courseItem(course: SavedCourse): GridItem {
+  return { kind: 'course', key: `course:${course.id}`, course }
+}
+
+export function eventItem(event: PersonalEvent): GridItem {
+  return { kind: 'event', key: `event:${event.id}`, event }
+}
+
+/** 兩種東西都有時段,取用方式不同。 */
+export function itemSlots(item: GridItem): readonly TimeSlot[] {
+  return item.kind === 'course'
+    ? item.course.snapshot.time_slots
+    : item.event.time_slots
+}
+
+/** 格子裡顯示的名稱。 */
+export function itemTitle(item: GridItem): string {
+  return item.kind === 'course' ? item.course.snapshot.name_zh : item.event.title
+}
+
 export interface Grid {
-  /** `"星期-節次"` → 佔用這一格的課。 */
-  cells: Map<string, SavedCourse[]>
-  /** 有兩門以上的格子。 */
+  /** `"星期-節次"` → 佔用這一格的東西。 */
+  cells: Map<string, GridItem[]>
+  /** 有兩個以上的格子。 */
   conflicts: Set<string>
-  /** 沒有固定時段的課(體育、班週會,實測 249 門)。 */
-  unscheduled: SavedCourse[]
+  /** 沒有固定時段的(體育、班週會,實測 249 門)。 */
+  unscheduled: GridItem[]
 }
 
 /**
@@ -94,26 +135,27 @@ export interface Grid {
  *
  * **衝堂只警告不阻擋**—— 使用者可能正在比較兩個方案。
  */
-export function buildGrid(courses: readonly SavedCourse[]): Grid {
-  const cells = new Map<string, SavedCourse[]>()
-  const unscheduled: SavedCourse[] = []
+export function buildGrid(items: readonly GridItem[]): Grid {
+  const cells = new Map<string, GridItem[]>()
+  const unscheduled: GridItem[] = []
 
-  for (const course of courses) {
-    if (course.snapshot.time_slots.length === 0) {
-      unscheduled.push(course)
+  for (const item of items) {
+    const slots = itemSlots(item)
+    if (slots.length === 0) {
+      unscheduled.push(item)
       continue
     }
 
-    for (const slot of course.snapshot.time_slots) {
+    for (const slot of slots) {
       for (const period of slot.periods) {
         const key = slotKey(slot.day, period)
         const bucket = cells.get(key)
         if (!bucket) {
-          cells.set(key, [course])
+          cells.set(key, [item])
           continue
         }
         // 同一門課在同一格出現兩次(來源資料重複)不該算成自己跟自己衝堂
-        if (!bucket.some((c) => c.id === course.id)) bucket.push(course)
+        if (!bucket.some((other) => other.key === item.key)) bucket.push(item)
       }
     }
   }
@@ -203,7 +245,7 @@ export function scheduleStats(
 }
 
 export interface CourseRun {
-  course: SavedCourse
+  item: GridItem
   day: Day
   /** 在 `meta.periods` 裡的起始索引。 */
   start: number
@@ -271,14 +313,14 @@ function assignLanes(runs: Omit<CourseRun, 'lane' | 'lanes'>[]): CourseRun[] {
  * 使用者會照著錯的時間去上課。
  */
 export function layoutRuns(
-  courses: readonly SavedCourse[],
+  items: readonly GridItem[],
   periods: readonly PeriodDef[],
 ): CourseRun[] {
   const order = new Map(periods.map((p, i) => [p.code, i]))
   const byDay = new Map<Day, Omit<CourseRun, 'lane' | 'lanes'>[]>()
 
-  for (const course of courses) {
-    for (const slot of course.snapshot.time_slots) {
+  for (const item of items) {
+    for (const slot of itemSlots(item)) {
       const indexes = slot.periods
         .map((code) => order.get(code))
         .filter((i): i is number => i !== undefined)
@@ -290,7 +332,7 @@ export function layoutRuns(
       const flush = () => {
         if (start === null || previous === null) return
         const bucket = byDay.get(slot.day) ?? []
-        bucket.push({ course, day: slot.day, start, span: previous - start + 1 })
+        bucket.push({ item, day: slot.day, start, span: previous - start + 1 })
         byDay.set(slot.day, bucket)
       }
 
@@ -319,22 +361,23 @@ const WEEKEND: Day[] = [6, 0]
  * 週末預設收起來,但**只要有課就一定顯示** —— 設定關著就把週六的課藏起來,
  * 等於課表在說謊。
  */
-export function visibleDays(
-  courses: readonly SavedCourse[],
-  showWeekend: boolean,
-): Day[] {
+export function visibleDays(items: readonly GridItem[], showWeekend: boolean): Day[] {
   const used = new Set<Day>()
-  for (const course of courses) {
-    for (const slot of course.snapshot.time_slots) used.add(slot.day)
+  for (const item of items) {
+    for (const slot of itemSlots(item)) used.add(slot.day)
   }
   return [...WEEKDAYS, ...WEEKEND.filter((d) => showWeekend || used.has(d))]
 }
 
-/** 有衝堂的課號。整塊標紅比只標那一格好認 —— 使用者要知道是哪兩門在撞。 */
-export function conflictingCourseIds(grid: Grid): Set<string> {
-  const ids = new Set<string>()
-  for (const key of grid.conflicts) {
-    for (const course of grid.cells.get(key) ?? []) ids.add(course.id)
+/**
+ * 有衝堂的項目(`course:` / `event:` 前綴)。
+ *
+ * 整塊標紅比只標那一格好認 —— 使用者要知道是哪兩個在撞。
+ */
+export function conflictingKeys(grid: Grid): Set<string> {
+  const keys = new Set<string>()
+  for (const cell of grid.conflicts) {
+    for (const item of grid.cells.get(cell) ?? []) keys.add(item.key)
   }
-  return ids
+  return keys
 }

@@ -1,4 +1,5 @@
 import type { SemesterPath, TimeSlot } from '@/types/api'
+import { readRaw, removeRaw, writeRaw } from './webStorage'
 
 /**
  * 個人資料的儲存層。
@@ -135,29 +136,6 @@ function toSettings(value: unknown): Store['settings'] {
 }
 
 /**
- * 讀不到就當作沒有。
- *
- * 無痕視窗、瀏覽器停用網站資料、企業政策都會讓 `localStorage` 直接丟例外 ——
- * 那時整個站要照常運作,只是存不下東西。
- */
-function readRaw(key: string): string | null {
-  try {
-    return localStorage.getItem(key)
-  } catch {
-    return null
-  }
-}
-
-function writeRaw(key: string, value: string): boolean {
-  try {
-    localStorage.setItem(key, value)
-    return true
-  } catch {
-    return false
-  }
-}
-
-/**
  * 整包救不回來時的最後手段:原樣留一份,再回到乾淨狀態。
  *
  * **「重置」要真的寫回去。** 只備份不覆蓋的話,壞掉的內容會一直留在主 key,
@@ -182,11 +160,7 @@ export function readBackup(): string | null {
 
 /** 使用者確認過(或下載過)之後清掉,提示才不會一直跟著他。 */
 export function clearBackup(): void {
-  try {
-    localStorage.removeItem(BACKUP_KEY)
-  } catch {
-    // 存不了也刪不了,那就讓提示留著 —— 總比丟例外好
-  }
+  removeRaw(BACKUP_KEY)
 }
 
 export function loadStore(): Store {
