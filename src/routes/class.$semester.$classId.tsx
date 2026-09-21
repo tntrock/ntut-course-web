@@ -79,6 +79,9 @@ function ClassPage() {
         courses={response.courses}
         semester={semester}
         periods={meta.periods}
+        // 通用的「這裡沒有課程。」在班級頁讀起來像網站壞了。這個狀態是真的
+        // 存在的(115-1 的半導體二,299 個班級裡唯一一個),要講清楚是誰沒列
+        empty="學校的課表在這個學期沒有列出這個班級的任何課程。可能是課掛在別的班級底下（合開），也可能是學校尚未公告。"
       />
     </DetailShell>
   )

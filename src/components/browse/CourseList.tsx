@@ -38,7 +38,9 @@ export function CourseList({
 
   if (courses.length === 0) {
     return (
-      <p className="text-muted-foreground px-4 py-16 text-center text-sm">{empty}</p>
+      <p className="text-muted-foreground mx-auto max-w-md px-4 py-16 text-center text-sm leading-6">
+        {empty}
+      </p>
     )
   }
 

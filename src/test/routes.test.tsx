@@ -154,3 +154,48 @@ describe('/course/$semester/$courseId', () => {
     expect(api.calls.some((url) => url.includes('199-9'))).toBe(false)
   })
 })
+
+describe('/class/$semester/$classId', () => {
+  /**
+   * 115-1 的半導體二(3223)是 299 個班級裡**唯一**一個沒有課的。
+   *
+   * 學校那一頁並不是空的 —— 它有一列「班週會及導師時間」,但沒有課號、沒有
+   * 學分,小計是 0 門。爬蟲照實記成 `course_count: 0`。
+   *
+   * 問題出在畫面:通用的「這裡沒有課程。」讀起來像是網站壞了。作者本人看到
+   * 這一頁都去開了 issue 懷疑爬蟲漏抓,別人只會更困惑。
+   */
+  function stubEmptyClass() {
+    return stubApi({
+      'meta.json': META,
+      '115-1/classes/3223.json': {
+        schema_version: 3,
+        year: 115,
+        sem: 1,
+        class_group: {
+          id: '3223',
+          name: '半導體二',
+          department_id: 'B2',
+          department_name: '半導體學士學位學程',
+          college: '機電學院',
+          url: 'https://aps.ntut.edu.tw/course/tw/Subj.jsp?code=3223',
+        },
+        course_count: 0,
+        courses: [],
+      },
+      'capacity.json': { schema_version: 3, classroom_count: 0, classrooms: {} },
+      'enrollment.json': { schema_version: 3, snapshot_count: 0, snapshots: [] },
+    })
+  }
+
+  it('班級沒有課時,說明是學校沒列而不是網站壞了', async () => {
+    stubEmptyClass()
+    renderRoute('/class/115-1/3223')
+
+    await screen.findByRole('heading', { name: '半導體二', level: 1 })
+    expect(screen.getByText(/沒有列出這個班級的任何課程/)).toBeInTheDocument()
+    // 最常見的原因要講出來,不然讀者不知道該去哪裡找
+    expect(screen.getByText(/合開/)).toBeInTheDocument()
+    expect(screen.queryByText('這裡沒有課程。')).not.toBeInTheDocument()
+  })
+})
