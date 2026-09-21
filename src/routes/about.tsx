@@ -1,12 +1,9 @@
 import { Chevron, SUMMARY_CLASS } from '@/components/ui/Disclosure'
-import { useQuery } from '@tanstack/react-query'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
-import { syllabusProgressQueryOptions } from '@/hooks/useCourseDetail'
 import { useMeta } from '@/hooks/useMeta'
 import { API_BASE } from '@/lib/api'
 import { formatTaipei } from '@/lib/datetime'
-import { syllabusCoverage } from '@/lib/syllabus'
 import { STATIC_PAGES, pageHead } from '@/lib/seo'
 
 const SITE_REPO = 'https://github.com/tntrock/ntut-course-web'
@@ -43,16 +40,6 @@ function Out({ href, children }: { href: string; children: React.ReactNode }) {
   )
 }
 
-function Limit({ head, children }: { head: string; children: React.ReactNode }) {
-  return (
-    <li>
-      <strong className="text-foreground font-semibold">{head}</strong>
-      <span className="text-foreground/50"> —— </span>
-      {children}
-    </li>
-  )
-}
-
 function Code({ children }: { children: React.ReactNode }) {
   return (
     <code className="bg-secondary text-foreground rounded px-1.5 py-0.5 text-[13px]">
@@ -64,19 +51,12 @@ function Code({ children }: { children: React.ReactNode }) {
 function AboutPage() {
   const { data: meta } = useMeta()
 
-  const progress = useQuery(syllabusProgressQueryOptions(meta)).data
-  const coverage = progress
-    ? syllabusCoverage(
-        progress,
-        meta.semesters.map((s) => s.path),
-      )
-    : null
-
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="text-2xl font-semibold tracking-tight">關於</h1>
       <p className="text-muted-foreground mt-3 text-[15px] leading-7">
-        臺北科技大學的課程查詢：搜尋、教學大綱、系所與教師瀏覽、排課表。<br />
+        臺北科技大學的課程查詢：搜尋、教學大綱、系所與教師瀏覽、排課表。
+        <br />
         純靜態網站，沒有後端，也沒有帳號。
       </p>
 
@@ -88,7 +68,9 @@ function AboutPage() {
         </p>
         <p>
           本站與國立臺北科技大學
-          <strong className="text-foreground font-semibold">沒有任何關係</strong>，是個人專案。<br />
+          <strong className="text-foreground font-semibold">沒有任何關係</strong>
+          ，是個人專案。
+          <br />
           選課、加退選、畢業學分請一律以學校公告與課程系統為準。
         </p>
       </Section>
@@ -115,7 +97,8 @@ function AboutPage() {
 
       <Section title="資料是開放的">
         <p>
-          crawler 發布的是公開的靜態 JSON，沒有金鑰、沒有速率限制，CORS 全開。<br />
+          crawler 發布的是公開的靜態 JSON，沒有金鑰、沒有速率限制，CORS 全開。
+          <br />
           想自己做點什麼的話，直接拿去用就好：
         </p>
         <p>
@@ -124,9 +107,9 @@ function AboutPage() {
           </code>
         </p>
         <p>
-          <Code>meta.json</Code>{' '}
-          會列出所有端點與目前收錄的學期，是所有其他請求的入口。<br />
-          完整說明在{' '} <Out href={CRAWLER_REPO}>crawler 的 README</Out>。
+          <Code>meta.json</Code> 會列出所有端點與目前收錄的學期，是所有其他請求的入口。
+          <br />
+          完整說明在 <Out href={CRAWLER_REPO}>crawler 的 README</Out>。
         </p>
         <details className="group">
           <summary className={`text-foreground text-sm ${SUMMARY_CLASS}`}>
@@ -156,9 +139,7 @@ function AboutPage() {
           <span className="text-foreground/40 mx-2">·</span>
           爬蟲：<Out href={CRAWLER_REPO}>tntrock/ntut-course-crawler</Out>
         </p>
-        <p>
-          發現資料有錯、或哪裡怪怪的，歡迎開 issue 給我。
-        </p>
+        <p>發現資料有錯、或哪裡怪怪的，歡迎開 issue 給我。</p>
       </Section>
     </div>
   )
