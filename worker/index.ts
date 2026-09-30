@@ -1,6 +1,5 @@
 import { FALLBACK_ATTR } from '../src/lib/seo.ts'
 import { headForPath } from './head.ts'
-import { parseUpstream } from './upstream.ts'
 import { renderHead } from './render.ts'
 
 /**
@@ -86,7 +85,7 @@ async function rewrite(
 
   let html: string
   try {
-    const tags = await headForPath(url.pathname, (path) => getJson(API_BASE, path))
+    const tags = await headForPath(url.pathname, (path) => getText(API_BASE, path))
     if (!tags) return asset
     html = renderHead(tags)
   } catch {
@@ -123,10 +122,10 @@ async function rewrite(
   return response
 }
 
-async function getJson<T>(base: string, path: string): Promise<T> {
+async function getText(base: string, path: string): Promise<string> {
   const response = await fetch(`${base}/${path}`, {
     cf: { cacheTtl: UPSTREAM_TTL, cacheEverything: true },
   })
   if (!response.ok) throw new Error(`${path} → HTTP ${response.status}`)
-  return parseUpstream<T>(await response.text())
+  return response.text()
 }
