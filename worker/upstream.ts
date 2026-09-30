@@ -29,7 +29,12 @@ export function findCourse<T extends { id: string }>(
 ): T | undefined {
   const needle = `"id":${JSON.stringify(id)}`
   const at = text.indexOf(needle)
-  if (at === -1) return undefined
+  if (at === -1) {
+    // 找不到有兩種可能:課號真的不存在(爬蟲亂打的,要快),或上游改成了有空白
+    // 的排版格式(要走慢路,不然每一門課都會悄悄查無此課)
+    if (text.includes('"id":"')) return undefined
+    return parseUpstream<{ courses: T[] }>(text).courses.find((c) => c.id === id)
+  }
 
   const start = text.lastIndexOf('{', at)
   const end = start === -1 ? -1 : matchBrace(text, start)

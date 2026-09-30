@@ -96,3 +96,21 @@ describe('findCourse', () => {
     parse.mockRestore()
   })
 })
+
+describe('findCourse — 上游格式變了', () => {
+  /** 找不到就回 undefined 的話,每一門課都會悄悄變成「查無此課」。 */
+  it('排版過的 JSON(冒號後有空白)仍然找得到', () => {
+    const text = JSON.stringify({ courses: [{ id: '1', name_zh: 'A' }] }, null, 2)
+    expect(findCourse<{ id: string; name_zh: string }>(text, '1')?.name_zh).toBe('A')
+  })
+
+  /** 反過來,緊湊格式裡查不到的課號要快速放棄,不能整份解析。 */
+  it('緊湊格式裡不存在的課號不會觸發整份解析', () => {
+    const text = JSON.stringify({ courses: [{ id: '1', name_zh: 'A' }] })
+    const parse = vi.spyOn(JSON, 'parse')
+
+    expect(findCourse(text, '999999')).toBeUndefined()
+    expect(parse).not.toHaveBeenCalled()
+    parse.mockRestore()
+  })
+})
