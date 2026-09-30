@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { headForPath, type GetJson } from './head.ts'
+import { headForPath, type GetText } from './head.ts'
 import type { HeadTags } from '../src/lib/seo.ts'
 
 const titleOf = (tags: HeadTags | null) =>
@@ -17,10 +17,9 @@ const canonicalOf = (tags: HeadTags | null) =>
 function fakeApi(files: Record<string, unknown>) {
   const fn = vi.fn(async (path: string) => {
     if (!(path in files)) throw new Error(`意外的請求：${path}`)
-    return files[path]
+    return JSON.stringify(files[path])
   })
-  // 測試替身沒辦法真的是泛型的 —— 回傳的型別是由呼叫端的 T 決定的
-  return fn as unknown as GetJson & typeof fn
+  return fn as GetText & typeof fn
 }
 
 const INDEX = {

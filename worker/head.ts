@@ -7,7 +7,8 @@ import {
   siteHead,
   type HeadTags,
 } from '../src/lib/seo.ts'
-import type { CourseIndex } from '../src/types/api.ts'
+import type { CourseIndexEntry } from '../src/types/api.ts'
+import { findCourse, parseUpstream } from './upstream.ts'
 
 /**
  * 一頁的完整 head。
@@ -20,8 +21,15 @@ function pageHead(options: Parameters<typeof page>[0]): HeadTags {
   return mergeHead(page(options), siteHead())
 }
 
-/** 抓一份上游 JSON。由呼叫端提供,測試才能塞假的進來。 */
-export type GetJson = <T>(path: string) => Promise<T>
+/**
+ * 抓一份上游檔案的**原始文字**。由呼叫端提供,測試才能塞假的進來。
+ *
+ * 給文字而不是解析好的 JSON:課程頁要從 942 KB 的索引裡切出一門課,
+ * 整份解析的 CPU 會超過免費方案的上限(見 `findCourse`)。
+ */
+export type GetText = (path: string) => Promise<string>
+
+type GetJson = <T>(path: string) => Promise<T>
 
 /**
  * 學期字串。**這是不可信的輸入** —— 它會被接進上游 API 的網址,
@@ -40,8 +48,10 @@ const ID = /^[A-Za-z0-9_-]+$/
  */
 export async function headForPath(
   pathname: string,
-  getJson: GetJson,
+  getText: GetText,
 ): Promise<HeadTags | null> {
+  const getJson: GetJson = async (p) => parseUpstream(await getText(p))
+
   // 尾端斜線是同一頁,但根目錄的那一條要留
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
 
@@ -71,7 +81,7 @@ export async function headForPath(
     classroom: [`${semester}/classrooms.json`, 'classrooms'],
   } as const
 
-  if (kind === 'course') return courseHead(semester, id, getJson)
+  if (kind === 'course') return courseHead(semester, id, getText)
 
   if (kind === 'program') {
     // 學程沒有代碼,網址參數就是名字本身 —— 但課程數還是要抓,不然爬蟲看到的
@@ -137,10 +147,12 @@ async function lookup(
 async function courseHead(
   semester: string,
   courseId: string,
-  getJson: GetJson,
+  getText: GetText,
 ): Promise<HeadTags | null> {
-  const index = await getJson<CourseIndex>(`${semester}/index.json`)
-  const course = index.courses.find((c) => c.id === courseId)
+  const course = findCourse<CourseIndexEntry>(
+    await getText(`${semester}/index.json`),
+    courseId,
+  )
   if (!course) return null
 
   return pageHead({
