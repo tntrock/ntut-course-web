@@ -1,11 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  clearEventsBackup,
   EVENTS_BACKUP_KEY,
   EVENTS_KEY,
   loadEvents,
   newEvent,
-  readEventsBackup,
   saveEvents,
   type EventStore,
 } from './events'
@@ -63,12 +61,9 @@ describe('loadEvents', () => {
     localStorage.setItem(EVENTS_KEY, '{ 壞掉的內容')
     loadEvents()
 
-    expect(readEventsBackup()).toBe('{ 壞掉的內容')
+    expect(localStorage.getItem(EVENTS_BACKUP_KEY)).toBe('{ 壞掉的內容')
     // 重置要真的寫回去,否則每次載入都重新備份一次
     expect(localStorage.getItem(EVENTS_KEY)).toBe('{}')
-
-    clearEventsBackup()
-    expect(readEventsBackup()).toBeNull()
   })
 
   it('localStorage 不可用時當作沒有資料,不丟例外', () => {

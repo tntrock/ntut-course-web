@@ -21,6 +21,10 @@ export type BackupResult =
   | { ok: true; store: Store; events: EventStore }
   | { ok: false; reason: 'invalid' | 'unsupported' }
 
+/**
+ * 縮排排版:沒有帳號同步,這個檔案是換裝置唯一的路,使用者要能自己打開來
+ * 確認裡面有什麼。
+ */
 export function serializeBackup(store: Store, events: EventStore): string {
   const backup: Backup = { ...store, version: STORE_VERSION, events }
   return JSON.stringify(backup, null, 2)

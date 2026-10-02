@@ -5,12 +5,10 @@ import {
   departmentsNeedingClassrooms,
   fillClassrooms,
   isFavoriteCourse,
-  isFavoriteTeacher,
   isInSchedule,
   refreshSnapshot,
   removeFromSchedule,
   toggleFavoriteCourse,
-  toggleFavoriteTeacher,
 } from './storeActions'
 import { course, slot } from '@/test/factories'
 
@@ -114,17 +112,6 @@ describe('收藏', () => {
 
     store = toggleFavoriteCourse(store, '115-1', '364893')
     expect(store.favorites.courses).toEqual([])
-  })
-
-  it('追蹤教師用代碼,不是姓名', () => {
-    // 803 個代碼只有 801 個姓名 —— 用姓名會同時追蹤到兩位老師
-    let store = toggleFavoriteTeacher(defaultStore(), '12095')
-
-    expect(store.favorites.teachers).toEqual(['12095'])
-    expect(isFavoriteTeacher(store, '12095')).toBe(true)
-
-    store = toggleFavoriteTeacher(store, '12095')
-    expect(store.favorites.teachers).toEqual([])
   })
 })
 

@@ -1,27 +1,23 @@
 import { useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 
 import { useStore } from '@/hooks/useStore'
 import { useEvents } from '@/hooks/useEvents'
-import { teachersQueryOptions } from '@/hooks/useBrowse'
 import { saveStore } from '@/lib/storage'
 import { saveEvents } from '@/lib/events'
 import { parseBackup, serializeBackup } from '@/lib/backup'
-import type { CourseIndexEntry, Meta } from '@/types/api'
+import type { CourseIndexEntry } from '@/types/api'
 
 /**
- * 收藏的課程與追蹤的教師。
+ * 收藏的課程。
  *
  * 收藏與課表是兩件事:課表是「我要修」,收藏是「我在考慮」——
  * 所以收藏不佔格子、不算學分,只是一份待辦清單。
  */
 export function Favorites({
-  meta,
   semester,
   courses,
 }: {
-  meta: Meta
   semester: string
   /** 當期索引。離線時是 `null`,那就只顯示課號。 */
   courses: ReadonlyMap<string, CourseIndexEntry> | null
@@ -35,52 +31,25 @@ export function Favorites({
     .filter((key) => key.startsWith(prefix))
     .map((key) => key.slice(prefix.length))
 
-  const teacherCodes = store.favorites.teachers
-  // 沒有追蹤任何老師時不要多打一個 15 KB 的請求
-  const teachers = useQuery({
-    ...teachersQueryOptions(meta, semester),
-    enabled: teacherCodes.length > 0,
-  })
-  const teacherName = new Map(
-    (teachers.data?.teachers ?? []).map((t) => [t.id, t.name]),
-  )
-
-  if (favoriteIds.length === 0 && teacherCodes.length === 0) return null
+  if (favoriteIds.length === 0) return null
 
   return (
     <section className="mt-6">
       <h2 className="text-muted-foreground text-xs font-medium">收藏</h2>
 
-      {favoriteIds.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {favoriteIds.map((id) => (
-            <Link
-              key={id}
-              to="/course/$semester/$courseId"
-              params={{ semester, courseId: id }}
-              className="bg-card shadow-card hover:ring-primary/40 rounded-lg px-3 py-2 text-sm hover:ring-1"
-            >
-              {/* 離線時索引拿不到，退回顯示課號而不是空白 */}
-              {courses?.get(id)?.name_zh ?? id}
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {teacherCodes.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {teacherCodes.map((code) => (
-            <Link
-              key={code}
-              to="/teacher/$semester/$teacherId"
-              params={{ semester, teacherId: code }}
-              className="bg-card shadow-card hover:ring-primary/40 rounded-lg px-3 py-2 text-sm hover:ring-1"
-            >
-              {teacherName.get(code) ?? `教師 ${code}`}
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className="mt-2 flex flex-wrap gap-2">
+        {favoriteIds.map((id) => (
+          <Link
+            key={id}
+            to="/course/$semester/$courseId"
+            params={{ semester, courseId: id }}
+            className="bg-card shadow-card hover:ring-primary/40 rounded-lg px-3 py-2 text-sm hover:ring-1"
+          >
+            {/* 離線時索引拿不到，退回顯示課號而不是空白 */}
+            {courses?.get(id)?.name_zh ?? id}
+          </Link>
+        ))}
+      </div>
     </section>
   )
 }

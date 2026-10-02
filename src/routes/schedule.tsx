@@ -207,7 +207,7 @@ function SchedulePage() {
 
       <EventEditor semester={semester} events={events} periods={meta.periods} />
 
-      <Favorites meta={meta} semester={semester} courses={latestById} />
+      <Favorites semester={semester} courses={latestById} />
       <DataTransfer />
 
       {/*
