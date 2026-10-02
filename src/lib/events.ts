@@ -1,5 +1,6 @@
 import type { SemesterPath, TimeSlot } from '@/types/api'
-import { readRaw, removeRaw, writeRaw } from './webStorage'
+import { readRaw, writeRaw } from './webStorage'
+import { isRecord } from './storage'
 
 /**
  * 個人事務:打工、社團、通勤這類固定時段。
@@ -41,30 +42,24 @@ export const MAX_TITLE = 20
  * 產生一筆新事務。
  *
  * id 用 `crypto.randomUUID()` 而不是時間戳:同一秒內連續加兩筆會撞。
- * `randomUUID` 在非安全來源不存在,退回亂數 —— 這裡不需要密碼學強度,
- * 只要不重複。
+ * 它只在安全來源存在 —— 本站一律 HTTPS,開發時是 localhost,兩者都算。
+ *
+ * ponytail: 用 `vite --host` 拿手機以區網 IP(http://192.168…)測試時**不算**
+ * 安全來源,這裡會丟例外。真的需要在區網測就改用 `vite --host --https`,
+ * 而不是把亂數退路加回來。
  */
 export function newEvent(
   title: string,
   timeSlots: TimeSlot[],
   note: string | null,
 ): PersonalEvent {
-  const random =
-    typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`
-
   return {
-    id: `evt_${random}`,
+    id: `evt_${crypto.randomUUID()}`,
     title: title.trim().slice(0, MAX_TITLE),
     time_slots: timeSlots,
     note: note?.trim() ? note.trim() : null,
     createdAt: new Date().toISOString(),
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 function toTimeSlots(value: unknown): TimeSlot[] {
@@ -145,12 +140,4 @@ export function loadEvents(): EventStore {
 
 export function saveEvents(events: EventStore): boolean {
   return writeRaw(EVENTS_KEY, JSON.stringify(events))
-}
-
-export function readEventsBackup(): string | null {
-  return readRaw(EVENTS_BACKUP_KEY)
-}
-
-export function clearEventsBackup(): void {
-  removeRaw(EVENTS_BACKUP_KEY)
 }

@@ -10,7 +10,6 @@ import {
   fetchDepartmentCourses,
   fetchPrograms,
   fetchSchedule,
-  fetchTeacherCourses,
   fetchTeacherCoursesInRange,
   fetchTeachers,
 } from '@/lib/api'
@@ -76,18 +75,6 @@ export function teacherRangeQueryOptions(
       version(meta, semesters[0] ?? ''),
     ],
     queryFn: () => fetchTeacherCoursesInRange(meta, semesters, teacherId),
-    staleTime: Infinity,
-  })
-}
-
-export function teacherCoursesQueryOptions(
-  meta: Meta,
-  semester: SemesterPath,
-  teacherId: string,
-) {
-  return queryOptions({
-    queryKey: ['teacher-courses', semester, teacherId, version(meta, semester)],
-    queryFn: () => fetchTeacherCourses(meta, semester, teacherId),
     staleTime: Infinity,
   })
 }

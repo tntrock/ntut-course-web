@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hasPrivateUse, replacePrivateUse, UNKNOWN_CHAR } from './pua'
+import { replacePrivateUse, UNKNOWN_CHAR } from './pua'
 
 /**
  * 實測案例:教師 23533 在學校原始頁面上的姓名是 `林` + U+E1B3。
@@ -33,15 +33,5 @@ describe('replacePrivateUse', () => {
 
   it('空值不要爆掉', () => {
     expect(replacePrivateUse('')).toBe('')
-  })
-})
-
-describe('hasPrivateUse', () => {
-  it('認得出造字', () => {
-    expect(hasPrivateUse('林\uE1B3')).toBe(true)
-  })
-
-  it('一般姓名不算', () => {
-    expect(hasPrivateUse('林建仲')).toBe(false)
   })
 })

@@ -48,7 +48,11 @@ export interface Store {
   favorites: {
     /** `{semester}:{courseId}`。 */
     courses: string[]
-    /** 教師**代碼**,不是姓名 —— 有同名老師。 */
+    /**
+     * 追蹤的教師代碼。**目前沒有介面會寫入它**(追蹤教師沒做完就拿掉了),
+     * 留著只是為了照原樣讀寫舊資料與匯入檔 —— 刪掉欄位的話,存檔時會把
+     * 使用者手上那份悄悄丟掉。
+     */
     teachers: string[]
   }
   settings: { theme: 'system' | 'light' | 'dark'; showWeekend: boolean }
@@ -63,7 +67,7 @@ export function defaultStore(): Store {
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
@@ -218,16 +222,6 @@ export function saveStore(store: Store): SaveResult {
         error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
     return { ok: false, reason: quota ? 'quota' : 'unavailable' }
   }
-}
-
-/**
- * 匯出成人看得懂的 JSON。
- *
- * 沒有帳號同步,這個檔案是換裝置唯一的路,所以縮排排版 ——
- * 使用者要能自己打開來確認裡面有什麼。
- */
-export function serializeStore(store: Store): string {
-  return JSON.stringify(store, null, 2)
 }
 
 export type ImportResult =

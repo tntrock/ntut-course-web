@@ -7,7 +7,6 @@ import {
   parseImport,
   readBackup,
   saveStore,
-  serializeStore,
   STORAGE_KEY,
   STORE_VERSION,
 } from './storage'
@@ -183,7 +182,7 @@ describe('匯出與匯入', () => {
       ],
     }
 
-    const result = parseImport(serializeStore(store))
+    const result = parseImport(JSON.stringify(store))
 
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.store).toEqual(store)

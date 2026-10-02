@@ -179,18 +179,3 @@ export function toggleFavoriteCourse(
     },
   }
 }
-
-/** 追蹤教師用**代碼**:803 個代碼只有 801 個姓名。 */
-export function isFavoriteTeacher(store: Store, teacherCode: string): boolean {
-  return store.favorites.teachers.includes(teacherCode)
-}
-
-export function toggleFavoriteTeacher(store: Store, teacherCode: string): Store {
-  return {
-    ...store,
-    favorites: {
-      ...store.favorites,
-      teachers: toggle(store.favorites.teachers, teacherCode),
-    },
-  }
-}

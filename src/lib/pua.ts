@@ -30,12 +30,6 @@ const PRIVATE_USE = /[\u{E000}-\u{F8FF}\u{F0000}-\u{FFFFD}\u{100000}-\u{10FFFD}]
  */
 export const UNKNOWN_CHAR = '〇'
 
-export function hasPrivateUse(text: string): boolean {
-  // 帶 g 旗標的正規表示式有 lastIndex 狀態，test() 連續呼叫會跳著匹配
-  PRIVATE_USE.lastIndex = 0
-  return PRIVATE_USE.test(text)
-}
-
 export function replacePrivateUse(text: string): string {
   return text.replace(PRIVATE_USE, UNKNOWN_CHAR)
 }
