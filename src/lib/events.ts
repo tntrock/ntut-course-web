@@ -43,6 +43,10 @@ export const MAX_TITLE = 20
  *
  * id 用 `crypto.randomUUID()` 而不是時間戳:同一秒內連續加兩筆會撞。
  * 它只在安全來源存在 —— 本站一律 HTTPS,開發時是 localhost,兩者都算。
+ *
+ * ponytail: 用 `vite --host` 拿手機以區網 IP(http://192.168…)測試時**不算**
+ * 安全來源,這裡會丟例外。真的需要在區網測就改用 `vite --host --https`,
+ * 而不是把亂數退路加回來。
  */
 export function newEvent(
   title: string,
