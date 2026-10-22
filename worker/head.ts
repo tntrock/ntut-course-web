@@ -7,7 +7,8 @@ import {
   siteHead,
   type HeadTags,
 } from '../src/lib/seo.ts'
-import type { CourseIndexEntry } from '../src/types/api.ts'
+import type { CourseIndexEntry, Syllabus } from '../src/types/api.ts'
+import { renderCourseBody } from './render.ts'
 import { findCourse, parseUpstream } from './upstream.ts'
 
 /**
@@ -81,7 +82,13 @@ export async function headForPath(
     classroom: [`${semester}/classrooms.json`, 'classrooms'],
   } as const
 
-  if (kind === 'course') return courseHead(semester, id, getText)
+  if (kind === 'course') {
+    const course = findCourse<CourseIndexEntry>(
+      await getText(`${semester}/index.json`),
+      id,
+    )
+    return course ? courseHead(course, semester, id) : null
+  }
 
   if (kind === 'program') {
     // 學程沒有代碼,網址參數就是名字本身 —— 但課程數還是要抓,不然爬蟲看到的
@@ -144,17 +151,59 @@ async function lookup(
   return data[key]?.find((item) => item.id === id) ?? null
 }
 
-async function courseHead(
+/** 一頁的伺服器端輸出:head 一定有,`body` 只有課程頁有(見 `renderCourseBody`)。 */
+export interface PageParts {
+  head: HeadTags
+  body?: string
+}
+
+const COURSE_PATH = /^\/course\/([^/]+)\/([^/]+)\/*$/
+
+/**
+ * 跟 `headForPath` 一樣,但課程頁多帶一份 body 內文。
+ *
+ * 其餘頁面(教師、系所……)只有 head:它們的內容是課程清單,真正值得被收錄的
+ * 是清單連出去的課程頁。
+ */
+export async function pageForPath(
+  pathname: string,
+  getText: GetText,
+): Promise<PageParts | null> {
+  const [, semester, id] = COURSE_PATH.exec(pathname) ?? []
+  if (semester && id && SEMESTER.test(semester) && ID.test(id)) {
+    return coursePage(semester, id, getText)
+  }
+  const head = await headForPath(pathname, getText)
+  return head && { head }
+}
+
+async function coursePage(
   semester: string,
   courseId: string,
   getText: GetText,
-): Promise<HeadTags | null> {
-  const course = findCourse<CourseIndexEntry>(
-    await getText(`${semester}/index.json`),
-    courseId,
-  )
+): Promise<PageParts | null> {
+  const [indexText, syllabus] = await Promise.all([
+    getText(`${semester}/index.json`),
+    // 約 30% 的課沒有大綱,上游回 404 —— 那就只畫課程資訊
+    getText(`${semester}/syllabus/${courseId}.json`).then(
+      (text) => parseUpstream<Syllabus>(text),
+      () => null,
+    ),
+  ])
+  const course = findCourse<CourseIndexEntry>(indexText, courseId)
   if (!course) return null
 
+  return {
+    head: courseHead(course, semester, courseId),
+    body: renderCourseBody(course, semester, syllabus),
+  }
+}
+
+function courseHead(
+  course: CourseIndexEntry,
+  semester: string,
+  courseId: string,
+): HeadTags {
   return pageHead({
     subject: `${course.name_zh} ${semester}`,
     /*

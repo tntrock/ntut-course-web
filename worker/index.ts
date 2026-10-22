@@ -1,5 +1,5 @@
 import { FALLBACK_ATTR } from '../src/lib/seo.ts'
-import { headForPath } from './head.ts'
+import { pageForPath } from './head.ts'
 import { renderHead } from './render.ts'
 
 /**
@@ -31,8 +31,8 @@ interface Env {
  * Facebook、Bing 的預覽爬蟲**完全不跑 JS** —— 對它們來說每一頁都叫「北科課程」。
  * 學生是用貼連結在傳這個站的,所以這半邊的實際效益比 Google 那半邊高。
  *
- * **body 不動。** 只改 head:內容還是前端渲染,這一層只負責讓「不會渲染的
- * 讀者」拿到正確的標題、敘述與分享卡片。
+ * **body 只動課程頁。** 其餘頁面只改 head;課程頁另外在 `#root` 塞一份內文
+ * (課名、教師、時段、大綱),理由見 `renderCourseBody`。
  */
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -84,10 +84,12 @@ async function rewrite(
   if (cached) return cached
 
   let html: string
+  let body: string | undefined
   try {
-    const tags = await headForPath(url.pathname, (path) => getText(API_BASE, path))
-    if (!tags) return asset
-    html = renderHead(tags)
+    const page = await pageForPath(url.pathname, (path) => getText(API_BASE, path))
+    if (!page) return asset
+    html = renderHead(page.head)
+    body = page.body
   } catch {
     // 上游掛掉、格式變了,就當作沒有這一層。`index.html` 自己帶著站台層級的
     // 後備標籤,退回去仍然是可以用的一頁
@@ -107,6 +109,12 @@ async function rewrite(
           head.onEndTag((end) => {
             end.before(html, { html: true })
           })
+        },
+      })
+      // 課程頁的內文,給爬蟲看。React 掛載時會整個換掉,見 `renderCourseBody`
+      .on('#root', {
+        element: (root) => {
+          if (body) root.setInnerContent(body, { html: true })
         },
       })
       .transform(asset).body,

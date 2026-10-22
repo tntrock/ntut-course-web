@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { renderHead } from './render.ts'
+import { renderCourseBody, renderHead } from './render.ts'
 import { FALLBACK_ATTR, pageHead } from '../src/lib/seo.ts'
 
 describe('renderHead', () => {
@@ -41,5 +41,44 @@ describe('renderHead', () => {
 
   it('沒有標籤就回空字串', () => {
     expect(renderHead({ meta: [], links: [] })).toBe('')
+  })
+})
+
+describe('renderCourseBody', () => {
+  const course = {
+    id: '364540',
+    name_zh: '網路<與>系統安全',
+    teachers: ['林敬皇', '魏銪志'],
+    teacher_codes: ['12345', ''],
+    time_slots: [{ day: 2 as const, day_name: '二', periods: ['2', '3'] }],
+    credits: 3,
+    required: false,
+  }
+
+  it('有大綱時畫出課名、教師連結、時段與大綱內文', () => {
+    const html = renderCourseBody(course, '115-1', {
+      has_content: true,
+      outline: '第一行\n第二行',
+      schedule: null,
+      assessment: '期末報告',
+      materials: '  ',
+    })
+    expect(html).toContain('<h1>網路&lt;與&gt;系統安全</h1>')
+    expect(html).toContain('<a href="/teacher/115-1/12345">林敬皇</a>、魏銪志')
+    expect(html).toContain('週二 2、3 節')
+    expect(html).toContain('<h2>課程大綱</h2>')
+    expect(html).toContain('第一行\n第二行')
+    expect(html).toContain('<h2>評量方式</h2>')
+    // 空的段落不畫標題
+    expect(html).not.toContain('課程進度')
+    expect(html).not.toContain('教材')
+  })
+
+  it('沒有大綱、或老師沒填,只畫課程資訊', () => {
+    for (const syllabus of [null, { has_content: false, outline: 'x' } as never]) {
+      const html = renderCourseBody(course, '115-1', syllabus)
+      expect(html).toContain('<h1>')
+      expect(html).not.toContain('<h2>')
+    }
   })
 })
