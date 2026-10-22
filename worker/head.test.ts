@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { headForPath, type GetText } from './head.ts'
+import { headForPath, pageForPath, type GetText } from './head.ts'
 import type { HeadTags } from '../src/lib/seo.ts'
 
 const titleOf = (tags: HeadTags | null) =>
@@ -230,5 +230,48 @@ describe('headForPath — 學程頁的課程數', () => {
         fakeApi(PROGRAMS),
       ),
     ).toBeNull()
+  })
+})
+
+describe('pageForPath — 課程頁帶內文', () => {
+  const COURSE = {
+    '115-1/index.json': {
+      courses: [
+        {
+          id: '364540',
+          name_zh: '網路與系統安全',
+          teachers: ['林敬皇'],
+          teacher_codes: ['12345'],
+          time_slots: [],
+          credits: 3,
+          required: false,
+          class_ids: [],
+        },
+      ],
+    },
+  }
+
+  it('有大綱就把大綱畫進 body', async () => {
+    const page = await pageForPath(
+      '/course/115-1/364540',
+      fakeApi({
+        ...COURSE,
+        '115-1/syllabus/364540.json': { has_content: true, outline: '資安概論' },
+      }),
+    )
+    expect(titleOf(page?.head ?? null)).toBe('網路與系統安全 115-1｜北科課程')
+    expect(page?.body).toContain('資安概論')
+  })
+
+  it('大綱 404 時照樣有 head 與課程資訊', async () => {
+    const page = await pageForPath('/course/115-1/364540', fakeApi(COURSE))
+    expect(page?.body).toContain('<h1>網路與系統安全</h1>')
+    expect(page?.body).not.toContain('<h2>')
+  })
+
+  it('其餘頁面只有 head', async () => {
+    const page = await pageForPath('/about', fakeApi({}))
+    expect(page?.head).toBeTruthy()
+    expect(page?.body).toBeUndefined()
   })
 })
