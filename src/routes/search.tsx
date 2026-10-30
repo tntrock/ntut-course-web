@@ -5,10 +5,10 @@ import {
   strictSearch,
   toFilters,
   validateSearchParams,
+  withoutFilter,
   type SearchParams,
 } from '@/lib/searchParams'
 import type { SortKey } from '@/lib/searchParams'
-import type { RelaxTarget } from '@/lib/suggest'
 import { activeFilterCount } from '@/lib/filters'
 import { metaQueryOptions, useMeta } from '@/hooks/useMeta'
 import { semesterIndexQueryOptions, useSemesterIndex } from '@/hooks/useSemesterIndex'
@@ -43,43 +43,6 @@ export const Route = createFileRoute('/search')({
   },
   component: SearchPage,
 })
-
-/** 移除某個條件後的網址參數。 */
-function withoutFilter(params: SearchParams, target: RelaxTarget): SearchParams {
-  const next = { ...params }
-  switch (target) {
-    case 'query':
-      delete next.q
-      break
-    case 'departments':
-      delete next.dept
-      break
-    case 'requirementTypes':
-      delete next.req
-      break
-    case 'languages':
-      delete next.lang
-      break
-    case 'slots':
-      delete next.slot
-      break
-    case 'credits':
-      delete next.cmin
-      delete next.cmax
-      break
-    case 'teacherCode':
-      delete next.teacher
-      break
-    case 'classId':
-      delete next.class
-      break
-    case 'courseIdSet':
-      delete next.program
-      delete next.classroom
-      break
-  }
-  return next
-}
 
 function SearchPage() {
   const params = Route.useSearch()

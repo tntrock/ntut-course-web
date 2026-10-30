@@ -49,3 +49,9 @@ describe('taipeiDate', () => {
     expect(taipeiDate('不是時間')).toBe('不是時間')
   })
 })
+
+describe('hoursSince — 不是時間的字串', () => {
+  it('回傳 0,不讓 NaN 流進畫面', () => {
+    expect(hoursSince('not-a-date')).toBe(0)
+  })
+})

@@ -250,3 +250,85 @@ describe('損毀後的復原', () => {
     expect(readBackup()).toBeNull()
   })
 })
+
+describe('parseImport — 亂七八糟的輸入一律補成合法的值', () => {
+  it('每個欄位型別不對時退回預設值,壞掉的單筆課濾掉', () => {
+    const result = parseImport(
+      JSON.stringify({
+        schedules: {
+          '115-1': {
+            courses: [
+              'not-an-object',
+              { id: '' },
+              { id: '1', snapshot: 'broken' },
+              {
+                id: '2',
+                addedAt: 'x',
+                snapshot: {
+                  name_zh: '微積分',
+                  teachers: ['王', 3],
+                  time_slots: [],
+                  credits: 3,
+                  required: true,
+                  requirement_type: '必修',
+                },
+              },
+            ],
+          },
+          '114-2': 'broken',
+        },
+        favorites: 'broken',
+        settings: { theme: 'neon', showWeekend: 'yes' },
+      }),
+    )
+    if (!result.ok) throw new Error('應該要成功')
+
+    const courses = result.store.schedules['115-1']?.courses ?? []
+    expect(courses.map((c) => c.id)).toEqual(['1', '2'])
+    expect(courses[0]?.snapshot).toMatchObject({
+      name_zh: '',
+      credits: null,
+      required: null,
+    })
+    expect(courses[1]?.snapshot).toMatchObject({
+      teachers: ['王'],
+      credits: 3,
+      required: true,
+      requirement_type: '必修',
+    })
+    expect(result.store.schedules['114-2']?.courses).toEqual([])
+    expect(result.store.favorites).toEqual(defaultStore().favorites)
+    expect(result.store.settings).toEqual(defaultStore().settings)
+  })
+
+  it('JSON 本身不是物件時視為不合法', () => {
+    expect(parseImport('[1, 2]')).toEqual({ ok: false, reason: 'invalid' })
+  })
+
+  it('整份 settings 不是物件時用預設值,合法的外觀照收', () => {
+    const bad = parseImport(JSON.stringify({ settings: 1 }))
+    const good = parseImport(
+      JSON.stringify({ settings: { theme: 'dark', showWeekend: true } }),
+    )
+    expect(bad.ok && bad.store.settings).toEqual(defaultStore().settings)
+    expect(good.ok && good.store.settings).toEqual({ theme: 'dark', showWeekend: true })
+  })
+})
+
+describe('loadStore — 存的不是物件', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('備份起來再重置', () => {
+    localStorage.setItem(STORAGE_KEY, '"just a string"')
+    expect(loadStore()).toEqual(defaultStore())
+    expect(readBackup()).toBe('"just a string"')
+  })
+})
+
+describe('saveStore — 序列化失敗', () => {
+  it('有循環參照時回報存不下,不丟例外', () => {
+    const store = defaultStore() as unknown as Record<string, unknown>
+    store.self = store
+    expect(saveStore(store as never)).toEqual({ ok: false, reason: 'unavailable' })
+  })
+})

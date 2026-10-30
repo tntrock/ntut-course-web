@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 
 import { renderRoute, stubApi } from '@/test/renderRoute'
 import { BASE_API, DEPARTMENTS, SCOPED, fullCourse } from '@/test/fixtures'
@@ -107,6 +107,8 @@ describe('/teacher/$semester/$teacherId', () => {
     expect(screen.getByText('代碼 t1')).toBeInTheDocument()
     expect(screen.getByText('作業系統')).toBeInTheDocument()
     await waitFor(() => expect(document.title).toContain('王小明'))
+    fireEvent.change(screen.getByLabelText('排序'), { target: { value: 'credits' } })
+    expect(screen.getByLabelText('排序')).toHaveValue('credits')
   })
 
   it('查無此人時用姓名說明,而不是代碼', async () => {
@@ -141,6 +143,8 @@ describe('/dept/$semester/$deptId', () => {
       '/class/115-1/2501',
     )
     expect(screen.getByText('作業系統')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('排序'), { target: { value: 'credits' } })
+    expect(screen.getByLabelText('排序')).toHaveValue('credits')
   })
 
   it('院級共同課程另外說明', async () => {

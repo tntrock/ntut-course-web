@@ -1,11 +1,12 @@
 coverage:
   status:
-    # 先只回報不擋 PR,等覆蓋率穩定再調門檻
+    # 整體覆蓋率不能比 base 掉超過 1%;新改的程式碼至少 80% 要有測試
     project:
       default:
-        informational: true
+        target: auto
+        threshold: 1%
     patch:
       default:
-        informational: true
+        target: 80%
 comment:
   layout: 'condensed_header, diff, flags'

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { applyFilters, emptyFilters, LANGUAGE_ZH, type Filters } from './filters'
+import {
+  activeFilterCount,
+  applyFilters,
+  emptyFilters,
+  LANGUAGE_ZH,
+  type Filters,
+} from './filters'
 import { course, slot } from '@/test/factories'
 
 const filters = (overrides: Partial<Filters> = {}): Filters => ({
@@ -196,5 +202,15 @@ describe('多個條件同時套用', () => {
     const f = filters({ departments: ['59'], languages: ['英語'] })
 
     expect(idsOf(courses, f)).toEqual(['match'])
+  })
+})
+
+describe('activeFilterCount', () => {
+  it('教師、班級、課號集合各算一個條件', () => {
+    expect(
+      activeFilterCount(
+        filters({ teacherCode: 't1', classId: '2501', courseIdSet: new Set(['1']) }),
+      ),
+    ).toBe(3)
   })
 })

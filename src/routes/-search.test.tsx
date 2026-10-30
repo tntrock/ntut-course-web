@@ -166,4 +166,18 @@ describe('/search', () => {
       expect(within(document.body).getByText('英文寫作')).toBeVisible(),
     )
   })
+
+  it('在別的頁面按 Enter 才導到搜尋頁,不即時抽換整頁', async () => {
+    await installSearchWorker()
+    stub()
+    renderRoute('/about')
+    const input = await screen.findByLabelText('搜尋課程')
+
+    fireEvent.change(input, { target: { value: '英文' } })
+    await new Promise((r) => setTimeout(r, 200))
+    expect(screen.queryByText('門課', { exact: false })).toBeNull()
+
+    fireEvent.submit(input.closest('form')!)
+    await waitFor(() => expect(count()).toContain('1 門課'))
+  })
 })

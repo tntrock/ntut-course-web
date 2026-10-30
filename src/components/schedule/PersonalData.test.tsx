@@ -91,3 +91,60 @@ describe('DataTransfer', () => {
     )
   })
 })
+
+describe('DataTransfer 匯出與存檔失敗', () => {
+  it('匯出 JSON 下載一份包含課表與事務的檔案', () => {
+    URL.createObjectURL = vi.fn(() => 'blob:x')
+    URL.revokeObjectURL = vi.fn()
+    let downloaded = ''
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloaded = this.download
+    })
+
+    render(<DataTransfer />)
+    fireEvent.click(screen.getByRole('button', { name: '匯出 JSON' }))
+    expect(downloaded).toMatch(/^ntut-course-web-\d{4}-\d{2}-\d{2}\.json$/)
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:x')
+  })
+
+  it('「匯入 JSON」按鈕打開檔案選擇', () => {
+    render(<DataTransfer />)
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    const click = vi.spyOn(input, 'click').mockImplementation(() => {})
+    fireEvent.click(screen.getByRole('button', { name: '匯入 JSON' }))
+    expect(click).toHaveBeenCalled()
+  })
+
+  it.each([
+    ['QuotaExceededError', '瀏覽器空間不足，匯入失敗。'],
+    ['SecurityError', '這個瀏覽器不允許儲存資料。'],
+  ])('課表存不下(%s)時講出原因', async (name, message) => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw Object.assign(new Error('nope'), { name })
+    })
+    render(<DataTransfer />)
+    importFile(serializeBackup(defaultStore(), {}))
+    expect(await screen.findByText(message)).toBeInTheDocument()
+  })
+
+  it('課表存進去了但事務存不下時,說清楚是哪一半', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const real = Storage.prototype.setItem
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key.endsWith('.events')) throw new Error('full')
+      real.call(this, key, value)
+    })
+    render(<DataTransfer />)
+    importFile(serializeBackup(defaultStore(), { '115-1': [] }))
+    expect(
+      await screen.findByText('課表已匯入，但個人事務存不下來。'),
+    ).toBeInTheDocument()
+  })
+})

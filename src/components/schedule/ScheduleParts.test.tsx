@@ -75,11 +75,18 @@ describe('ChangeList', () => {
         semester="115-1"
         periods={PERIODS}
         entries={[
-          { course: calculus, current: undefined, changes: [{ kind: 'removed' }] },
+          {
+            course: calculus,
+            current: undefined,
+            changes: [
+              { kind: 'removed' },
+              { kind: 'teachers', from: ['甲'], to: ['乙'] },
+            ],
+          },
         ]}
       />,
     )
-    expect(await screen.findByText('此課已停開')).toBeInTheDocument()
+    expect(await screen.findByText('此課已停開、授課教師已更換')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '更新為最新資料' })).toBeNull()
   })
 })
