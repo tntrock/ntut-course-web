@@ -123,3 +123,85 @@ describe('EventCard', () => {
     expect(await findText('論文')).toBeInTheDocument()
   })
 })
+
+describe('EventCard 各種事件', () => {
+  const card = () => document.querySelector('article')?.textContent ?? ''
+
+  it('大量異動:摘要、依系所與班級的分布、備註與樣本', async () => {
+    renderCard({
+      at: '2026-09-07T03:34:15Z',
+      semester: '115-1',
+      type: 'bulk_change',
+      event_count: 120,
+      counts: { course_added: 100, course_removed: 20, mystery: 1 },
+      by_department: { '59': 80, '31': 40 },
+      by_class: { '2501': 10 },
+      note: '開學加開',
+      samples: [
+        { at: 'a', semester: '115-1', type: 'course_added', id: '1', name: '新課' },
+        { at: 'b', semester: '115-1', type: 'baseline', course_count: 1 },
+      ],
+    } as ChangeEvent)
+
+    await findText('115-1 一次異動 120 筆')
+    expect(card()).toContain('加開 100、停開 20、mystery 1')
+    expect(card()).toContain('開學加開')
+    expect(screen.getByText('依系所')).toBeInTheDocument()
+    expect(screen.getByText('依班級')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /新課/ })).toHaveAttribute(
+      'href',
+      '/course/115-1/1',
+    )
+    expect(screen.getByText('看 2 筆樣本')).toBeInTheDocument()
+  })
+
+  it('大量異動沒有分布與樣本時,只留摘要', async () => {
+    renderCard({
+      at: '2026-09-07T03:34:15Z',
+      semester: '115-1',
+      type: 'bulk_change',
+      event_count: 3,
+      counts: { course_changed: 3 },
+    } as ChangeEvent)
+    await findText('115-1 一次異動 3 筆')
+    expect(screen.queryByText('依系所')).toBeNull()
+    expect(screen.queryByText(/筆樣本/)).toBeNull()
+  })
+
+  it('欄位異動列出前後的值', async () => {
+    renderCard({
+      at: '2026-09-07T03:34:15Z',
+      semester: '115-1',
+      type: 'course_changed',
+      id: '1',
+      name: '微積分',
+      changes: { credits: { from: 3, to: 4 }, weird_field: { from: 'a', to: 'b' } },
+    } as ChangeEvent)
+    await findText('微積分')
+    expect(card()).toContain('學分')
+    expect(card()).toContain('→')
+    expect(card()).toContain('weird_field')
+  })
+
+  it('沒有課號也沒有名稱時不給連結', async () => {
+    renderCard({
+      at: '2026-09-07T03:34:15Z',
+      semester: '115-1',
+      type: 'course_removed',
+    } as ChangeEvent)
+    await findText('(無名稱)')
+    expect(screen.queryByRole('link')).toBeNull()
+  })
+
+  it('教師事件沒有系所與門數時不留空欄位', async () => {
+    renderCard({
+      at: '2026-09-07T03:34:15Z',
+      semester: '115-1',
+      type: 'teacher_removed',
+      id: '1',
+      name: '白敦文',
+    } as ChangeEvent)
+    await findText('白敦文')
+    expect(card()).not.toContain('門課')
+  })
+})
