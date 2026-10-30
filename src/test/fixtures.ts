@@ -1,3 +1,4 @@
+import type { Course, CourseIndexEntry } from '@/types/api'
 import { course } from './factories'
 
 /**
@@ -62,3 +63,25 @@ export const BASE_API = {
   'capacity.json': { schema_version: 3, classroom_count: 0, classrooms: {} },
   'enrollment.json': { schema_version: 3, snapshot_count: 0, snapshots: [] },
 }
+
+/** 明細頁用的完整課程物件(索引欄位之外的那些)。 */
+export function fullCourse(overrides: Partial<CourseIndexEntry> = {}): Course {
+  return {
+    ...course(overrides),
+    name_en: null,
+    stage: '1',
+    hours: 3,
+    classes: [],
+    classrooms: [],
+    classroom_codes: [],
+    quota: null,
+    syllabus_url: null,
+    notes: null,
+    audit: null,
+    lab: null,
+    programs: [],
+  }
+}
+
+/** `SemesterScoped` 的那三個欄位。 */
+export const SCOPED = { schema_version: 3, year: 115, sem: 1 }
