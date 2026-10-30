@@ -153,3 +153,91 @@ describe('SyllabusPanel', () => {
     expect(screen.getByText('教學目標的內容')).toBeInTheDocument()
   })
 })
+
+describe('SyllabusPanel 各個區塊', () => {
+  it('每個有內容的區塊都畫出來,沒看過的欄位也要看得見', () => {
+    render(
+      <SyllabusPanel
+        state={{ kind: 'available', version: 'v' }}
+        syllabus={
+          {
+            ...syllabus({
+              schedule: '第一週 導論',
+              assessment: '期中 50%',
+              materials: '課本',
+              flexible_learning: { category: ['自主學習'], content: '每週一篇心得' },
+              sdgs: ['SDG 4'],
+              ai_usage: ['可使用'],
+              extended_resources: ['https://example.invalid'],
+              contact: ['週二下午'],
+              teacher_email: 'teacher@example.invalid',
+              notes: '請準時',
+              updated_at: null,
+            }),
+            new_list: ['甲', '乙'],
+            new_text: '新的說明',
+          } as Syllabus
+        }
+        syllabusUrl="https://aps.ntut.edu.tw/x"
+      />,
+    )
+
+    for (const title of [
+      '教學目標',
+      '教學進度',
+      '評量方式',
+      '教材',
+      '彈性學習',
+      '永續發展目標（SDGs）',
+      '生成式 AI 使用',
+      '延伸資源',
+      '聯絡方式',
+      '備註',
+      'new_list',
+      'new_text',
+    ]) {
+      expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
+    }
+    expect(screen.getByText('每週一篇心得')).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: 'teacher@example.invalid' }),
+    ).toHaveAttribute('href', 'mailto:teacher@example.invalid')
+    expect(screen.getByText('乙')).toBeInTheDocument()
+    expect(screen.getByText('新的說明')).toBeInTheDocument()
+    expect(screen.getByText(/教師未提供更新時間/)).toBeInTheDocument()
+  })
+
+  it('彈性學習只有類別或只有內容都照樣顯示,兩者皆空就整段不畫', () => {
+    const { rerender } = render(
+      <SyllabusPanel
+        state={{ kind: 'available', version: 'v' }}
+        syllabus={syllabus({
+          flexible_learning: { category: [], content: '只有內容' },
+        })}
+        syllabusUrl={null}
+      />,
+    )
+    expect(screen.getByText('只有內容')).toBeInTheDocument()
+
+    rerender(
+      <SyllabusPanel
+        state={{ kind: 'available', version: 'v' }}
+        syllabus={syllabus({ flexible_learning: { category: [], content: null } })}
+        syllabusUrl={null}
+      />,
+    )
+    expect(screen.queryByRole('heading', { name: '彈性學習' })).toBeNull()
+  })
+
+  it('聯絡方式沒有信箱時只列文字', () => {
+    render(
+      <SyllabusPanel
+        state={{ kind: 'available', version: 'v' }}
+        syllabus={syllabus({ contact: ['研究室 101'] })}
+        syllabusUrl={null}
+      />,
+    )
+    expect(screen.getByText('研究室 101')).toBeInTheDocument()
+    expect(document.querySelector('a[href^="mailto:"]')).toBeNull()
+  })
+})

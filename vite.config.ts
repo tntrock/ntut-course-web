@@ -95,7 +95,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text-summary', 'lcov'],
       include: ['{src,worker,scripts}/**/*.{ts,tsx}'],
-      exclude: ['src/routeTree.gen.ts', 'src/test/**', '**/*.{test,spec}.{ts,tsx}'],
+      exclude: [
+        'src/routeTree.gen.ts',
+        // 只是把 router、QueryClient 接起來掛到 DOM 上,沒有可以單獨驗的邏輯
+        'src/main.tsx',
+        'src/test/**',
+        '**/*.{test,spec}.{ts,tsx}',
+      ],
     },
     alias: {
       // vite-plugin-pwa 的虛擬模組只有 build 時才存在,vitest 解析不到它。

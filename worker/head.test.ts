@@ -275,3 +275,30 @@ describe('pageForPath — 課程頁帶內文', () => {
     expect(page?.body).toBeUndefined()
   })
 })
+
+describe('headForPath / pageForPath — 查不到就回 null', () => {
+  it('壞掉的百分比編碼當作不認得,不丟例外', async () => {
+    const get = fakeApi({})
+    expect(await headForPath('/program/115-1/%E0%A4%A', get)).toBeNull()
+    expect(get).not.toHaveBeenCalled()
+  })
+
+  it('不認得的頁面種類', async () => {
+    expect(await headForPath('/nope/115-1/1', fakeApi({}))).toBeNull()
+  })
+
+  it('清單裡沒有這個代碼', async () => {
+    const get = fakeApi({ '115-1/teachers.json': { teachers: [] } })
+    expect(await headForPath('/teacher/115-1/1', get)).toBeNull()
+  })
+
+  it('清單檔少了那個欄位也只是查不到', async () => {
+    const get = fakeApi({ '115-1/classes.json': {} })
+    expect(await headForPath('/class/115-1/1', get)).toBeNull()
+  })
+
+  it('課程頁:索引裡沒有這門課', async () => {
+    const get = fakeApi({ '115-1/index.json': { courses: [] } })
+    expect(await pageForPath('/course/115-1/999', get)).toBeNull()
+  })
+})
