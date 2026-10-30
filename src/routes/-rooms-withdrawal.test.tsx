@@ -187,9 +187,9 @@ describe('/withdrawal', () => {
     let release!: () => void
     const gate = new Promise<void>((r) => (release = r))
     const fake = stubApi(W_API)
-    vi.stubGlobal('fetch', async (...args: Parameters<typeof fetch>) => {
-      if (String(args[0]).includes('index.json')) await gate
-      return fake(...args)
+    vi.stubGlobal('fetch', async (input: string) => {
+      if (input.includes('index.json')) await gate
+      return fake(input)
     })
     renderRoute('/withdrawal?range=all')
     expect(await screen.findByText(/彙總中，已完成 0 \/ 3 個學期/)).toBeInTheDocument()
