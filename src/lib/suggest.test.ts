@@ -76,3 +76,30 @@ describe('suggestRelaxations', () => {
     expect(result.map((r) => r.remove)).toEqual(['departments'])
   })
 })
+
+describe('教師、班級、學程 / 教室也能被建議移除', () => {
+  it('移除後有結果就列出來,結果多的排前面', () => {
+    const counts: Record<string, number> = {
+      teacherCode: 1,
+      classId: 3,
+      courseIdSet: 2,
+    }
+    const result = suggestRelaxations(
+      (_q, f) =>
+        f.teacherCode === null
+          ? counts.teacherCode!
+          : f.classId === null
+            ? counts.classId!
+            : f.courseIdSet === null
+              ? counts.courseIdSet!
+              : 0,
+      '',
+      filters({ teacherCode: 't1', classId: '2501', courseIdSet: new Set(['1']) }),
+    )
+    expect(result.map((r) => r.remove)).toEqual([
+      'classId',
+      'courseIdSet',
+      'teacherCode',
+    ])
+  })
+})
