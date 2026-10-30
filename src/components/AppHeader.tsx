@@ -31,7 +31,10 @@ export function AppHeader() {
   const debounced = useDebounced(draft)
 
   useEffect(() => {
-    if (!onSearchPage || debounced === urlQuery) return
+    // `debounced !== draft` 代表還沒停手,**或是網址剛從外面被改掉**(上一頁、
+    // 點了「移除關鍵字」)—— 後者的 debounced 還是舊字,這時寫回去會把剛拿掉的
+    // 關鍵字又塞回網址
+    if (!onSearchPage || debounced !== draft || debounced === urlQuery) return
     void navigate({
       to: '/search',
       search: (prev: Record<string, unknown>) => {
@@ -44,7 +47,7 @@ export function AppHeader() {
       // 每個按鍵都推一次歷史紀錄的話,上一頁會變成一個字一個字倒退
       replace: true,
     })
-  }, [debounced, urlQuery, onSearchPage, navigate])
+  }, [debounced, draft, urlQuery, onSearchPage, navigate])
 
   /**
    * 不在搜尋頁時**不即時導頁**,按 Enter 才走。
