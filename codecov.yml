@@ -1,0 +1,11 @@
+coverage:
+  status:
+    # 先只回報不擋 PR,等覆蓋率穩定再調門檻
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
+comment:
+  layout: 'condensed_header, diff, flags'

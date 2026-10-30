@@ -90,6 +90,13 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
     include: ['{src,worker,scripts}/**/*.{test,spec}.{ts,tsx}'],
+    // lcov 給 Codecov 上傳用
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'lcov'],
+      include: ['{src,worker,scripts}/**/*.{ts,tsx}'],
+      exclude: ['src/routeTree.gen.ts', 'src/test/**', '**/*.{test,spec}.{ts,tsx}'],
+    },
     alias: {
       // vite-plugin-pwa 的虛擬模組只有 build 時才存在,vitest 解析不到它。
       // 根路由用了 UpdatePrompt,不換掉的話整棵路由樹都載不起來

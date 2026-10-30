@@ -35,3 +35,6 @@ dist-ssr
 
 # 驗證用的暫存截圖
 .tmp-*
+
+# 測試覆蓋率報告
+coverage

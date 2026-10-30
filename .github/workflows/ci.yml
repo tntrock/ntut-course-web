@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: read
+  # Codecov 用 OIDC 驗證,不需要另外存 token
+  id-token: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -33,7 +35,13 @@ jobs:
         run: npm run format:check
 
       - name: 測試
-        run: npm test
+        run: npm test -- --coverage
+
+      - uses: codecov/codecov-action@v7
+        with:
+          use_oidc: true
+          files: coverage/lcov.info
+          fail_ci_if_error: false
 
       # Cloudflare Pages 自己會 build,這裡跑是為了讓型別錯誤在 PR 上就擋下來,
       # 而不是等部署失敗才發現
