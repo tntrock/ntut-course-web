@@ -1,4 +1,6 @@
-import type { CourseIndexEntry, TimeSlot } from '@/types/api'
+import type { CourseIndexEntry, PeriodDef, TimeSlot } from '@/types/api'
+import type { SavedCourse } from '@/lib/storage'
+import { toSnapshot } from '@/lib/schedule'
 
 /**
  * 測試用的課程建構器。
@@ -36,3 +38,28 @@ export function slot(day: number, ...periods: string[]): TimeSlot {
     periods,
   }
 }
+
+/**
+ * 存在課表裡的課 —— 快照從 `course()` 轉出來,跟正式加入課表的路徑一樣。
+ *
+ * 教室不在索引裡(另外補進快照),所以單獨給。
+ */
+export function savedCourse({
+  classrooms = [],
+  ...overrides
+}: Partial<CourseIndexEntry> & { classrooms?: string[] } = {}): SavedCourse {
+  const entry = course(overrides)
+  return {
+    id: entry.id,
+    addedAt: '2026-09-01T00:00:00.000Z',
+    snapshot: { ...toSnapshot(entry), classrooms },
+  }
+}
+
+/** 第 1–4 節。順序就是 `meta.periods` 的順序。 */
+export const PERIODS: PeriodDef[] = [
+  { code: '1', start: '08:10', end: '09:00' },
+  { code: '2', start: '09:10', end: '10:00' },
+  { code: '3', start: '10:10', end: '11:00' },
+  { code: '4', start: '11:10', end: '12:00' },
+]
