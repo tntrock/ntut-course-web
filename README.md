@@ -1,6 +1,17 @@
 # 北科課程
 
-[![CI](https://github.com/tntrock/ntut-course-web/actions/workflows/ci.yml/badge.svg)](https://github.com/tntrock/ntut-course-web/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/tntrock/ntut-course-web/graph/badge.svg)](https://codecov.io/gh/tntrock/ntut-course-web)
+[![CI](https://img.shields.io/github/actions/workflow/status/tntrock/ntut-course-web/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white)](https://github.com/tntrock/ntut-course-web/actions/workflows/ci.yml)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/tntrock/ntut-course-web/github-code-scanning/codeql?branch=main&label=CodeQL&logo=github)](https://github.com/tntrock/ntut-course-web/security/code-scanning)
+[![Codecov](https://img.shields.io/codecov/c/github/tntrock/ntut-course-web?logo=codecov&logoColor=white)](https://codecov.io/gh/tntrock/ntut-course-web)
+[![License: MIT](https://img.shields.io/github/license/tntrock/ntut-course-web)](LICENSE)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Fntut-course.allenyen.net&label=ntut-course.allenyen.net)](https://ntut-course.allenyen.net)
+[![Last commit](https://img.shields.io/github/last-commit/tntrock/ntut-course-web)](https://github.com/tntrock/ntut-course-web/commits/main)
+
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 
 臺北科技大學的課程查詢：搜尋、教學大綱、系所與教師瀏覽、排課表。
 
