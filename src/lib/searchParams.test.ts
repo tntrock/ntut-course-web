@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   parseSearch,
+  strictSearch,
   stringifySearch,
   validateSearchParams,
   toFilters,
@@ -150,5 +151,20 @@ describe('網址往返', () => {
     const restored = validateSearchParams(parseSearch(stringifySearch(original)))
 
     expect(restored).toEqual(original)
+  })
+})
+
+describe('strictSearch', () => {
+  /** TanStack Router 會把驗證結果疊在原始參數上,沒蓋掉的 key 會以原字串留下來。 */
+  it('驗證沒留下的 key 明確設成 undefined,疊上去才蓋得掉', () => {
+    const validate = strictSearch((raw) =>
+      raw.tab === 'dept' ? { tab: 'dept' as const } : {},
+    )
+    expect(validate({ tab: 'bogus', utm_source: 'x' })).toEqual({
+      tab: undefined,
+      utm_source: undefined,
+    })
+    expect({ ...{ tab: 'bogus' }, ...validate({ tab: 'bogus' }) }.tab).toBeUndefined()
+    expect(validate({ tab: 'dept' })).toEqual({ tab: 'dept' })
   })
 })

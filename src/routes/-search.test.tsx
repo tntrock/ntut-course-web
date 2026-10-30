@@ -131,6 +131,13 @@ describe('/search', () => {
     expect(screen.getByText('英文寫作')).toBeInTheDocument()
   })
 
+  /** 回歸測試:沒通過驗證的參數原本會以原字串留下來,`sem=` 讓 loader 找不到學期而炸掉。 */
+  it('空的學期與不認得的排序直接忽略', async () => {
+    await open('/search?sem=&sort=bogus')
+    await waitFor(() => expect(count()).toContain('2 門課'))
+    expect(screen.getByLabelText('排序')).toHaveValue('relevance')
+  })
+
   it('在頁首輸入關鍵字會即時篩選', async () => {
     await open('/search')
     await waitFor(() => expect(count()).toContain('2 門課'))

@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
-import { toFilters, validateSearchParams, type SearchParams } from '@/lib/searchParams'
+import {
+  strictSearch,
+  toFilters,
+  validateSearchParams,
+  type SearchParams,
+} from '@/lib/searchParams'
 import type { SortKey } from '@/lib/searchParams'
 import type { RelaxTarget } from '@/lib/suggest'
 import { activeFilterCount } from '@/lib/filters'
@@ -19,8 +24,7 @@ export const Route = createFileRoute('/search')({
   // 搜尋結果是無限的網址空間(`q` 可以是任何字),整片收錄只會吃掉爬取預算 ——
   // 但 `follow` 要留著,它連出去的課程頁是有價值的
   head: () => pageHead({ ...STATIC_PAGES['/search'], path: '/search' }),
-  validateSearch: (search: Record<string, unknown>): SearchParams =>
-    validateSearchParams(search),
+  validateSearch: strictSearch<SearchParams>((search) => validateSearchParams(search)),
   // 只有學期會改變要載入的資料,其餘條件都在前端算
   loaderDeps: ({ search }) => ({ sem: search.sem }),
   /**

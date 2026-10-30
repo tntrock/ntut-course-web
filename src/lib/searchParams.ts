@@ -73,6 +73,27 @@ export function parseSearch(search: string): Record<string, unknown> {
 
 // ─── 驗證 ─────────────────────────────────────────────────────
 
+/**
+ * 包住路由的 `validateSearch`,讓**沒通過驗證的參數真的消失**。
+ *
+ * TanStack Router 把驗證結果疊在原始參數上(`{ ...raw, ...validated }`),所以
+ * 驗證函式「不回傳」某個 key 並不會把它拿掉 —— `?tab=bogus` 的 `tab` 照樣以
+ * 原字串流進 `useSearch()` 與 `loaderDeps`。結果是分頁整片空白、`?sem=` 讓
+ * loader 去找一個叫空字串的學期而炸掉。
+ *
+ * 把驗證沒留下的 key 明確設成 `undefined`,疊上去時才蓋得掉。
+ */
+export function strictSearch<T extends object>(
+  validate: (raw: Record<string, unknown>) => T,
+): (raw: Record<string, unknown>) => T {
+  return (raw) => {
+    const validated = validate(raw)
+    const out: Record<string, unknown> = { ...(validated as Record<string, unknown>) }
+    for (const key of Object.keys(raw)) if (!(key in validated)) out[key] = undefined
+    return out as T
+  }
+}
+
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' && value !== '' ? value : undefined
 }

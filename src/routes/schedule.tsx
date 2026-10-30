@@ -25,6 +25,7 @@ import { ExportImage } from '@/components/schedule/ExportImage'
 import { DataTransfer, Favorites } from '@/components/schedule/PersonalData'
 import { EventEditor } from '@/components/schedule/EventEditor'
 import { STATIC_PAGES, pageHead } from '@/lib/seo'
+import { strictSearch } from '@/lib/searchParams'
 
 interface ScheduleSearch {
   sem?: string
@@ -33,8 +34,9 @@ interface ScheduleSearch {
 export const Route = createFileRoute('/schedule')({
   // 課表只存在使用者自己的瀏覽器,伺服器沒有這一頁的內容可以給爬蟲
   head: () => pageHead({ ...STATIC_PAGES['/schedule'], path: '/schedule' }),
-  validateSearch: (search: Record<string, unknown>): ScheduleSearch =>
+  validateSearch: strictSearch<ScheduleSearch>((search) =>
     typeof search.sem === 'string' && search.sem !== '' ? { sem: search.sem } : {},
+  ),
 
   /**
    * **只等 `meta`,不等學期索引。**

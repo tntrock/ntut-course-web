@@ -17,6 +17,7 @@ import {
 } from '@/lib/rooms'
 import type { SemesterPath } from '@/types/api'
 import { STATIC_PAGES, pageHead } from '@/lib/seo'
+import { strictSearch } from '@/lib/searchParams'
 
 /** 常見的教室規模。實測容量分布 10 ~ 420,中位數 50。 */
 const SEAT_OPTIONS = [0, 30, 50, 80, 120] as const
@@ -31,7 +32,7 @@ interface RoomsSearch {
 
 export const Route = createFileRoute('/rooms')({
   head: () => pageHead({ ...STATIC_PAGES['/rooms'], path: '/rooms' }),
-  validateSearch: (search: Record<string, unknown>): RoomsSearch => {
+  validateSearch: strictSearch<RoomsSearch>((search) => {
     const out: RoomsSearch = {}
     if (typeof search.sem === 'string' && search.sem !== '') out.sem = search.sem
     const slot = search.slot
@@ -44,7 +45,7 @@ export const Route = createFileRoute('/rooms')({
     const seats = Number(search.seats)
     if (Number.isFinite(seats) && seats > 0) out.seats = seats
     return out
-  },
+  }),
 
   loaderDeps: ({ search }) => ({ sem: search.sem }),
 

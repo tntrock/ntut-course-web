@@ -20,6 +20,7 @@ import {
   type BrowseTab,
 } from '@/lib/browseTabs'
 import { STATIC_PAGES, pageHead } from '@/lib/seo'
+import { strictSearch } from '@/lib/searchParams'
 
 interface BrowseSearch {
   sem?: string
@@ -29,13 +30,13 @@ interface BrowseSearch {
 
 export const Route = createFileRoute('/browse')({
   head: () => pageHead({ ...STATIC_PAGES['/browse'], path: '/browse' }),
-  validateSearch: (search: Record<string, unknown>): BrowseSearch => {
+  validateSearch: strictSearch<BrowseSearch>((search) => {
     const out: BrowseSearch = {}
     if (typeof search.sem === 'string' && search.sem !== '') out.sem = search.sem
     if (isBrowseTab(search.tab)) out.tab = search.tab
     if (typeof search.q === 'string' && search.q !== '') out.q = search.q
     return out
-  },
+  }),
 
   // 關鍵字只在前端過濾,不該觸發重新載入
   loaderDeps: ({ search }) => ({ sem: search.sem, tab: search.tab }),
@@ -112,11 +113,13 @@ function BrowsePage() {
 
   // 導頁是副作用,不能在 render 期做
   useEffect(() => {
-    if (query === (params.q ?? '')) return
+    // `query !== draft`:還沒停手,或網址剛從外面改掉(換分頁會清掉 q)——
+    // 後者的 debounced 還是舊字,寫回去會把剛清掉的關鍵字又帶回來
+    if (query !== draft || query === (params.q ?? '')) return
     setSearch({ q: query })
     // setSearch 每次 render 都是新的函式,放進相依陣列會變成無窮迴圈
     // oxlint-disable-next-line exhaustive-deps
-  }, [query, params.q])
+  }, [query, draft, params.q])
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">

@@ -26,6 +26,7 @@ import {
 } from '@/lib/withdrawal'
 import type { SemesterPath } from '@/types/api'
 import { STATIC_PAGES, pageHead } from '@/lib/seo'
+import { strictSearch } from '@/lib/searchParams'
 
 const TABS = ['teacher', 'course'] as const
 type Tab = (typeof TABS)[number]
@@ -50,7 +51,7 @@ interface WithdrawalSearch {
 
 export const Route = createFileRoute('/withdrawal')({
   head: () => pageHead({ ...STATIC_PAGES['/withdrawal'], path: '/withdrawal' }),
-  validateSearch: (search: Record<string, unknown>): WithdrawalSearch => {
+  validateSearch: strictSearch<WithdrawalSearch>((search) => {
     const out: WithdrawalSearch = {}
     if (typeof search.sem === 'string' && search.sem !== '') out.sem = search.sem
     if (TABS.includes(search.tab as Tab)) out.tab = search.tab as Tab
@@ -62,7 +63,7 @@ export const Route = createFileRoute('/withdrawal')({
     const min = Number(search.min)
     if (Number.isFinite(min) && min >= 0) out.min = min
     return out
-  },
+  }),
 
   // 學期資料交給 useQueries 逐一載入 —— 「所有期間」是 51 支請求,
   // 全部塞進 loader 會讓整頁卡在白畫面好幾秒
