@@ -1,5 +1,7 @@
 # 北科課程
 
+[![CI](https://github.com/tntrock/ntut-course-web/actions/workflows/ci.yml/badge.svg)](https://github.com/tntrock/ntut-course-web/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/tntrock/ntut-course-web/graph/badge.svg)](https://codecov.io/gh/tntrock/ntut-course-web)
+
 臺北科技大學的課程查詢：搜尋、教學大綱、系所與教師瀏覽、排課表。
 
 **[ntut-course.allenyen.net](https://ntut-course.allenyen.net)**
