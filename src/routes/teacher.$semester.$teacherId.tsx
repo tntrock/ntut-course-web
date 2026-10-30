@@ -8,6 +8,7 @@ import { RANGES, rangeSemesters, type Range } from '@/hooks/useWithdrawal'
 import { TeacherCourseGroups } from '@/components/browse/TeacherCourseGroups'
 import { DetailNotFound, DetailShell } from '@/components/browse/DetailShell'
 import { DYNAMIC_PAGES, pageHead } from '@/lib/seo'
+import { strictSearch } from '@/lib/searchParams'
 
 interface TeacherSearch {
   /**
@@ -20,8 +21,9 @@ interface TeacherSearch {
 }
 
 export const Route = createFileRoute('/teacher/$semester/$teacherId')({
-  validateSearch: (search: Record<string, unknown>): TeacherSearch =>
+  validateSearch: strictSearch<TeacherSearch>((search) =>
     RANGES.includes(search.range as Range) ? { range: search.range as Range } : {},
+  ),
 
   loaderDeps: ({ search }) => ({ range: search.range }),
 

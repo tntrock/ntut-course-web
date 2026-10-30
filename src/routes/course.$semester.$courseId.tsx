@@ -22,14 +22,16 @@ import { Badge } from '@/components/ui/Badge'
 import { ScheduleToggle } from '@/components/ScheduleToggle'
 import { FavoriteToggle } from '@/components/FavoriteToggle'
 import { SyllabusPanel } from '@/components/course/SyllabusPanel'
+import { strictSearch } from '@/lib/searchParams'
 
 interface DetailSearch {
   tab?: 'syllabus'
 }
 
 export const Route = createFileRoute('/course/$semester/$courseId')({
-  validateSearch: (search: Record<string, unknown>): DetailSearch =>
+  validateSearch: strictSearch<DetailSearch>((search) =>
     search.tab === 'syllabus' ? { tab: 'syllabus' } : {},
+  ),
 
   /**
    * 冷啟動(直接開分享連結)的請求安排。實測線上冷快取約 1.25 秒,
