@@ -92,3 +92,25 @@ describe('sortCourses', () => {
     expect(sortCourses(tied, 'credits', new Map()).map((c) => c.id)).toEqual(['1', '2'])
   })
 })
+
+describe('sortCourses — 缺值與同分', () => {
+  it('學分與人數不明的排最後,同分時照課名', () => {
+    const list = [
+      course({ id: 'x', name_zh: '乙', credits: null, enrolled: null }),
+      course({ id: 'y', name_zh: '甲', credits: 2, enrolled: 5 }),
+      course({ id: 'z', name_zh: '丙', credits: 2, enrolled: 5 }),
+    ]
+    const ids = (key: 'credits' | 'enrolled') =>
+      sortCourses(list, key, new Map()).map((c) => c.id)
+    expect(ids('credits').at(-1)).toBe('x')
+    expect(ids('enrolled').at(-1)).toBe('x')
+  })
+
+  it('相關度沒有分數的課視為 0 分,同分照課名', () => {
+    const list = [
+      course({ id: 'p', name_zh: '乙' }),
+      course({ id: 'q', name_zh: '甲' }),
+    ]
+    expect(sortCourses(list, 'relevance', new Map()).map((c) => c.id)).toHaveLength(2)
+  })
+})
