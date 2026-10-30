@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 
 import { renderRoute, stubApi } from '@/test/renderRoute'
-import { course } from '@/test/factories'
+import { DEPARTMENTS, ENTRY, META } from '@/test/fixtures'
 
 /**
  * **整條路由的測試。**
@@ -11,55 +11,6 @@ import { course } from '@/test/factories'
  * `notFound()` 與 `head()` —— 那些只有真的走一次路由才會經過,而那正是
  * 這個站最容易出錯的地方(冷啟動直接開分享連結就是走這條)。
  */
-
-const META = {
-  schema_version: 3,
-  generated_at: '2026-09-13T00:00:00Z',
-  latest: '115-1',
-  disclaimer: '測試用免責聲明。',
-  source: { name: '測試來源', url: 'https://example.invalid/' },
-  semesters: [
-    {
-      year: 115,
-      sem: 1,
-      path: '115-1',
-      generated_at: '2026-09-13T00:00:00Z',
-      partial: false,
-      department_count: 1,
-      class_group_count: 1,
-      course_count: 1,
-      merged_course_count: 0,
-      failed_department_count: 0,
-    },
-  ],
-  endpoints: [],
-  periods: [{ code: '1', start: '08:10', end: '09:00' }],
-  requirement_symbols: [],
-}
-
-const ENTRY = course({
-  id: '364540',
-  name_zh: '網路與系統安全',
-  teachers: ['王小明'],
-  department_ids: ['59'],
-  credits: 3,
-})
-
-const DEPARTMENTS = {
-  semester: '115-1',
-  departments: [
-    {
-      id: '59',
-      name: '資工系',
-      college: '電資學院',
-      url: '',
-      class_groups: [],
-      course_count: 1,
-      path: '115-1/courses/59.json',
-    },
-  ],
-  colleges: [{ name: '電資學院', department_ids: ['59'] }],
-}
 
 afterEach(() => {
   vi.unstubAllGlobals()
