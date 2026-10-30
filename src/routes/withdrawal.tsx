@@ -145,7 +145,9 @@ function WithdrawalPage() {
   // 導頁是副作用,不能在 render 期做。這裡直接呼叫 navigate 而不是走 `set`,
   // 因為 `set` 會順手重設 limit —— 在 effect 裡 setState 會多跑一輪 render
   useEffect(() => {
-    if (q === (params.q ?? '')) return
+    // `q !== draft`:還沒停手,或網址剛從外面改掉(上一頁)—— 後者的 debounced
+    // 還是舊字,寫回去會把網址上的關鍵字蓋掉
+    if (q !== draft || q === (params.q ?? '')) return
     void navigate({
       search: (prev: WithdrawalSearch) => {
         const merged: Record<string, unknown> = { ...prev, q }
@@ -156,7 +158,7 @@ function WithdrawalPage() {
     })
     // navigate 每次 render 都是新的函式,放進相依陣列會變成無窮迴圈
     // oxlint-disable-next-line exhaustive-deps
-  }, [q, params.q])
+  }, [q, draft, params.q])
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
