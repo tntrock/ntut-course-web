@@ -114,3 +114,9 @@ describe('findCourse — 上游格式變了', () => {
     parse.mockRestore()
   })
 })
+
+describe('findCourse — 快路切錯時退回整份解析', () => {
+  it('括號配不起來(上游截斷)時不會無窮迴圈,而是交給整份解析去失敗', () => {
+    expect(() => findCourse('{"courses":[{"id":"1","name_zh":"甲"', '1')).toThrow()
+  })
+})
