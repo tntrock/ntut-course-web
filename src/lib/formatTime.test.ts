@@ -135,3 +135,16 @@ describe('dayName', () => {
     expect(dayName(0)).toBe('日')
   })
 })
+
+describe('認不得的星期與節次', () => {
+  it('星期超出範圍時照數字顯示', () => {
+    expect(dayName(9)).toBe('9')
+    expect(formatTimeSlots(course({ time_slots: [slot(9, '1')] }), periods)).toBe(
+      '週9 1',
+    )
+  })
+
+  it('不在 meta 裡的節次不編時刻', () => {
+    expect(formatSlotClock(slot(1, 'Z'), periods)).toBe('')
+  })
+})

@@ -61,6 +61,44 @@ describe('/rooms', () => {
     expect(await screen.findByText(/三教102/)).toBeInTheDocument()
   })
 
+  it('容量、時段格子與學期都能改,改時段時保留學期與容量', async () => {
+    stubApi(API)
+    renderRoute('/rooms?slot=1-1')
+    await screen.findByText(/三教102/)
+
+    fireEvent.change(screen.getByRole('combobox', { name: /至少坐得下/ }), {
+      target: { value: '50' },
+    })
+    expect(await screen.findByText('未提供容量')).toBeInTheDocument()
+
+    // 再點一次同一格 = 取消;保留 seats 的話提示文字就不會出現容量那一句
+    fireEvent.click(screen.getByRole('button', { name: '週一 第 1 節' }))
+    expect(await screen.findByText('先在上面框選想要的時段。')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '週二 第 1 節' }))
+    expect(await screen.findByText(/且坐得下 50 人/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /清除 1 格/ }))
+    expect(await screen.findByText('先在上面框選想要的時段。')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByRole('combobox', { name: /至少坐得下/ }), {
+      target: { value: '0' },
+    })
+    fireEvent.change(screen.getByLabelText('學期'), { target: { value: '115-1' } })
+    expect(await screen.findByText('先在上面框選想要的時段。')).toBeInTheDocument()
+  })
+
+  it('選到的時段沒有完全空著的教室時,建議少選幾格', async () => {
+    stubApi({
+      ...API,
+      '115-1/classrooms.json': {
+        ...API['115-1/classrooms.json'],
+        classrooms: [API['115-1/classrooms.json'].classrooms[0]],
+      },
+    })
+    renderRoute('/rooms?slot=1-1')
+    expect(await screen.findByText(/沒有完全空著的教室/)).toBeInTheDocument()
+  })
+
   it('單一時段字串與陣列都收', async () => {
     stubApi({
       ...API,

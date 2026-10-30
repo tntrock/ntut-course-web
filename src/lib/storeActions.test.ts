@@ -196,3 +196,39 @@ describe('教室的補救', () => {
     expect(snap?.credits).toBe(fromIndex.credits)
   })
 })
+
+describe('refreshSnapshot / fillClassrooms — 只動到目標那一門', () => {
+  const store = () => {
+    const s = defaultStore()
+    s.schedules['115-1'] = { courses: [] }
+    let out = addToSchedule(s, '115-1', course({ id: '1', name_zh: '甲' }))
+    out = addToSchedule(out, '115-1', course({ id: '2', name_zh: '乙' }))
+    return out
+  }
+
+  it('更新一門課的快照,其他課原封不動', () => {
+    const before = store()
+    const after = refreshSnapshot(
+      before,
+      '115-1',
+      '1',
+      course({ id: '1', name_zh: '甲(新)' }),
+    )
+    const [first, second] = after.schedules['115-1']?.courses ?? []
+    expect(first?.snapshot.name_zh).toBe('甲(新)')
+    expect(second).toBe(before.schedules['115-1']?.courses[1])
+  })
+
+  it('已經有教室的課不覆蓋', () => {
+    const filled = fillClassrooms(store(), '115-1', [
+      { id: '1', classrooms: ['三教101'] },
+    ])
+    const again = fillClassrooms(filled, '115-1', [
+      { id: '1', classrooms: ['別的'] },
+      { id: '2', classrooms: ['四教202'] },
+    ])
+    expect(again.schedules['115-1']?.courses.map((c) => c.snapshot.classrooms)).toEqual(
+      [['三教101'], ['四教202']],
+    )
+  })
+})

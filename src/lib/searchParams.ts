@@ -1,4 +1,5 @@
 import { emptyFilters, type Filters, type TimeMode } from './filters'
+import type { RelaxTarget } from './suggest'
 
 /**
  * 搜尋條件全部放在網址上,所以網址可分享、可加書籤、上一頁行為正確。
@@ -204,4 +205,41 @@ export function toFilters(
     classId: params.class ?? null,
     courseIdSet,
   }
+}
+
+/** 移除某個條件後的網址參數。 */
+export function withoutFilter(params: SearchParams, target: RelaxTarget): SearchParams {
+  const next = { ...params }
+  switch (target) {
+    case 'query':
+      delete next.q
+      break
+    case 'departments':
+      delete next.dept
+      break
+    case 'requirementTypes':
+      delete next.req
+      break
+    case 'languages':
+      delete next.lang
+      break
+    case 'slots':
+      delete next.slot
+      break
+    case 'credits':
+      delete next.cmin
+      delete next.cmax
+      break
+    case 'teacherCode':
+      delete next.teacher
+      break
+    case 'classId':
+      delete next.class
+      break
+    case 'courseIdSet':
+      delete next.program
+      delete next.classroom
+      break
+  }
+  return next
 }

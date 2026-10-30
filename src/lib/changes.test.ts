@@ -235,3 +235,12 @@ describe('formatFieldValue 的時段', () => {
     expect(formatFieldValue('time_slots', slots, names)).toContain('day')
   })
 })
+
+describe('formatFieldValue — 認不得的值', () => {
+  const names: NameLookup = { department: (id) => id, classGroup: (id) => id }
+
+  it('物件原樣序列化,空字串寫成「無」', () => {
+    expect(formatFieldValue('x', { a: 1 }, names)).toBe('{"a":1}')
+    expect(formatFieldValue('x', '', names)).toBe('無')
+  })
+})

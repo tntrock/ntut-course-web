@@ -126,3 +126,48 @@ describe('newEvent', () => {
     expect(event.id).not.toMatch(/^\d+$/)
   })
 })
+
+describe('loadEvents — 壞掉的事務只濾掉那一筆', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('時段與欄位型別不對時修補或丟掉,不牽連同一學期的其他事務', () => {
+    localStorage.setItem(
+      EVENTS_KEY,
+      JSON.stringify({
+        '115-1': [
+          'broken',
+          { id: '', title: 'x' },
+          { id: 'evt_1', title: '   ' },
+          {
+            id: 'evt_2',
+            title: '打工',
+            note: '',
+            time_slots: [
+              'broken',
+              { day: 9, periods: ['1'] },
+              { day: 1, periods: 'nope' },
+              { day: 2, periods: ['1', 3] },
+            ],
+          },
+          { id: 'evt_3', title: '社團', time_slots: 'nope', createdAt: 'c' },
+        ],
+        '114-2': 'broken',
+      }),
+    )
+    const events = loadEvents()
+    expect(events['115-1']?.map((e) => e.id)).toEqual(['evt_2', 'evt_3'])
+    expect(events['115-1']?.[0]).toMatchObject({
+      note: null,
+      createdAt: '',
+      time_slots: [{ day: 2, day_name: '', periods: ['1'] }],
+    })
+    expect(events['115-1']?.[1]?.time_slots).toEqual([])
+    expect(events['114-2']).toEqual([])
+  })
+
+  it('存的不是物件時備份並重置', () => {
+    localStorage.setItem(EVENTS_KEY, '[1]')
+    expect(loadEvents()).toEqual({})
+    expect(localStorage.getItem(EVENTS_BACKUP_KEY)).toBe('[1]')
+  })
+})

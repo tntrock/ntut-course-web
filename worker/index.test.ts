@@ -164,3 +164,126 @@ describe('worker fetch — 快取命中', () => {
     expect(key.url).toContain('/nope')
   })
 })
+
+/**
+ * 改寫成功的那條路。
+ *
+ * vitest 裡沒有真的 `HTMLRewriter`,這裡用一個極簡的替身:記下每個選擇器的
+ * handler,`transform` 時對字串做同樣的事。驗的是 Worker 交給它的指令對不對,
+ * 不是 HTMLRewriter 本身。
+ */
+class FakeRewriter {
+  private handlers: [string, Record<string, (el: unknown) => void>][] = []
+  on(selector: string, handler: Record<string, (el: unknown) => void>) {
+    this.handlers.push([selector, handler])
+    return this
+  }
+  transform(response: Response) {
+    const body = response.text().then((source) => {
+      let out = source
+      for (const [selector, handler] of this.handlers) {
+        if (selector.startsWith('[')) {
+          handler.element?.({
+            remove: () => (out = out.replace(/<title data-[^<]*<\/title>/, '')),
+          })
+        } else if (selector === 'head') {
+          handler.element?.({
+            onEndTag: (fn: (end: unknown) => void) =>
+              fn({
+                before: (html: string) =>
+                  (out = out.replace('</head>', `${html}</head>`)),
+              }),
+          })
+        } else if (selector === '#root') {
+          handler.element?.({
+            setInnerContent: (html: string) =>
+              (out = out.replace(
+                '<div id="root"></div>',
+                `<div id="root">${html}</div>`,
+              )),
+          })
+        }
+      }
+      return out
+    })
+    return new Response(
+      new ReadableStream({
+        async start(controller) {
+          controller.enqueue(new TextEncoder().encode(await body))
+          controller.close()
+        },
+      }),
+    )
+  }
+}
+
+describe('worker fetch — 改寫', () => {
+  const PAGE =
+    '<!doctype html><html><head><title data-fallback>北科課程</title></head>' +
+    '<body><div id="root"></div></body></html>'
+  const page = () =>
+    new Response(PAGE, {
+      headers: { 'content-type': 'text/html; charset=utf-8', etag: '"e1"' },
+    })
+
+  it('固定頁面:換掉後備標題、拿掉 ETag、存進邊緣快取', async () => {
+    vi.stubGlobal('HTMLRewriter', FakeRewriter)
+    const response = await worker.fetch(
+      new Request('https://ntut-course.allenyen.net/about'),
+      makeEnv(page),
+      ctx,
+    )
+    const text = await response.text()
+
+    // 原本那個站台層級的標題拿掉,換成這一頁的
+    expect(text).not.toContain('>北科課程</title>')
+    expect(text).toContain('>關於｜北科課程</title>')
+    expect(response.headers.get('etag')).toBeNull()
+    expect(response.headers.get('cache-control')).toContain('s-maxage=')
+    expect(ctx.waitUntil).toHaveBeenCalled()
+  })
+
+  it('課程頁把內文畫進 #root', async () => {
+    vi.stubGlobal('HTMLRewriter', FakeRewriter)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        url.endsWith('/115-1/index.json')
+          ? new Response(
+              JSON.stringify({
+                courses: [
+                  {
+                    id: '1',
+                    name_zh: '作業系統',
+                    teachers: [],
+                    time_slots: [],
+                    class_ids: [],
+                  },
+                ],
+              }),
+            )
+          : new Response('not found', { status: 404 }),
+      ),
+    )
+    const response = await worker.fetch(
+      new Request('https://ntut-course.allenyen.net/course/115-1/1'),
+      makeEnv(page),
+      ctx,
+    )
+    expect(await response.text()).toContain('<div id="root"><')
+  })
+
+  it('上游回錯誤時退回原本的資產', async () => {
+    vi.stubGlobal('HTMLRewriter', FakeRewriter)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('down', { status: 503 })),
+    )
+    const response = await worker.fetch(
+      new Request('https://ntut-course.allenyen.net/teacher/115-1/1'),
+      makeEnv(page),
+      ctx,
+    )
+    expect(await response.text()).toBe(PAGE)
+  })
+})

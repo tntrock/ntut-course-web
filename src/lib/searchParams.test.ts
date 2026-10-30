@@ -5,6 +5,8 @@ import {
   stringifySearch,
   validateSearchParams,
   toFilters,
+  withoutFilter,
+  type SearchParams,
 } from './searchParams'
 import { LANGUAGE_ZH } from './filters'
 
@@ -166,5 +168,59 @@ describe('strictSearch', () => {
     })
     expect({ ...{ tab: 'bogus' }, ...validate({ tab: 'bogus' }) }.tab).toBeUndefined()
     expect(validate({ tab: 'dept' })).toEqual({ tab: 'dept' })
+  })
+})
+
+describe('withoutFilter', () => {
+  const FULL: SearchParams = {
+    q: 'x',
+    sem: '115-1',
+    dept: ['59'],
+    req: ['必修'],
+    lang: ['英語'],
+    slot: ['1-1'],
+    cmin: 1,
+    cmax: 3,
+    teacher: 't1',
+    class: '2501',
+    program: 'AI',
+    classroom: 'r1',
+  }
+
+  it.each([
+    ['query', ['q']],
+    ['departments', ['dept']],
+    ['requirementTypes', ['req']],
+    ['languages', ['lang']],
+    ['slots', ['slot']],
+    ['credits', ['cmin', 'cmax']],
+    ['teacherCode', ['teacher']],
+    ['classId', ['class']],
+    // 學程與教室都是「一組課號」,移除時兩個一起拿掉
+    ['courseIdSet', ['program', 'classroom']],
+  ] as const)('移除 %s 只拿掉 %j,學期留著', (target, keys) => {
+    const next = withoutFilter(FULL, target)
+    for (const key of keys) expect(next).not.toHaveProperty(key)
+    expect(Object.keys(next)).toHaveLength(Object.keys(FULL).length - keys.length)
+    expect(next.sem).toBe('115-1')
+  })
+})
+
+describe('validateSearchParams — 教師、班級、學程、教室', () => {
+  it('收下單值參數,空字串丟掉', () => {
+    expect(
+      validateSearchParams({
+        teacher: 't1',
+        class: '2501',
+        program: 'AI',
+        classroom: 'r1',
+        q: '',
+      }),
+    ).toEqual({ teacher: 't1', class: '2501', program: 'AI', classroom: 'r1' })
+  })
+
+  it('數字參數接受已經是數字的值,負數與 NaN 丟掉', () => {
+    expect(validateSearchParams({ cmin: 2, cmax: -1 })).toEqual({ cmin: 2 })
+    expect(validateSearchParams({ cmin: Number.NaN })).toEqual({})
   })
 })
