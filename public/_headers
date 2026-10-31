@@ -8,13 +8,17 @@
 # `connect-src` 放行 fonts.googleapis.com / fonts.gstatic.com 不是為了載字型
 # (那是 style-src 與 font-src 的事),是因為**「存成圖片」會用 fetch 把字型抓下來
 # 內嵌進 PNG**。實測 report-only 時就是這一條被擋,而且只在按下匯出時才會出現。
+#
+# GA4 的來源照 Google 官方的 CSP 建議放行:收集端點會依地區換主機
+# (`region1.`、`analytics.google.com`),開了 Google 信號還會打 doubleclick 與
+# www.google.com,追蹤像素走 `img-src`。只列實測看到的主機,下次換一個就又被擋。
 
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
   X-Frame-Options: DENY
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-DAlwKpD+jvcmxNhduON4Nuo+dU09rwhrX1H8preWFoU=' 'sha256-y/cw1RUmwmtKilwzJoIhQ3C65/RUahftz8GocbjNuSY=' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://tntrock.github.io https://fonts.googleapis.com https://fonts.gstatic.com https://www.google-analytics.com https://region1.google-analytics.com https://cloudflareinsights.com https://static.cloudflareinsights.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-DAlwKpD+jvcmxNhduON4Nuo+dU09rwhrX1H8preWFoU=' 'sha256-y/cw1RUmwmtKilwzJoIhQ3C65/RUahftz8GocbjNuSY=' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://tntrock.github.io https://fonts.googleapis.com https://fonts.gstatic.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://www.google.com https://cloudflareinsights.com https://static.cloudflareinsights.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 # Vite 產出的檔名含 hash,可以永久快取
 /assets/*
