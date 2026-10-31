@@ -80,4 +80,23 @@ describe('CSP 的基本形狀', () => {
     expect(connect).toContain('https://fonts.googleapis.com')
     expect(connect).toContain('https://fonts.gstatic.com')
   })
+
+  /**
+   * GA4 的收集請求被擋過:Search Console 回報 connect-src 擋了
+   * analytics.google.com、stats.g.doubleclick.net、www.google.com,
+   * img-src 擋了 googletagmanager.com。缺任何一個,流量數字就會默默變少。
+   */
+  it.each([
+    ['connect-src', 'https://analytics.google.com'],
+    ['connect-src', 'https://*.google-analytics.com'],
+    ['connect-src', 'https://*.analytics.google.com'],
+    ['connect-src', 'https://*.googletagmanager.com'],
+    ['connect-src', 'https://stats.g.doubleclick.net'],
+    ['connect-src', 'https://www.google.com'],
+    ['img-src', 'https://*.google-analytics.com'],
+    ['img-src', 'https://*.googletagmanager.com'],
+  ])('%s 放行 GA4 的 %s', (directive, host) => {
+    const value = csp?.match(new RegExp(`${directive}[^;]*`))?.[0] ?? ''
+    expect(value.split(' ')).toContain(host)
+  })
 })
