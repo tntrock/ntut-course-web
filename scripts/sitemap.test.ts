@@ -63,7 +63,7 @@ describe('sitemap 外掛', () => {
     expect(sitemap().apply).toBe('build')
   })
 
-  it('收最新兩個學期,不收更舊的', async () => {
+  it('只收最新的學期', async () => {
     const fetch = fakeFetch(FILES)
     vi.stubGlobal('fetch', fetch)
     const { done, logger, emitFile } = run({ VITE_API_BASE: 'https://api.invalid/' })
@@ -72,11 +72,11 @@ describe('sitemap 外掛', () => {
     const xml = emitFile.mock.calls[0]?.[0].source as string
     expect(emitFile.mock.calls[0]?.[0].fileName).toBe('sitemap.xml')
     expect(xml).toContain('/course/115-1/c-115-1')
-    expect(xml).toContain('/course/114-2/c-114-2')
-    expect(fetch.calls.some((u) => u.includes('114-1/'))).toBe(false)
+    expect(xml).not.toContain('/course/114-2/')
+    expect(fetch.calls.some((u) => /114-[12]\//.test(u))).toBe(false)
     // 結尾的斜線不能變成 `//meta.json`
     expect(fetch.calls[0]).toBe('https://api.invalid/meta.json')
-    expect(logger.info.mock.calls[0]?.[0]).toContain('115-1、114-2')
+    expect(logger.info.mock.calls[0]?.[0]).toContain('（115-1）')
   })
 
   it('抓不到資料時只警告,不擋 build', async () => {
