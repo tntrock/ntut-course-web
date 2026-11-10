@@ -2,8 +2,6 @@ import type { Plugin, ResolvedConfig } from 'vite'
 
 import { sitemapEntries, sitemapXml, type SemesterContent } from '../src/lib/sitemap.ts'
 import type {
-  ClassesResponse,
-  ClassroomsResponse,
   CourseIndex,
   DepartmentsResponse,
   Meta,
@@ -46,25 +44,19 @@ function newestFirst(meta: Meta) {
   return [...meta.semesters].sort((a, b) => b.year - a.year || b.sem - a.sem)
 }
 
-async function collect(base: string, semester: SemesterPath, lastmod: string) {
-  const [index, departments, classes, teachers, classrooms, programs] =
-    await Promise.all([
-      getJson<CourseIndex>(base, `${semester}/index.json`),
-      getJson<DepartmentsResponse>(base, `${semester}/departments.json`),
-      getJson<ClassesResponse>(base, `${semester}/classes.json`),
-      getJson<TeachersResponse>(base, `${semester}/teachers.json`),
-      getJson<ClassroomsResponse>(base, `${semester}/classrooms.json`),
-      getJson<ProgramsResponse>(base, `${semester}/programs.json`),
-    ])
+async function collect(base: string, semester: SemesterPath) {
+  const [index, departments, teachers, programs] = await Promise.all([
+    getJson<CourseIndex>(base, `${semester}/index.json`),
+    getJson<DepartmentsResponse>(base, `${semester}/departments.json`),
+    getJson<TeachersResponse>(base, `${semester}/teachers.json`),
+    getJson<ProgramsResponse>(base, `${semester}/programs.json`),
+  ])
 
   return {
     semester,
-    lastmod,
     courseIds: index.courses.map((c) => c.id),
     deptIds: departments.departments.map((d) => d.id),
-    classIds: classes.classes.map((c) => c.id),
     teacherIds: teachers.teachers.map((t) => t.id),
-    classroomIds: classrooms.classrooms.map((c) => c.id),
     programNames: programs.programs.map((p) => p.name),
   } satisfies SemesterContent
 }
@@ -102,9 +94,7 @@ export function sitemap(): Plugin {
           Math.max(start, 0) + SEMESTER_COUNT,
         )
 
-        const contents = await Promise.all(
-          picked.map((s) => collect(base, s.path, s.generated_at)),
-        )
+        const contents = await Promise.all(picked.map((s) => collect(base, s.path)))
 
         const entries = sitemapEntries(contents)
         this.emitFile({
