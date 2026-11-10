@@ -16,5 +16,5 @@ Disallow: /search?
 # 會只憑網址把它列進搜尋結果。放行讓爬蟲讀到那一頁的 `noindex`,它才會真的消失。
 
 # sitemap 在 build 時產生(見 `scripts/sitemap.ts`),只收本學期,
-# 約 4,300 個網址。
+# 約 3,700 個網址(不含班級頁、教室頁,見 `src/lib/sitemap.ts`)。
 Sitemap: https://ntut-course.allenyen.net/sitemap.xml

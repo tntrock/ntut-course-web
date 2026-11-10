@@ -23,51 +23,44 @@ export const STATIC_PATHS = [
 /** sitemap 協定的單檔上限。超過要拆檔並加一份 sitemap index。 */
 export const SITEMAP_MAX_URLS = 50000
 
+/**
+ * **沒有 `lastmod`。** 唯一拿得到的時間是上游每天重爬的 `generated_at`,
+ * 每一筆都一樣、每天都變 —— 那是在說「全站四千頁每天都改了」,Google 很快就會
+ * 判定這個欄位不可信、整份 sitemap 的訊號一起打折。沒有逐頁的真實變動時間,
+ * 不寫比亂寫好。
+ */
 export interface SitemapEntry {
   path: string
-  lastmod?: string | undefined
 }
 
-/** 一個學期裡所有有自己網址的東西。 */
+/**
+ * 一個學期裡要送進 sitemap 的東西。
+ *
+ * **班級頁、教室頁不收。** 它們只是課程清單換個切法,內容跟系所頁、教師頁高度
+ * 重疊,約 530 個網址在跟真正有獨特內容的課程頁搶爬取預算。頁面本身照樣可以
+ * 從課程頁連過去,只是不主動送。
+ */
 export interface SemesterContent {
   semester: SemesterPath
-  /** 這個學期資料的產生時間,直接當 `<lastmod>` 用。 */
-  lastmod: string
   courseIds: readonly string[]
   deptIds: readonly string[]
-  classIds: readonly string[]
   teacherIds: readonly string[]
-  classroomIds: readonly string[]
   /** 學程沒有代碼,網址參數就是中文名字。 */
   programNames: readonly string[]
 }
 
-/**
- * 要送進 sitemap 的所有網址。
- *
- * 固定頁面的 `lastmod` 跟著**最新**那個學期走 —— 首頁、瀏覽頁的內容就是從
- * 最新學期的資料長出來的,學期一更新它們也跟著變。
- */
+/** 要送進 sitemap 的所有網址。 */
 export function sitemapEntries(semesters: readonly SemesterContent[]): SitemapEntry[] {
-  const newest = semesters.map((s) => s.lastmod).sort((a, b) => b.localeCompare(a))[0]
-
-  const entries: SitemapEntry[] = STATIC_PATHS.map((path) => ({
-    path,
-    lastmod: newest,
-  }))
+  const entries: SitemapEntry[] = STATIC_PATHS.map((path) => ({ path }))
 
   for (const s of semesters) {
     const add = (prefix: string, ids: readonly string[]) => {
-      for (const id of ids) {
-        entries.push({ path: `/${prefix}/${s.semester}/${id}`, lastmod: s.lastmod })
-      }
+      for (const id of ids) entries.push({ path: `/${prefix}/${s.semester}/${id}` })
     }
 
     add('course', s.courseIds)
     add('dept', s.deptIds)
-    add('class', s.classIds)
     add('teacher', s.teacherIds)
-    add('classroom', s.classroomIds)
     // 中文名字要編碼,不然產出的不是合法網址
     add('program', s.programNames.map(encodeURIComponent))
   }
@@ -91,8 +84,8 @@ function escapeXml(text: string): string {
 /**
  * 產生 `sitemap.xml`。
  *
- * 只寫 `<loc>` 與 `<lastmod>`:`changefreq` 與 `priority` Google 明講不看,
- * 寫了只是讓檔案變大。
+ * 只寫 `<loc>`:`changefreq` 與 `priority` Google 明講不看,寫了只是讓檔案
+ * 變大;`<lastmod>` 為什麼不寫見 `SitemapEntry`。
  */
 export function sitemapXml(entries: readonly SitemapEntry[]): string {
   if (entries.length > SITEMAP_MAX_URLS) {
@@ -102,12 +95,10 @@ export function sitemapXml(entries: readonly SitemapEntry[]): string {
     )
   }
 
-  const urls = entries.map((entry) => {
-    const loc = `    <loc>${escapeXml(canonicalUrl(entry.path))}</loc>`
-    // 空的 <lastmod> 會讓整份被判為無效,沒有就整個不寫
-    const lastmod = entry.lastmod ? `\n    <lastmod>${entry.lastmod}</lastmod>` : ''
-    return `  <url>\n${loc}${lastmod}\n  </url>`
-  })
+  const urls = entries.map(
+    (entry) =>
+      `  <url>\n    <loc>${escapeXml(canonicalUrl(entry.path))}</loc>\n  </url>`,
+  )
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',

@@ -74,6 +74,9 @@ describe('sitemap 外掛', () => {
     expect(xml).toContain('/course/115-1/c-115-1')
     expect(xml).not.toContain('/course/114-2/')
     expect(fetch.calls.some((u) => /114-[12]\//.test(u))).toBe(false)
+    // 班級、教室不收,連抓都不用抓
+    expect(fetch.calls.some((u) => /class(es|rooms)\.json$/.test(u))).toBe(false)
+    expect(xml).not.toContain('<lastmod>')
     // 結尾的斜線不能變成 `//meta.json`
     expect(fetch.calls[0]).toBe('https://api.invalid/meta.json')
     expect(logger.info.mock.calls[0]?.[0]).toContain('（115-1）')
