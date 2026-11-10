@@ -276,6 +276,43 @@ describe('pageForPath — 課程頁帶內文', () => {
   })
 })
 
+describe('pageForPath — 教師頁、系所頁帶課程連結', () => {
+  const COURSES = { courses: [{ id: '364540', name_zh: '網路與系統安全' }] }
+
+  it('教師頁:標題當 h1,每門課連到課程頁', async () => {
+    const page = await pageForPath(
+      '/teacher/115-1/23533',
+      fakeApi({
+        '115-1/teachers.json': { teachers: [{ id: '23533', name: '林〇' }] },
+        '115-1/teachers/23533.json': COURSES,
+      }),
+    )
+    expect(page?.body).toContain('<h1>林〇 老師</h1>')
+    expect(page?.body).toContain('<a href="/course/115-1/364540">網路與系統安全</a>')
+  })
+
+  it('系所頁讀的是 courses/<系所>.json', async () => {
+    const page = await pageForPath(
+      '/dept/115-1/59',
+      fakeApi({
+        '115-1/departments.json': { departments: [{ id: '59', name: '資工系' }] },
+        '115-1/courses/59.json': COURSES,
+      }),
+    )
+    expect(page?.body).toContain('href="/course/115-1/364540"')
+  })
+
+  /** 少了連結只是少一段內文,不能連 head 都丟掉、更不能變成 404。 */
+  it('清單檔抓不到時照樣有 head', async () => {
+    const page = await pageForPath(
+      '/teacher/115-1/23533',
+      fakeApi({ '115-1/teachers.json': { teachers: [{ id: '23533', name: '林〇' }] } }),
+    )
+    expect(titleOf(page?.head ?? null)).toBe('林〇 老師｜北科課程')
+    expect(page?.body).toBeUndefined()
+  })
+})
+
 describe('headForPath / pageForPath — 查不到就回 null', () => {
   it('壞掉的百分比編碼當作不認得,不丟例外', async () => {
     const get = fakeApi({})

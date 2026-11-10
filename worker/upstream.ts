@@ -50,6 +50,22 @@ export function findCourse<T extends { id: string }>(
   return parseUpstream<{ courses: T[] }>(text).courses.find((c) => c.id === id)
 }
 
+/**
+ * 從一份課程清單檔(`teachers/<id>.json`、`courses/<系所>.json`)的**原始文字**
+ * 裡撈出每門課的課號與課名,不做整份解析。
+ *
+ * 理由跟 `findCourse` 一樣是 CPU:系所檔最大約 137 KB,整份解析加造字替換在
+ * 10ms 的上限前沒什麼餘裕,而這裡只要兩個欄位。上游改了欄位順序就會撈到零筆
+ * —— 那只是少了一段內文,不會答錯。
+ */
+export function listCourses(text: string): { id: string; name: string }[] {
+  const out: { id: string; name: string }[] = []
+  for (const m of text.matchAll(/\{"id":"([^"\\]+)","name_zh":("(?:[^"\\]|\\.)*")/g)) {
+    out.push({ id: m[1]!, name: parseUpstream<string>(m[2]!) })
+  }
+  return out
+}
+
 /** 從 `{` 往後找對應的 `}`,字串裡的括號與跳脫字元不算。找不到回傳 -1。 */
 function matchBrace(text: string, open: number): number {
   let depth = 0
