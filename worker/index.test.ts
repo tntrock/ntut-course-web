@@ -113,13 +113,15 @@ describe('worker fetch — 不該碰的東西原封不動', () => {
     expect(await response.text()).toBe(SHELL)
   })
 
-  it('認不得的路徑不改寫 —— 站台預設的後備標籤留著', async () => {
+  /** 內容照舊(前端畫「查無此頁」),但不能是 200 —— 那是 soft 404。 */
+  it('認不得的路徑不改寫,但回 404', async () => {
     const response = await worker.fetch(
       new Request('https://ntut-course.allenyen.net/nope'),
       makeEnv(html),
       ctx,
     )
 
+    expect(response.status).toBe(404)
     expect(await response.text()).toBe(SHELL)
   })
 })
@@ -273,7 +275,8 @@ describe('worker fetch — 改寫', () => {
     expect(await response.text()).toContain('<div id="root"><')
   })
 
-  it('上游回錯誤時退回原本的資產', async () => {
+  /** 暫時性的錯誤不能回 404,不然真的課程頁會被移出索引。 */
+  it('上游回錯誤時退回原本的資產,狀態碼 200', async () => {
     vi.stubGlobal('HTMLRewriter', FakeRewriter)
     vi.stubGlobal(
       'fetch',
@@ -284,6 +287,37 @@ describe('worker fetch — 改寫', () => {
       makeEnv(page),
       ctx,
     )
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe(PAGE)
+  })
+
+  it('查不到的課回 404', async () => {
+    vi.stubGlobal('HTMLRewriter', FakeRewriter)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ courses: [{ id: '1' }] }))),
+    )
+    const response = await worker.fetch(
+      new Request('https://ntut-course.allenyen.net/course/115-1/999'),
+      makeEnv(page),
+      ctx,
+    )
+    expect(response.status).toBe(404)
+    expect(await response.text()).toBe(PAGE)
+  })
+
+  it('不存在的學期(上游 404)回 404', async () => {
+    vi.stubGlobal('HTMLRewriter', FakeRewriter)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('not found', { status: 404 })),
+    )
+    const response = await worker.fetch(
+      new Request('https://ntut-course.allenyen.net/teacher/999-9/1'),
+      makeEnv(page),
+      ctx,
+    )
+    expect(response.status).toBe(404)
     expect(await response.text()).toBe(PAGE)
   })
 })

@@ -87,10 +87,12 @@ async function rewrite(
   let body: string | undefined
   try {
     const page = await pageForPath(url.pathname, (path) => getText(API_BASE, path))
-    if (!page) return asset
+    if (!page) return notFound(asset)
     html = renderHead(page.head)
     body = page.body
-  } catch {
+  } catch (error) {
+    // 學期不存在:上游那份檔案就是 404,跟查不到課是同一件事
+    if (error instanceof UpstreamNotFound) return notFound(asset)
     // 上游掛掉、格式變了,就當作沒有這一層。`index.html` 自己帶著站台層級的
     // 後備標籤,退回去仍然是可以用的一頁
     return asset
@@ -130,10 +132,27 @@ async function rewrite(
   return response
 }
 
+/**
+ * 認不得的網址:內容照舊送 `index.html`(前端會畫「查無此頁」),但狀態碼給 404。
+ *
+ * **不能回 200。** SPA fallback 讓任何網址都回同一個空殼,Google 把這種頁判成
+ * soft 404 / 重複內容,並據此調低整個網域的爬取意願 —— Search Console 長期把
+ * 整份 sitemap 列為「已找到 - 目前尚未建立索引」。
+ *
+ * 上游出錯**不走這裡**(見呼叫端):暫時性的錯誤回 404 會讓真的課程頁被移出索引。
+ */
+function notFound(asset: Response): Response {
+  return new Response(asset.body, { status: 404, headers: asset.headers })
+}
+
+/** 上游明確說「沒有這份檔案」,跟上游掛掉分開。 */
+class UpstreamNotFound extends Error {}
+
 async function getText(base: string, path: string): Promise<string> {
   const response = await fetch(`${base}/${path}`, {
     cf: { cacheTtl: UPSTREAM_TTL, cacheEverything: true },
   })
+  if (response.status === 404) throw new UpstreamNotFound(path)
   if (!response.ok) throw new Error(`${path} → HTTP ${response.status}`)
   return response.text()
 }
