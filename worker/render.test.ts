@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { renderCourseBody, renderHead } from './render.ts'
+import { renderCourseBody, renderCourseList, renderHead } from './render.ts'
 import { FALLBACK_ATTR, pageHead } from '../src/lib/seo.ts'
 
 describe('renderHead', () => {
@@ -80,5 +80,16 @@ describe('renderCourseBody', () => {
       expect(html).toContain('<h1>')
       expect(html).not.toContain('<h2>')
     }
+  })
+})
+
+describe('renderCourseList', () => {
+  it('課名與標題都跳脫,課號進網址前編碼', () => {
+    const html = renderCourseList('<b>林〇</b>', '115-1', [
+      { id: 'a/b', name: '<script>' },
+    ])
+    expect(html).toContain('<h1>&lt;b&gt;林〇&lt;/b&gt;</h1>')
+    expect(html).toContain('<a href="/course/115-1/a%2Fb">&lt;script&gt;</a>')
+    expect(html).not.toContain('<script>')
   })
 })

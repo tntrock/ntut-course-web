@@ -48,6 +48,32 @@ function escapeAttr(text: string): string {
   return escapeText(text).replace(/"/g, '&quot;')
 }
 
+/**
+ * 教師頁、系所頁的 `#root` 內容:一串連到課程頁的 `<a>`。
+ *
+ * **要的是連結,不是內文。** 這兩種頁面本身只是課程清單,真正值得收錄的是課程頁
+ * —— 但原始 HTML 裡沒有任何連到課程頁的連結,Google 得排隊等 JS 渲染才找得到,
+ * 結果整份 sitemap 停在「已找到 - 目前尚未建立索引」。跟 `renderCourseBody`
+ * 一樣,React 掛載時會整個換掉。
+ */
+export function renderCourseList(
+  heading: string,
+  semester: string,
+  courses: readonly { id: string; name: string }[],
+): string {
+  const items = courses.map(
+    (c) =>
+      `<li><a href="/course/${escapeAttr(semester)}/${encodeURIComponent(c.id)}">` +
+      `${escapeText(c.name)}</a>(${escapeText(c.id)})</li>`,
+  )
+  return (
+    `<main class="mx-auto max-w-3xl px-4 py-8">` +
+    `<h1>${escapeText(heading)}</h1>` +
+    `<ul>${items.join('')}</ul>` +
+    `</main>`
+  )
+}
+
 /** `renderCourseBody` 需要的課程欄位 —— 輕量索引就有,不必再抓系所檔。 */
 type CourseFacts = Pick<
   CourseIndexEntry,

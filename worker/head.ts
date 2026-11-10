@@ -5,11 +5,12 @@ import {
   mergeHead,
   pageHead as page,
   siteHead,
+  SITE_NAME,
   type HeadTags,
 } from '../src/lib/seo.ts'
 import type { CourseIndexEntry, Syllabus } from '../src/types/api.ts'
-import { renderCourseBody } from './render.ts'
-import { findCourse, parseUpstream } from './upstream.ts'
+import { renderCourseBody, renderCourseList } from './render.ts'
+import { findCourse, listCourses, parseUpstream } from './upstream.ts'
 
 /**
  * 一頁的完整 head。
@@ -174,7 +175,41 @@ export async function pageForPath(
     return coursePage(semester, id, getText)
   }
   const head = await headForPath(pathname, getText)
-  return head && { head }
+  if (!head) return null
+
+  // 清單抓不到只是少了連結,head 照樣送
+  const body = await listBody(pathname, head, getText).catch(() => undefined)
+  return body ? { head, body } : { head }
+}
+
+/** 有課程清單檔的頁面,以及那份檔案在上游的位置。 */
+const LIST_PATH = /^\/(teacher|dept)\/([^/]+)\/([^/]+)\/*$/
+const LIST_FILES = { teacher: 'teachers', dept: 'courses' } as const
+
+/**
+ * 教師頁、系所頁的連結清單(見 `renderCourseList`)。其他頁面回 `undefined`。
+ *
+ * 只在 `headForPath` 認得這一頁之後才呼叫,學期與代碼都驗過了。
+ */
+async function listBody(
+  pathname: string,
+  head: HeadTags,
+  getText: GetText,
+): Promise<string | undefined> {
+  const [, kind, semester, id] = LIST_PATH.exec(pathname) ?? []
+  if (!kind || !semester || !id) return undefined
+
+  const dir = LIST_FILES[kind as keyof typeof LIST_FILES]
+  const courses = listCourses(await getText(`${semester}/${dir}/${id}.json`))
+  if (courses.length === 0) return undefined
+
+  // 標題跟這一頁的 <title> 同一份,去掉站名
+  const title = head.meta.find((m) => 'title' in m)
+  const heading = (title && 'title' in title ? title.title : '').replace(
+    `｜${SITE_NAME}`,
+    '',
+  )
+  return renderCourseList(heading, semester, courses)
 }
 
 async function coursePage(

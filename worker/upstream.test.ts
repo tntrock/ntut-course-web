@@ -1,5 +1,25 @@
 import { describe, expect, it, vi } from 'vitest'
-import { findCourse, parseUpstream } from './upstream.ts'
+import { findCourse, listCourses, parseUpstream } from './upstream.ts'
+
+describe('listCourses', () => {
+  it('撈出課號與課名,巢狀物件的 id 不算', () => {
+    const text = JSON.stringify({
+      teacher: { id: 't1', name: '林〇' },
+      courses: [
+        { id: '1', name_zh: '作業系統', department: { id: '59', name: '資工' } },
+        { id: '2', name_zh: '引號"與\\反斜線' },
+      ],
+    })
+    expect(listCourses(text)).toEqual([
+      { id: '1', name: '作業系統' },
+      { id: '2', name: '引號"與\\反斜線' },
+    ])
+  })
+
+  it('格式變了就是零筆,不丟例外', () => {
+    expect(listCourses('{"courses":[{"name_zh":"x","id":"1"}]}')).toEqual([])
+  })
+})
 
 describe('parseUpstream', () => {
   /**
