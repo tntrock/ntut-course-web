@@ -9,8 +9,15 @@ import {
   type HeadTags,
 } from '../src/lib/seo.ts'
 import type { CourseIndexEntry, Syllabus } from '../src/types/api.ts'
-import { renderCourseBody, renderCourseList } from './render.ts'
-import { findCourse, listCourses, parseUpstream } from './upstream.ts'
+import {
+  renderCourseBody,
+  renderCourseList,
+  renderIntro,
+  renderLinkSection,
+  renderSiteNav,
+  type PageLink,
+} from './render.ts'
+import { findCourse, listCourses, listTeachers, parseUpstream } from './upstream.ts'
 
 /**
  * 一頁的完整 head。
@@ -152,64 +159,178 @@ async function lookup(
   return data[key]?.find((item) => item.id === id) ?? null
 }
 
-/** 一頁的伺服器端輸出:head 一定有,`body` 只有課程頁有(見 `renderCourseBody`)。 */
+/**
+ * 一頁的伺服器端輸出。
+ *
+ * **每一頁都有 `body`,而且結尾都是站內導覽**(見 `renderSiteNav`)。以前只有
+ * 課程、教師、系所頁有內文,首頁與瀏覽頁的 `#root` 是空的 —— 原始 HTML 裡
+ * 從首頁出發一個連結都沒有,整個站只能靠 sitemap 被發現。
+ */
 export interface PageParts {
   head: HeadTags
-  body?: string
+  body: string
 }
 
 const COURSE_PATH = /^\/course\/([^/]+)\/([^/]+)\/*$/
 
-/**
- * 跟 `headForPath` 一樣,但課程頁多帶一份 body 內文。
- *
- * 其餘頁面(教師、系所……)只有 head:它們的內容是課程清單,真正值得被收錄的
- * 是清單連出去的課程頁。
- */
+/** 跟 `headForPath` 一樣,但多帶一份給 `#root` 的內文。 */
 export async function pageForPath(
   pathname: string,
   getText: GetText,
 ): Promise<PageParts | null> {
+  // head 與 body 會要同一份清單檔(例如 `departments.json`),同一個請求只抓一次
+  const pending = new Map<string, Promise<string>>()
+  const get: GetText = (path) => {
+    let hit = pending.get(path)
+    if (!hit) pending.set(path, (hit = getText(path)))
+    return hit
+  }
+
   const [, semester, id] = COURSE_PATH.exec(pathname) ?? []
   if (semester && id && SEMESTER.test(semester) && ID.test(id)) {
-    return coursePage(semester, id, getText)
+    const page = await coursePage(semester, id, get)
+    return page && { head: page.head, body: page.body + renderSiteNav() }
   }
-  const head = await headForPath(pathname, getText)
+  const head = await headForPath(pathname, get)
   if (!head) return null
 
-  // 清單抓不到只是少了連結,head 照樣送
-  const body = await listBody(pathname, head, getText).catch(() => undefined)
-  return body ? { head, body } : { head }
+  // 清單抓不到只是少了連結:退回標題加敘述,head 照樣送,更不能變成 404
+  const body = await pageBody(pathname, head, get).catch(() => undefined)
+  return {
+    head,
+    body: (body ?? renderIntro(headingOf(head), descriptionOf(head))) + renderSiteNav(),
+  }
+}
+
+/** 標題跟這一頁的 <title> 同一份,去掉站名。首頁的標題就是站名,原樣留著。 */
+function headingOf(head: HeadTags): string {
+  const title = head.meta.find((m) => 'title' in m)
+  return (title && 'title' in title ? title.title : SITE_NAME).replace(
+    `｜${SITE_NAME}`,
+    '',
+  )
+}
+
+function descriptionOf(head: HeadTags): string {
+  const hit = head.meta.find((m) => 'name' in m && m.name === 'description')
+  return hit && 'content' in hit ? hit.content : ''
 }
 
 /** 有課程清單檔的頁面,以及那份檔案在上游的位置。 */
-const LIST_PATH = /^\/(teacher|dept)\/([^/]+)\/([^/]+)\/*$/
 const LIST_FILES = { teacher: 'teachers', dept: 'courses' } as const
 
 /**
- * 教師頁、系所頁的連結清單(見 `renderCourseList`)。其他頁面回 `undefined`。
+ * 各種頁面專屬的 `#root` 內文。沒有專屬內文的頁面回 `undefined`,
+ * 由呼叫端補上標題加敘述。
  *
  * 只在 `headForPath` 認得這一頁之後才呼叫,學期與代碼都驗過了。
  */
-async function listBody(
+async function pageBody(
   pathname: string,
   head: HeadTags,
   getText: GetText,
 ): Promise<string | undefined> {
-  const [, kind, semester, id] = LIST_PATH.exec(pathname) ?? []
-  if (!kind || !semester || !id) return undefined
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
+  if (path === '/') return homeBody(head, getText)
+  if (path === '/browse') return browseBody(head, getText)
 
-  const dir = LIST_FILES[kind as keyof typeof LIST_FILES]
-  const courses = listCourses(await getText(`${semester}/${dir}/${id}.json`))
+  const [, kind, semester, rawId] = path.split('/')
+  if (!kind || !semester || !rawId) return undefined
+
+  let courses: { id: string; name: string }[]
+  if (kind === 'program') {
+    // 學程沒有自己的課程清單檔,只有課號 —— 課名要回學期索引裡撈
+    const name = safeDecode(rawId)
+    const { programs } = parseUpstream<{
+      programs: { name: string; course_ids: string[] }[]
+    }>(await getText(`${semester}/programs.json`))
+    const ids = new Set(programs.find((p) => p.name === name)?.course_ids)
+    if (ids.size === 0) return undefined
+    courses = listCourses(await getText(`${semester}/index.json`), ids)
+  } else if (kind in LIST_FILES) {
+    const dir = LIST_FILES[kind as keyof typeof LIST_FILES]
+    courses = listCourses(await getText(`${semester}/${dir}/${rawId}.json`))
+  } else {
+    return undefined
+  }
+
   if (courses.length === 0) return undefined
+  return renderCourseList(headingOf(head), semester, courses)
+}
 
-  // 標題跟這一頁的 <title> 同一份,去掉站名
-  const title = head.meta.find((m) => 'title' in m)
-  const heading = (title && 'title' in title ? title.title : '').replace(
-    `｜${SITE_NAME}`,
-    '',
+interface Named {
+  id: string
+  name: string
+}
+
+async function latestSemester(getText: GetText): Promise<string> {
+  const { latest } = parseUpstream<{ latest: string }>(await getText('meta.json'))
+  // 會被接進上游網址與連結,跟路徑上的學期一樣要驗
+  if (!SEMESTER.test(latest)) throw new Error(`meta.latest 格式不對：${latest}`)
+  return latest
+}
+
+async function departmentLinks(
+  semester: string,
+  getText: GetText,
+): Promise<PageLink[]> {
+  const { departments } = parseUpstream<{ departments: Named[] }>(
+    await getText(`${semester}/departments.json`),
   )
-  return renderCourseList(heading, semester, courses)
+  return departments.map((d) => ({
+    href: `/dept/${semester}/${encodeURIComponent(d.id)}`,
+    text: d.name,
+  }))
+}
+
+/**
+ * 首頁:最新學期的每個開課單位。
+ *
+ * 這是原始 HTML 連結圖的**根** —— 首頁 → 系所頁 → 課程頁 → 教師頁,
+ * 不跑 JS 也能從 `/` 走到 sitemap 裡的每一頁。
+ */
+async function homeBody(head: HeadTags, getText: GetText): Promise<string> {
+  const semester = await latestSemester(getText)
+  return renderIntro(
+    headingOf(head),
+    descriptionOf(head),
+    renderLinkSection(
+      `${semester} 學期開課單位`,
+      await departmentLinks(semester, getText),
+    ),
+  )
+}
+
+/** 瀏覽頁:系所、學程、教師三份清單,跟前端這一頁列的是同一批。 */
+async function browseBody(head: HeadTags, getText: GetText): Promise<string> {
+  const semester = await latestSemester(getText)
+  // 三份各自抓;少一份就少一段,不要整頁退回只有敘述
+  const [departments, programs, teachers] = await Promise.all([
+    departmentLinks(semester, getText).catch(() => []),
+    getText(`${semester}/programs.json`).then(
+      (text) =>
+        parseUpstream<{ programs: { name: string }[] }>(text).programs.map((p) => ({
+          href: `/program/${semester}/${encodeURIComponent(p.name)}`,
+          text: p.name,
+        })),
+      () => [],
+    ),
+    getText(`${semester}/teachers.json`).then(
+      (text) =>
+        listTeachers(text).map((t) => ({
+          href: `/teacher/${semester}/${encodeURIComponent(t.id)}`,
+          text: t.name,
+        })),
+      () => [],
+    ),
+  ])
+  return renderIntro(
+    headingOf(head),
+    descriptionOf(head),
+    renderLinkSection(`${semester} 學期系所`, departments) +
+      renderLinkSection(`${semester} 學期學程`, programs) +
+      renderLinkSection(`${semester} 學期教師`, teachers),
+  )
 }
 
 async function coursePage(
@@ -217,20 +338,31 @@ async function coursePage(
   courseId: string,
   getText: GetText,
 ): Promise<PageParts | null> {
-  const [indexText, syllabus] = await Promise.all([
+  const [indexText, syllabus, departments] = await Promise.all([
     getText(`${semester}/index.json`),
     // 約 30% 的課沒有大綱,上游回 404 —— 那就只畫課程資訊
     getText(`${semester}/syllabus/${courseId}.json`).then(
       (text) => parseUpstream<Syllabus>(text),
       () => null,
     ),
+    // 系所名只是為了連回系所頁,抓不到就不畫那一行
+    getText(`${semester}/departments.json`).then(
+      (text) => parseUpstream<{ departments: Named[] }>(text).departments,
+      () => [],
+    ),
   ])
   const course = findCourse<CourseIndexEntry>(indexText, courseId)
   if (!course) return null
 
+  const ids = new Set(course.department_ids)
   return {
     head: courseHead(course, semester, courseId),
-    body: renderCourseBody(course, semester, syllabus),
+    body: renderCourseBody(
+      course,
+      semester,
+      syllabus,
+      departments.filter((d) => ids.has(d.id)),
+    ),
   }
 }
 

@@ -269,10 +269,144 @@ describe('pageForPath — 課程頁帶內文', () => {
     expect(page?.body).not.toContain('<h2>')
   })
 
-  it('其餘頁面只有 head', async () => {
-    const page = await pageForPath('/about', fakeApi({}))
-    expect(page?.head).toBeTruthy()
-    expect(page?.body).toBeUndefined()
+  it('開課單位連回系所頁,只列這門課自己的', async () => {
+    const page = await pageForPath(
+      '/course/115-1/1',
+      fakeApi({
+        '115-1/index.json': {
+          courses: [
+            {
+              id: '1',
+              name_zh: '作業系統',
+              teachers: [],
+              teacher_codes: [],
+              time_slots: [],
+              department_ids: ['59'],
+              credits: null,
+              required: null,
+            },
+          ],
+        },
+        '115-1/departments.json': {
+          departments: [
+            { id: '59', name: '資工系' },
+            { id: '36', name: '電子系' },
+          ],
+        },
+      }),
+    )
+    expect(page?.body).toContain('開課單位：<a href="/dept/115-1/59">資工系</a>')
+    expect(page?.body).not.toContain('電子系')
+  })
+
+  it('課程頁結尾也有站內導覽', async () => {
+    const page = await pageForPath('/course/115-1/364540', fakeApi(COURSE))
+    expect(page?.body).toContain('<a href="/browse">')
+  })
+})
+
+/**
+ * 原始 HTML 要自己構成一張走得通的連結圖:首頁 → 系所 → 課程 → 教師。
+ * 少了任何一段,那一層以下的頁面就只剩 sitemap 這一條路。
+ */
+describe('pageForPath — 每一頁都有內文與站內連結', () => {
+  const META = { 'meta.json': { latest: '115-1' } }
+  const DEPARTMENTS = {
+    '115-1/departments.json': { departments: [{ id: '59', name: '資工<系>' }] },
+  }
+
+  it('沒有專屬內文的頁面:標題、敘述、站內導覽', async () => {
+    const get = fakeApi({})
+    const page = await pageForPath('/about', get)
+    expect(page?.body).toContain('<h1>關於</h1>')
+    expect(page?.body).toContain('資料來源')
+    expect(page?.body).toContain('<a href="/">')
+    expect(page?.body).toContain('<a href="/browse">')
+    expect(get).not.toHaveBeenCalled()
+  })
+
+  it('首頁列出最新學期的每個開課單位', async () => {
+    const page = await pageForPath('/', fakeApi({ ...META, ...DEPARTMENTS }))
+    expect(page?.body).toContain('<h1>北科課程</h1>')
+    expect(page?.body).toContain('<h2>115-1 學期開課單位</h2>')
+    expect(page?.body).toContain('<a href="/dept/115-1/59">資工&lt;系&gt;</a>')
+  })
+
+  it('首頁:上游抓不到就退回標題加敘述,不是空的也不是 404', async () => {
+    const page = await pageForPath('/', fakeApi({}))
+    expect(page?.body).toContain('<h1>北科課程</h1>')
+    expect(page?.body).toContain('臺北科技大學課程查詢')
+    expect(page?.body).not.toContain('<h2>')
+  })
+
+  /** `latest` 會被接進上游網址,格式不對就整段不要。 */
+  it('首頁:meta.latest 格式不對時不拿去組網址', async () => {
+    const get = fakeApi({ 'meta.json': { latest: '../x' } })
+    const page = await pageForPath('/', get)
+    expect(page?.body).not.toContain('<h2>')
+    expect(get).toHaveBeenCalledTimes(1)
+  })
+
+  it('瀏覽頁列出系所、學程與教師', async () => {
+    const page = await pageForPath(
+      '/browse/',
+      fakeApi({
+        ...META,
+        ...DEPARTMENTS,
+        '115-1/programs.json': { programs: [{ name: '半導體', course_ids: [] }] },
+        '115-1/teachers.json': { teachers: [{ id: '23533', name: '林〇' }] },
+      }),
+    )
+    expect(page?.body).toContain('href="/dept/115-1/59"')
+    expect(page?.body).toContain(
+      '<a href="/program/115-1/%E5%8D%8A%E5%B0%8E%E9%AB%94">半導體</a>',
+    )
+    expect(page?.body).toContain('<a href="/teacher/115-1/23533">林〇</a>')
+  })
+
+  it('瀏覽頁:少一份清單就少一段,其餘照畫', async () => {
+    const page = await pageForPath('/browse', fakeApi({ ...META, ...DEPARTMENTS }))
+    expect(page?.body).toContain('<h2>115-1 學期系所</h2>')
+    expect(page?.body).not.toContain('學期教師')
+    expect(page?.body).not.toContain('學期學程')
+  })
+
+  it('學程頁:課名從學期索引撈,只列學程裡的課', async () => {
+    const get = fakeApi({
+      '115-1/programs.json': { programs: [{ name: '半導體', course_ids: ['2'] }] },
+      '115-1/index.json': {
+        courses: [
+          { id: '1', name_zh: '作業系統' },
+          { id: '2', name_zh: '半導體製程' },
+        ],
+      },
+    })
+    const page = await pageForPath('/program/115-1/%E5%8D%8A%E5%B0%8E%E9%AB%94', get)
+    expect(page?.body).toContain('<h1>半導體 115-1</h1>')
+    expect(page?.body).toContain('<a href="/course/115-1/2">半導體製程</a>')
+    expect(page?.body).not.toContain('作業系統')
+    // head 與 body 都要 programs.json,同一個請求只抓一次
+    expect(get.mock.calls.filter(([p]) => p === '115-1/programs.json')).toHaveLength(1)
+  })
+
+  it('學程頁:沒有課就退回標題加敘述', async () => {
+    const page = await pageForPath(
+      '/program/115-1/%E5%8D%8A%E5%B0%8E%E9%AB%94',
+      fakeApi({
+        '115-1/programs.json': { programs: [{ name: '半導體', course_ids: [] }] },
+      }),
+    )
+    expect(page?.body).toContain('<h1>半導體 115-1</h1>')
+    expect(page?.body).toContain('<p>')
+  })
+
+  it('班級頁沒有專屬內文,照樣有標題與導覽', async () => {
+    const page = await pageForPath(
+      '/class/115-1/2401',
+      fakeApi({ '115-1/classes.json': { classes: [{ id: '2401', name: '資工四' }] } }),
+    )
+    expect(page?.body).toContain('<h1>資工四 115-1</h1>')
+    expect(page?.body).toContain('<a href="/browse">')
   })
 })
 
@@ -309,7 +443,8 @@ describe('pageForPath — 教師頁、系所頁帶課程連結', () => {
       fakeApi({ '115-1/teachers.json': { teachers: [{ id: '23533', name: '林〇' }] } }),
     )
     expect(titleOf(page?.head ?? null)).toBe('林〇 老師｜北科課程')
-    expect(page?.body).toBeUndefined()
+    expect(page?.body).toContain('<h1>林〇 老師</h1>')
+    expect(page?.body).not.toContain('/course/')
   })
 })
 

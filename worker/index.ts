@@ -1,4 +1,4 @@
-import { FALLBACK_ATTR } from '../src/lib/seo.ts'
+import { FALLBACK_ATTR, SITE_URL } from '../src/lib/seo.ts'
 import { pageForPath } from './head.ts'
 import { renderHead } from './render.ts'
 
@@ -31,13 +31,14 @@ interface Env {
  * Facebook、Bing 的預覽爬蟲**完全不跑 JS** —— 對它們來說每一頁都叫「北科課程」。
  * 學生是用貼連結在傳這個站的,所以這半邊的實際效益比 Google 那半邊高。
  *
- * **body 只動課程頁。** 其餘頁面只改 head;課程頁另外在 `#root` 塞一份內文
- * (課名、教師、時段、大綱),理由見 `renderCourseBody`。
+ * **每一頁的 `#root` 也都有內文。** 課程頁是課名、教師、時段、大綱(見
+ * `renderCourseBody`),清單類的頁面是連結,而且每一頁結尾都有站內導覽 ——
+ * 原始 HTML 要自己構成一張走得通的連結圖,理由見 `renderSiteNav`。
  */
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      return await rewrite(request, env, ctx)
+      return offCanonicalHost(request, await rewrite(request, env, ctx))
     } catch {
       /*
        * **最後一道防線。**
@@ -49,10 +50,29 @@ export default {
        *
        * 這一層做的事只是「加幾個 meta 標籤」,不值得讓整個站陪葬。
        */
-      return env.ASSETS.fetch(request)
+      return offCanonicalHost(request, await env.ASSETS.fetch(request))
     }
   },
 } satisfies ExportedHandler<Env>
+
+/** 正式網域。只有這個主機名稱上的頁面該被收錄。 */
+const CANONICAL_HOST = new URL(SITE_URL).hostname
+
+/**
+ * 不是正式網域就標上 `noindex`。
+ *
+ * 同一個 Worker 也掛在 `*.workers.dev` 與每次部署的預覽網址上,內容一模一樣。
+ * canonical 雖然指回正式網域,但那只是「建議」—— 整站多一份完全重複的內容,
+ * Google 得花爬取額度去確認它是重複的,而新站的額度本來就少。
+ *
+ * **在快取外面做**:快取鍵沒有主機名稱,兩邊共用同一份改寫結果。
+ */
+function offCanonicalHost(request: Request, response: Response): Response {
+  if (new URL(request.url).hostname === CANONICAL_HOST) return response
+  const copy = new Response(response.body, response)
+  copy.headers.set('x-robots-tag', 'noindex')
+  return copy
+}
 
 /** 真正的改寫流程。任何一步出錯都由上面那層接住。 */
 async function rewrite(
@@ -84,7 +104,7 @@ async function rewrite(
   if (cached) return cached
 
   let html: string
-  let body: string | undefined
+  let body: string
   try {
     const page = await pageForPath(url.pathname, (path) => getText(API_BASE, path))
     if (!page) return notFound(asset)
@@ -113,10 +133,10 @@ async function rewrite(
           })
         },
       })
-      // 課程頁的內文,給爬蟲看。React 掛載時會整個換掉,見 `renderCourseBody`
+      // 這一頁的內文與站內連結,給爬蟲看。React 掛載時會整個換掉,見 `renderCourseBody`
       .on('#root', {
         element: (root) => {
-          if (body) root.setInnerContent(body, { html: true })
+          root.setInnerContent(body, { html: true })
         },
       })
       .transform(asset).body,
