@@ -46,5 +46,10 @@
     "vitest": "^5.0.5",
     "wrangler": "^4.161.0"
   },
-  "description": "北科大課程查詢網站"
+  "description": "北科大課程查詢網站",
+  "overrides": {
+    "workbox-build": {
+      "glob": "^14.0.6"
+    }
+  }
 }
