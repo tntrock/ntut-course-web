@@ -126,6 +126,50 @@ describe('worker fetch — 不該碰的東西原封不動', () => {
   })
 })
 
+/**
+ * 同一個 Worker 也掛在 workers.dev 與預覽網址上。那些是整站的重複內容,
+ * 不該跟正式網域搶爬取額度。
+ */
+describe('worker fetch — 只有正式網域給收錄', () => {
+  it('正式網域不加 X-Robots-Tag', async () => {
+    const response = await worker.fetch(
+      new Request('https://ntut-course.allenyen.net/nope'),
+      makeEnv(html),
+      ctx,
+    )
+    expect(response.headers.get('x-robots-tag')).toBeNull()
+  })
+
+  it('workers.dev 一律 noindex,內容與狀態碼照舊', async () => {
+    const response = await worker.fetch(
+      new Request('https://ntut-course-web.tntrock.workers.dev/nope'),
+      makeEnv(html),
+      ctx,
+    )
+    expect(response.headers.get('x-robots-tag')).toBe('noindex')
+    expect(response.status).toBe(404)
+    expect(await response.text()).toBe(SHELL)
+  })
+
+  it('走到最後一道防線時也一樣', async () => {
+    vi.stubGlobal('caches', {
+      default: {
+        match: vi.fn(async () => {
+          throw new Error('快取壞了')
+        }),
+        put: vi.fn(),
+      },
+    })
+    const response = await worker.fetch(
+      new Request('https://ntut-course-web.tntrock.workers.dev/about'),
+      makeEnv(html),
+      ctx,
+    )
+    expect(response.headers.get('x-robots-tag')).toBe('noindex')
+    expect(await response.text()).toBe(SHELL)
+  })
+})
+
 describe('worker fetch — 快取命中', () => {
   it('命中就直接回,不重新改寫', async () => {
     const cached = new Response('CACHED', {
@@ -240,6 +284,9 @@ describe('worker fetch — 改寫', () => {
     // 原本那個站台層級的標題拿掉,換成這一頁的
     expect(text).not.toContain('>北科課程</title>')
     expect(text).toContain('>關於｜北科課程</title>')
+    // 沒有專屬內文的頁面,#root 也不是空的
+    expect(text).toContain('<div id="root"><main')
+    expect(text).toContain('<a href="/browse">')
     expect(response.headers.get('etag')).toBeNull()
     expect(response.headers.get('cache-control')).toContain('s-maxage=')
     expect(ctx.waitUntil).toHaveBeenCalled()

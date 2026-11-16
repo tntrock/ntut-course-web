@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { renderCourseBody, renderCourseList, renderHead } from './render.ts'
+import {
+  renderCourseBody,
+  renderCourseList,
+  renderHead,
+  renderIntro,
+  renderLinkSection,
+  renderSiteNav,
+} from './render.ts'
 import { FALLBACK_ATTR, pageHead } from '../src/lib/seo.ts'
 
 describe('renderHead', () => {
@@ -80,6 +87,58 @@ describe('renderCourseBody', () => {
       expect(html).toContain('<h1>')
       expect(html).not.toContain('<h2>')
     }
+  })
+})
+
+describe('renderCourseBody — 開課單位', () => {
+  const course = {
+    id: '1',
+    name_zh: '作業系統',
+    teachers: [],
+    teacher_codes: [],
+    time_slots: [],
+    credits: null,
+    required: null,
+  }
+
+  it('有給就連到系所頁,名字跳脫、代碼編碼', () => {
+    const html = renderCourseBody(course, '115-1', null, [
+      { id: 'a/b', name: '資工<系>' },
+    ])
+    expect(html).toContain('開課單位：<a href="/dept/115-1/a%2Fb">資工&lt;系&gt;</a>')
+  })
+
+  it('沒給就不畫那一行', () => {
+    expect(renderCourseBody(course, '115-1', null)).not.toContain('開課單位')
+  })
+})
+
+describe('renderSiteNav', () => {
+  it('連回首頁與瀏覽頁 —— 每一頁都靠這段接回連結圖', () => {
+    const html = renderSiteNav()
+    expect(html).toContain('<a href="/">')
+    expect(html).toContain('<a href="/browse">')
+  })
+})
+
+describe('renderLinkSection / renderIntro', () => {
+  it('連結文字與網址都跳脫', () => {
+    const html = renderLinkSection('<系所>', [{ href: '/x?"a"', text: '<script>' }])
+    expect(html).toContain('<h2>&lt;系所&gt;</h2>')
+    expect(html).toContain('<a href="/x?&quot;a&quot;">&lt;script&gt;</a>')
+  })
+
+  it('沒有連結就整段不畫', () => {
+    expect(renderLinkSection('系所', [])).toBe('')
+  })
+
+  it('標題與敘述跳脫,段落原樣接上', () => {
+    const html = renderIntro('<b>', 'A & B', '<section>x</section>')
+    expect(html).toContain('<h1>&lt;b&gt;</h1><p>A &amp; B</p><section>x</section>')
+  })
+
+  it('沒有敘述就不畫空的 <p>', () => {
+    expect(renderIntro('標題', '')).not.toContain('<p>')
   })
 })
 

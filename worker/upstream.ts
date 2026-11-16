@@ -58,12 +58,36 @@ export function findCourse<T extends { id: string }>(
  * 10ms 的上限前沒什麼餘裕,而這裡只要兩個欄位。上游改了欄位順序就會撈到零筆
  * —— 那只是少了一段內文,不會答錯。
  */
-export function listCourses(text: string): { id: string; name: string }[] {
+export function listCourses(
+  text: string,
+  /** 只要這幾門。學程頁用:從整份學期索引裡挑出學程的課,一趟掃完。 */
+  only?: ReadonlySet<string>,
+): { id: string; name: string }[] {
   const out: { id: string; name: string }[] = []
   for (const m of text.matchAll(/\{"id":"([^"\\]+)","name_zh":("(?:[^"\\]|\\.)*")/g)) {
+    // 先比課號再解析課名 —— 索引有八千多門課,全部解析就失去只掃文字的意義
+    if (only && !only.has(m[1]!)) continue
     out.push({ id: m[1]!, name: parseUpstream<string>(m[2]!) })
   }
   return out
+}
+
+/**
+ * 從 `teachers.json` 的**原始文字**裡撈出每位教師的代碼與姓名。
+ *
+ * 瀏覽頁要一次列出八百多位教師,而它同時還要解析系所與學程兩份檔案 ——
+ * 最大的這一份就不整份解析了,理由同 `listCourses`。撈到零筆(上游改了欄位
+ * 順序或排版)才退回整份解析。
+ */
+export function listTeachers(text: string): { id: string; name: string }[] {
+  const out: { id: string; name: string }[] = []
+  for (const m of text.matchAll(/\{"id":"([^"\\]+)","name":("(?:[^"\\]|\\.)*")/g)) {
+    out.push({ id: m[1]!, name: parseUpstream<string>(m[2]!) })
+  }
+  if (out.length > 0) return out
+  return (
+    parseUpstream<{ teachers?: { id: string; name: string }[] }>(text).teachers ?? []
+  )
 }
 
 /** 從 `{` 往後找對應的 `}`,字串裡的括號與跳脫字元不算。找不到回傳 -1。 */

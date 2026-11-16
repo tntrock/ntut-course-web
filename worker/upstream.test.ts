@@ -1,7 +1,39 @@
 import { describe, expect, it, vi } from 'vitest'
-import { findCourse, listCourses, parseUpstream } from './upstream.ts'
+import { findCourse, listCourses, listTeachers, parseUpstream } from './upstream.ts'
+
+describe('listTeachers', () => {
+  it('不整份解析就撈出代碼與姓名', () => {
+    const text = JSON.stringify({
+      teachers: [
+        { id: '1', name: '林〇', course_count: 3 },
+        { id: '2', name: '引號"王' },
+      ],
+    })
+    expect(listTeachers(text)).toEqual([
+      { id: '1', name: '林〇' },
+      { id: '2', name: '引號"王' },
+    ])
+  })
+
+  /** 上游改了排版或欄位順序時會變慢,但不能悄悄變成零位教師。 */
+  it('撈不到就退回整份解析', () => {
+    const text = JSON.stringify({ teachers: [{ name: '林〇', id: '1' }] }, null, 2)
+    expect(listTeachers(text)).toEqual([{ name: '林〇', id: '1' }])
+    expect(listTeachers('{}')).toEqual([])
+  })
+})
 
 describe('listCourses', () => {
+  it('給了課號集合就只撈那幾門', () => {
+    const text = JSON.stringify({
+      courses: [
+        { id: '1', name_zh: '作業系統' },
+        { id: '2', name_zh: '編譯器' },
+      ],
+    })
+    expect(listCourses(text, new Set(['2']))).toEqual([{ id: '2', name: '編譯器' }])
+  })
+
   it('撈出課號與課名,巢狀物件的 id 不算', () => {
     const text = JSON.stringify({
       teacher: { id: 't1', name: '林〇' },
