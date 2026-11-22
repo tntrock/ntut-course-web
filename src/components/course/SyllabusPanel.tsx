@@ -72,6 +72,17 @@ function Badges({ items }: { items: readonly string[] }) {
   )
 }
 
+/**
+ * 陣列欄位一律經過這裡再讀。
+ *
+ * 爬蟲曾經整個拿掉 `ai_usage`(內容搬進 `extra`),當時這裡直接讀 `.length`,
+ * 每一份有內容的大綱都丟 TypeError、整個分頁空白。缺欄位就當成空的,
+ * 不要讓一個欄位拖垮整份大綱。
+ */
+function list(value: readonly string[] | null | undefined): readonly string[] {
+  return Array.isArray(value) ? value : []
+}
+
 function Loading() {
   return (
     <p className="text-muted-foreground px-4 py-10 text-center text-sm">載入大綱中…</p>
@@ -139,6 +150,11 @@ export function SyllabusPanel({
   }
 
   const unknown = unknownSyllabusFields(syllabus)
+  const flexibleCategory = list(syllabus.flexible_learning?.category)
+  const sdgs = list(syllabus.sdgs)
+  const aiUsage = list(syllabus.ai_usage)
+  const extendedResources = list(syllabus.extended_resources)
+  const contact = list(syllabus.contact)
 
   return (
     <div>
@@ -166,42 +182,38 @@ export function SyllabusPanel({
         </Block>
       )}
 
-      {syllabus.flexible_learning &&
-        (syllabus.flexible_learning.category.length > 0 ||
-          syllabus.flexible_learning.content) && (
-          <Block title="彈性學習">
-            {syllabus.flexible_learning.category.length > 0 && (
-              <Badges items={syllabus.flexible_learning.category} />
-            )}
-            {syllabus.flexible_learning.content && (
-              <div className="mt-2">
-                <Text value={syllabus.flexible_learning.content} />
-              </div>
-            )}
-          </Block>
-        )}
+      {(flexibleCategory.length > 0 || syllabus.flexible_learning?.content) && (
+        <Block title="彈性學習">
+          {flexibleCategory.length > 0 && <Badges items={flexibleCategory} />}
+          {syllabus.flexible_learning?.content && (
+            <div className="mt-2">
+              <Text value={syllabus.flexible_learning.content} />
+            </div>
+          )}
+        </Block>
+      )}
 
-      {syllabus.sdgs.length > 0 && (
+      {sdgs.length > 0 && (
         <Block title="永續發展目標（SDGs）">
-          <Badges items={syllabus.sdgs} />
+          <Badges items={sdgs} />
         </Block>
       )}
 
-      {syllabus.ai_usage.length > 0 && (
+      {aiUsage.length > 0 && (
         <Block title="生成式 AI 使用">
-          <Badges items={syllabus.ai_usage} />
+          <Badges items={aiUsage} />
         </Block>
       )}
 
-      {syllabus.extended_resources.length > 0 && (
+      {extendedResources.length > 0 && (
         <Block title="延伸資源">
-          <Bullets items={syllabus.extended_resources} />
+          <Bullets items={extendedResources} />
         </Block>
       )}
 
-      {syllabus.contact.length > 0 && (
+      {contact.length > 0 && (
         <Block title="聯絡方式">
-          <Bullets items={syllabus.contact} />
+          <Bullets items={contact} />
           {syllabus.teacher_email && (
             <p className="mt-1 text-sm">
               <a

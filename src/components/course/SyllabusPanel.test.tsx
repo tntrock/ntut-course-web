@@ -241,3 +241,45 @@ describe('SyllabusPanel 各個區塊', () => {
     expect(document.querySelector('a[href^="mailto:"]')).toBeNull()
   })
 })
+
+describe('SyllabusPanel 爬蟲拿掉欄位時', () => {
+  // 115-1 起的大綱沒有 `ai_usage`、多了 `extra`。當時直接讀 `.length`,
+  // 每一份有內容的大綱都丟 TypeError,整個分頁是空的。
+  it('沒有 ai_usage 仍然畫得出來,extra 的內容也看得見', () => {
+    const record = {
+      ...syllabus({ sdgs: ['SDG3'] }),
+      extra: { 'AI 能力圖像': '0 未涉及，5 核心培養' },
+    }
+    delete (record as { ai_usage?: string[] }).ai_usage
+
+    render(
+      <SyllabusPanel
+        state={{ kind: 'available', version: 'v' }}
+        syllabus={record}
+        syllabusUrl={null}
+      />,
+    )
+
+    expect(screen.getByText('教學目標的內容')).toBeInTheDocument()
+    expect(screen.getByText('SDG3')).toBeInTheDocument()
+    expect(screen.queryByText('生成式 AI 使用')).not.toBeInTheDocument()
+    expect(screen.getByText('AI 能力圖像')).toBeInTheDocument()
+  })
+
+  it('陣列欄位整個不見也不會掛', () => {
+    const record = syllabus({ flexible_learning: { content: '只有內容' } as never })
+    for (const key of ['contact', 'extended_resources', 'sdgs', 'ai_usage'] as const) {
+      delete (record as Partial<Syllabus>)[key]
+    }
+
+    render(
+      <SyllabusPanel
+        state={{ kind: 'available', version: 'v' }}
+        syllabus={record}
+        syllabusUrl={null}
+      />,
+    )
+
+    expect(screen.getByText('只有內容')).toBeInTheDocument()
+  })
+})
