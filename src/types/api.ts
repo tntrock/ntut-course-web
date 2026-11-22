@@ -422,7 +422,11 @@ export interface Syllabus extends SemesterScoped {
   contact: string[]
   extended_resources: string[]
   sdgs: string[]
-  ai_usage: string[]
+  /**
+   * **目前的爬蟲已經不輸出這個欄位**(AI 相關內容改放在 `extra`)。
+   * 留著是為了舊資料;讀取一律經過 `SyllabusPanel` 的 `list()`。
+   */
+  ai_usage?: string[]
   notes: string | null
 }
 
